@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "991017233515",
+    "project_id": "smartfinancetracker-69c8f",
+    "storage_bucket": "smartfinancetracker-69c8f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:991017233515:android:7d6e6b6bcd70758888152e",
+        "android_client_info": {
+          "package_name": "com.example.financeflow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-GS-ftVaD5OajMzrPTRjSKKTvK9geIxI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
