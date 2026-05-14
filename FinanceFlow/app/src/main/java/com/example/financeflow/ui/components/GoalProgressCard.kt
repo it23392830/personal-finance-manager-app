@@ -1,11 +1,10 @@
 package com.example.financeflow.ui.components
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,390 +14,324 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Canvas
-import kotlin.math.min
 
-// ──────────────────────────────────────────────
-// Data model
-// ──────────────────────────────────────────────
+// ─────────────────────────────────────────────
+//  Design Tokens
+// ─────────────────────────────────────────────
+private val CardWhite        = Color(0xFFFFFFFF)
+private val TextPrimary      = Color(0xFF1A1A2E)
+private val TextSecondary    = Color(0xFF6B7280)
+private val PrimaryPurple    = Color(0xFF7C4DFF)
+private val ProgressTrack    = Color(0xFFEDE7FF)
+private val ProgressFillStart= Color(0xFF7C4DFF)
+private val ProgressFillEnd  = Color(0xFFB39DDB)
+private val DaysChipBg       = Color(0xFFF3EDFF)
+private val SavingsInfoBg    = Color(0xFFFFFDE7)
+private val SavingsInfoBorder= Color(0xFFFFECB3)
+private val WarningAmber     = Color(0xFFFF9800)
 
+// ─────────────────────────────────────────────
+//  Data model
+// ─────────────────────────────────────────────
 data class GoalProgressData(
-    val goalName: String,
-    val targetAmount: String,
-    val savedAmount: String,
-    val progressFraction: Float,          // 0f..1f
-    val daysLeft: Int? = null,
-    val icon: ImageVector = Icons.Rounded.Savings,
-    val accentColor: Color = Color(0xFF9B72E8),
-    val secondaryColor: Color = Color(0xFFD4AEFF),
-    val category: String = "Goal"
-)
+    val goalTitle: String          = "MacBook Pro M4 Goal",
+    val currentAmount: Long        = 11_200L,
+    val targetAmount: Long         = 490_000L,
+    val daysRemaining: Int         = 267,
+    val dailySavingsNeeded: Long   = 1_794L,
+    val currentDailyRate: Long     = 1_774L,
+    val currencySymbol: String     = "LKR"
+) {
+    val progressFraction: Float
+        get() = (currentAmount.toFloat() / targetAmount).coerceIn(0f, 1f)
 
-// ──────────────────────────────────────────────
-// Public composable — horizontal card layout
-// ──────────────────────────────────────────────
+    val progressPercent: Float
+        get() = progressFraction * 100f
 
+    val isOnTrack: Boolean
+        get() = currentDailyRate >= dailySavingsNeeded
+}
+
+// ─────────────────────────────────────────────
+//  Hardcoded sample  (remove / replace later)
+// ─────────────────────────────────────────────
+fun goalProgressSample() = GoalProgressData()
+
+// ─────────────────────────────────────────────
+//  Public composable
+// ─────────────────────────────────────────────
+/**
+ * GoalProgressCard
+ *
+ * Displays a savings goal with animated progress bar,
+ * days remaining chip, and daily savings info panel.
+ *
+ * @param data      Goal data. Replace with ViewModel state later.
+ * @param modifier  External layout modifier.
+ */
 @Composable
 fun GoalProgressCard(
-    data: GoalProgressData,
-    modifier: Modifier = Modifier,
-    animateProgress: Boolean = true
+    data: GoalProgressData = goalProgressSample(),
+    modifier: Modifier = Modifier
 ) {
-    val cardShape = RoundedCornerShape(22.dp)
-    val clampedFraction = data.progressFraction.coerceIn(0f, 1f)
-
+    // Animate progress bar on first composition
+    var animationPlayed by remember { mutableStateOf(false) }
     val animatedProgress by animateFloatAsState(
-        targetValue = if (animateProgress) clampedFraction else clampedFraction,
-        animationSpec = tween(durationMillis = 900, easing = EaseOutCubic),
-        label = "goal_progress"
+        targetValue    = if (animationPlayed) data.progressFraction else 0f,
+        animationSpec  = tween(durationMillis = 900),
+        label          = "goalProgress"
     )
+    LaunchedEffect(Unit) { animationPlayed = true }
 
-    Card(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 10.dp,
-                shape = cardShape,
-                ambientColor = data.accentColor.copy(alpha = 0.22f),
-                spotColor = data.accentColor.copy(alpha = 0.14f)
-            ),
-        shape = cardShape,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation    = 4.dp,
+                shape        = RoundedCornerShape(20.dp),
+                ambientColor = PrimaryPurple.copy(alpha = 0.08f),
+                spotColor    = PrimaryPurple.copy(alpha = 0.14f)
+            )
+            .clip(RoundedCornerShape(20.dp))
+            .background(CardWhite)
+            .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // ── Circular progress indicator ──────────
-            GoalCircularProgress(
-                progress = animatedProgress,
-                accent = data.accentColor,
-                secondary = data.secondaryColor,
-                icon = data.icon,
-                size = 68.dp
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+
+            // ── Header row ──────────────────────────────────
+            GoalHeaderRow(
+                title         = data.goalTitle,
+                daysRemaining = data.daysRemaining
             )
 
-            // ── Text section ─────────────────────────
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                GoalHeader(
-                    name = data.goalName,
-                    category = data.category,
-                    accent = data.accentColor
-                )
+            // ── Amount row ──────────────────────────────────
+            GoalAmountRow(
+                current        = data.currentAmount,
+                target         = data.targetAmount,
+                currencySymbol = data.currencySymbol,
+                percent        = data.progressPercent
+            )
 
-                GoalAmountRow(
-                    saved = data.savedAmount,
-                    target = data.targetAmount
-                )
+            // ── Progress bar ────────────────────────────────
+            GoalProgressBar(progress = animatedProgress)
 
-                GoalLinearBar(
-                    progress = animatedProgress,
-                    accent = data.accentColor,
-                    secondary = data.secondaryColor
-                )
-
-                GoalFooter(
-                    progressFraction = clampedFraction,
-                    daysLeft = data.daysLeft,
-                    accent = data.accentColor
-                )
-            }
+            // ── Savings info panel ──────────────────────────
+            DailySavingsPanel(
+                needed         = data.dailySavingsNeeded,
+                currentRate    = data.currentDailyRate,
+                currencySymbol = data.currencySymbol,
+                isOnTrack      = data.isOnTrack
+            )
         }
     }
 }
 
-// ──────────────────────────────────────────────
-// Compact horizontal variant (for lists)
-// ──────────────────────────────────────────────
+// ─────────────────────────────────────────────
+//  Private sub-composables
+// ─────────────────────────────────────────────
 
 @Composable
-fun GoalProgressCardCompact(
-    data: GoalProgressData,
-    modifier: Modifier = Modifier
-) {
-    val clampedFraction = data.progressFraction.coerceIn(0f, 1f)
-    val animatedProgress by animateFloatAsState(
-        targetValue = clampedFraction,
-        animationSpec = tween(800, easing = EaseOutCubic),
-        label = "compact_progress"
-    )
-
-    val cardShape = RoundedCornerShape(16.dp)
-
+private fun GoalHeaderRow(title: String, daysRemaining: Int) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(cardShape)
-            .background(Color.White)
-            .padding(14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(data.accentColor.copy(alpha = 0.14f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = data.icon,
-                contentDescription = null,
-                tint = data.accentColor,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-
-        Column(modifier = Modifier.weight(1f)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = data.goalName,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = Color(0xFF1D1530),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = "${"%.0f".format(clampedFraction * 100)}%",
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    color = data.accentColor
-                )
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
-            GoalLinearBar(
-                progress = animatedProgress,
-                accent = data.accentColor,
-                secondary = data.secondaryColor,
-                height = 6.dp
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = data.savedAmount,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF6B6880)
-                )
-                Text(
-                    text = "of ${data.targetAmount}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFFADABBB)
-                )
-            }
-        }
-    }
-}
-
-// ──────────────────────────────────────────────
-// Sub-composables
-// ──────────────────────────────────────────────
-
-@Composable
-private fun GoalCircularProgress(
-    progress: Float,
-    accent: Color,
-    secondary: Color,
-    icon: ImageVector,
-    size: Dp
-) {
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(size)) {
-        Canvas(modifier = Modifier.size(size)) {
-            val strokeWidth = 6.dp.toPx()
-            val radius = (size.toPx() / 2) - strokeWidth / 2
-
-            // Track
-            drawArc(
-                color = secondary.copy(alpha = 0.20f),
-                startAngle = -90f,
-                sweepAngle = 360f,
-                useCenter = false,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-            )
-            // Progress arc
-            drawArc(
-                brush = Brush.sweepGradient(
-                    colors = listOf(accent, secondary, accent)
-                ),
-                startAngle = -90f,
-                sweepAngle = 360f * progress,
-                useCenter = false,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-            )
-        }
-
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = accent,
-            modifier = Modifier.size(size * 0.38f)
-        )
-    }
-}
-
-@Composable
-private fun GoalHeader(
-    name: String,
-    category: String,
-    accent: Color
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        modifier              = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment     = Alignment.CenterVertically
     ) {
         Text(
-            text = name,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-            color = Color(0xFF1D1530),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false)
+            text  = title,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Bold,
+                color      = TextPrimary,
+                fontSize   = 16.sp
+            )
         )
-        Text(
-            text = category,
-            modifier = Modifier
-                .clip(RoundedCornerShape(50))
-                .background(accent.copy(alpha = 0.12f))
-                .padding(horizontal = 7.dp, vertical = 2.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = accent
-        )
+
+        // Days remaining chip
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = DaysChipBg
+        ) {
+            Text(
+                text     = "$daysRemaining days left",
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                style    = MaterialTheme.typography.labelSmall.copy(
+                    color      = PrimaryPurple,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize   = 11.sp
+                )
+            )
+        }
     }
 }
 
 @Composable
 private fun GoalAmountRow(
-    saved: String,
-    target: String
-) {
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = saved,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = Color(0xFF1D1530)
-        )
-        Text(
-            text = "/ $target",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFFADABBB)
-        )
-    }
-}
-
-@Composable
-private fun GoalLinearBar(
-    progress: Float,
-    accent: Color,
-    secondary: Color,
-    height: Dp = 7.dp
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(height)
-            .clip(RoundedCornerShape(50))
-            .background(secondary.copy(alpha = 0.18f))
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(fraction = progress)
-                .fillMaxHeight()
-                .clip(RoundedCornerShape(50))
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(accent, secondary)
-                    )
-                )
-        )
-    }
-}
-
-@Composable
-private fun GoalFooter(
-    progressFraction: Float,
-    daysLeft: Int?,
-    accent: Color
+    current: Long,
+    target: Long,
+    currencySymbol: String,
+    percent: Float
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier              = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment     = Alignment.Bottom
     ) {
-        Text(
-            text = "${"%.0f".format(progressFraction * 100)}% achieved",
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-            color = accent
-        )
-        daysLeft?.let {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "$it days left",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFFADABBB)
+                text  = "Current",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color    = TextSecondary,
+                    fontSize = 11.sp
+                )
+            )
+            Text(
+                text  = "$currencySymbol ${"%,d".format(current)}",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color      = TextPrimary,
+                    fontSize   = 22.sp
+                )
+            )
+        }
+
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text  = "Target",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color    = TextSecondary,
+                    fontSize = 11.sp
+                )
+            )
+            Text(
+                text  = "$currencySymbol ${"%,d".format(target)}",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color      = PrimaryPurple,
+                    fontSize   = 16.sp
+                )
             )
         }
     }
 }
 
-// ──────────────────────────────────────────────
-// Preview
-// ──────────────────────────────────────────────
-
-@Preview(showBackground = true, backgroundColor = 0xFFF3EEFF)
 @Composable
-fun GoalProgressCardPreview() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+private fun GoalProgressBar(progress: Float) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // Percentage label
+        Text(
+            text  = "${"%.1f".format(progress * 100)}% complete",
+            style = MaterialTheme.typography.labelSmall.copy(
+                color      = TextSecondary,
+                fontSize   = 11.sp,
+                fontWeight = FontWeight.Medium
+            )
+        )
+
+        // Custom gradient progress bar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .clip(RoundedCornerShape(50))
+                .background(ProgressTrack)
         ) {
-            GoalProgressCard(
-                data = GoalProgressData(
-                    goalName = "Vacation Fund",
-                    targetAmount = "$5,000",
-                    savedAmount = "$3,200",
-                    progressFraction = 0.64f,
-                    daysLeft = 42,
-                    icon = Icons.Rounded.BeachAccess,
-                    accentColor = Color(0xFF9B72E8),
-                    secondaryColor = Color(0xFFD4AEFF),
-                    category = "Travel"
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(fraction = progress.coerceIn(0f, 1f))
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(50))
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(ProgressFillStart, ProgressFillEnd)
+                        )
+                    )
             )
-            GoalProgressCard(
-                data = GoalProgressData(
-                    goalName = "Emergency Fund",
-                    targetAmount = "$10,000",
-                    savedAmount = "$8,750",
-                    progressFraction = 0.875f,
-                    daysLeft = 15,
-                    icon = Icons.Rounded.Security,
-                    accentColor = Color(0xFF4EC9C9),
-                    secondaryColor = Color(0xFF88E0D8),
-                    category = "Safety"
+        }
+    }
+}
+
+@Composable
+private fun DailySavingsPanel(
+    needed: Long,
+    currentRate: Long,
+    currencySymbol: String,
+    isOnTrack: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(SavingsInfoBg)
+            .padding(horizontal = 14.dp, vertical = 12.dp)
+    ) {
+        Row(
+            modifier              = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment     = Alignment.CenterVertically
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text  = "Daily savings needed",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color    = TextSecondary,
+                        fontSize = 12.sp
+                    )
                 )
-            )
+                Text(
+                    text  = "$currencySymbol ${"%,d".format(needed)}",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color      = TextPrimary,
+                        fontSize   = 18.sp
+                    )
+                )
+                Text(
+                    text  = "Current rate: $currencySymbol ${"%,d".format(currentRate)}/day",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color    = if (isOnTrack) Color(0xFF2DBD6E) else WarningAmber,
+                        fontSize = 11.sp
+                    )
+                )
+            }
+
+            // On-track indicator
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = if (isOnTrack)
+                    Color(0xFF2DBD6E).copy(alpha = 0.12f)
+                else
+                    WarningAmber.copy(alpha = 0.12f)
+            ) {
+                Text(
+                    text     = if (isOnTrack) "✓ On Track" else "⚠ Behind",
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    style    = MaterialTheme.typography.labelSmall.copy(
+                        color      = if (isOnTrack) Color(0xFF2DBD6E) else WarningAmber,
+                        fontWeight = FontWeight.Bold,
+                        fontSize   = 11.sp
+                    )
+                )
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────
+//  Preview
+// ─────────────────────────────────────────────
+@Preview(showBackground = true, backgroundColor = 0xFFF5F3FF)
+@Composable
+private fun GoalProgressCardPreview() {
+    MaterialTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            GoalProgressCard()
         }
     }
 }

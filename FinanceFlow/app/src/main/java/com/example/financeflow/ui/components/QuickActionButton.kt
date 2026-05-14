@@ -1,240 +1,144 @@
 package com.example.financeflow.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
-// ──────────────────────────────────────────────
-// Data model
-// ──────────────────────────────────────────────
+// ─────────────────────────────────────────────
+//  Design Tokens
+// ─────────────────────────────────────────────
+private val AddIncomeGreen  = Color(0xFF2DBD6E)
+private val AddExpenseRed   = Color(0xFFFF5252)
+private val ButtonTextWhite = Color(0xFFFFFFFF)
 
-data class QuickActionData(
-    val label: String,
-    val icon: ImageVector,
-    val gradientColors: List<Color> = QuickActionDefaults.purpleGradient,
-    val badgeCount: Int = 0                // 0 = no badge
-)
-
-object QuickActionDefaults {
-    val purpleGradient = listOf(Color(0xFF9B72E8), Color(0xFFB48FE0))
-    val tealGradient   = listOf(Color(0xFF4EC9C9), Color(0xFF88E0D8))
-    val peachGradient  = listOf(Color(0xFFFF8C67), Color(0xFFFFB48F))
-    val roseGradient   = listOf(Color(0xFFFF6B8B), Color(0xFFFF9DB5))
-    val mintGradient   = listOf(Color(0xFF4EBA82), Color(0xFF82DDB0))
-    val indigoGradient = listOf(Color(0xFF5C7BE0), Color(0xFF90A8F4))
-}
-
-// ──────────────────────────────────────────────
-// Single button
-// ──────────────────────────────────────────────
-
+// ─────────────────────────────────────────────
+//  Public composable
+// ─────────────────────────────────────────────
+/**
+ * QuickActionButton
+ *
+ * A full-width or half-width pill button with icon + label.
+ * Used for primary CTAs like "Add Income" and "Add Expense".
+ *
+ * @param label         Button label text.
+ * @param icon          Leading icon.
+ * @param backgroundColor  Fill color of the button.
+ * @param contentColor  Icon and text color (default white).
+ * @param onClick       Click callback — wire up navigation/dialog later.
+ * @param modifier      External layout modifier.
+ * @param elevation     Shadow elevation.
+ */
 @Composable
 fun QuickActionButton(
-    data: QuickActionData,
-    onClick: () -> Unit,
+    label: String,
+    icon: ImageVector = Icons.Default.Add,
+    backgroundColor: Color,
+    contentColor: Color = ButtonTextWhite,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
-    iconSize: Dp = 24.dp,
-    buttonSize: Dp = 58.dp
+    elevation: Dp = 6.dp
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.91f else 1f,
-        animationSpec = spring(dampingRatio = 0.55f, stiffness = 600f),
-        label = "quick_action_scale"
-    )
-
-    val buttonShape = RoundedCornerShape(18.dp)
-
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // ── Icon button ──────────────────────────
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .scale(scale)
-                .size(buttonSize)
-                .shadow(
-                    elevation = 10.dp,
-                    shape = buttonShape,
-                    ambientColor = data.gradientColors.first().copy(alpha = 0.40f),
-                    spotColor = data.gradientColors.first().copy(alpha = 0.30f)
-                )
-                .clip(buttonShape)
-                .background(
-                    brush = Brush.linearGradient(colors = data.gradientColors)
-                )
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClick
-                )
-        ) {
-            Icon(
-                imageVector = data.icon,
-                contentDescription = data.label,
-                tint = Color.White,
-                modifier = Modifier.size(iconSize)
+    Box(
+        modifier = modifier
+            .shadow(
+                elevation    = elevation,
+                shape        = RoundedCornerShape(50),
+                ambientColor = backgroundColor.copy(alpha = 0.25f),
+                spotColor    = backgroundColor.copy(alpha = 0.35f)
             )
-
-            // Badge
-            if (data.badgeCount > 0) {
-                BadgeBox(count = data.badgeCount)
+    ) {
+        Button(
+            onClick  = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape    = RoundedCornerShape(50),
+            colors   = ButtonDefaults.buttonColors(
+                containerColor = backgroundColor,
+                contentColor   = contentColor
+            ),
+            contentPadding = PaddingValues(horizontal = 20.dp)
+        ) {
+            Row(
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector        = icon,
+                    contentDescription = null,
+                    modifier           = Modifier.size(20.dp),
+                    tint               = contentColor
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text  = label,
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize   = 15.sp,
+                        color      = contentColor
+                    )
+                )
             }
         }
-
-        // ── Label ────────────────────────────────
-        Text(
-            text = data.label,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-            color = Color(0xFF6B6880),
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.widthIn(max = 72.dp)
-        )
     }
 }
 
-// ──────────────────────────────────────────────
-// Row strip (LazyRow — scroll-safe in LazyColumn)
-// ──────────────────────────────────────────────
-
+// ─────────────────────────────────────────────
+//  Convenience row — Add Income + Add Expense
+// ─────────────────────────────────────────────
+/**
+ * QuickActionRow
+ *
+ * Pre-built side-by-side "Add Income" and "Add Expense" buttons.
+ * Callbacks are no-ops until navigation is wired up.
+ */
 @Composable
 fun QuickActionRow(
-    actions: List<QuickActionData>,
-    onActionClick: (QuickActionData) -> Unit,
-    modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp),
-    itemSpacing: Dp = 20.dp
-) {
-    LazyRow(
-        modifier = modifier,
-        contentPadding = contentPadding,
-        horizontalArrangement = Arrangement.spacedBy(itemSpacing)
-    ) {
-        items(actions) { action ->
-            QuickActionButton(
-                data = action,
-                onClick = { onActionClick(action) }
-            )
-        }
-    }
-}
-
-// ──────────────────────────────────────────────
-// Fixed-grid row (for 4–5 actions, no scroll)
-// ──────────────────────────────────────────────
-
-@Composable
-fun QuickActionGrid(
-    actions: List<QuickActionData>,
-    onActionClick: (QuickActionData) -> Unit,
+    onAddIncomeClick: () -> Unit = {},
+    onAddExpenseClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        modifier              = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        actions.forEach { action ->
-            QuickActionButton(
-                data = action,
-                onClick = { onActionClick(action) }
-            )
-        }
-    }
-}
-
-// ──────────────────────────────────────────────
-// Sub-composables
-// ──────────────────────────────────────────────
-
-@Composable
-private fun BadgeBox(count: Int) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(top = 6.dp, end = 6.dp)
-            .size(16.dp)
-            .clip(RoundedCornerShape(50))
-            .background(Color(0xFFFF4D6D))
-    ) {
-        Text(
-            text = if (count > 9) "9+" else count.toString(),
-            style = MaterialTheme.typography.labelSmall,
-            color = Color.White,
-            fontWeight = FontWeight.Bold
+        QuickActionButton(
+            label           = "+ Add Income",
+            backgroundColor = AddIncomeGreen,
+            onClick         = onAddIncomeClick,
+            modifier        = Modifier.weight(1f)
+        )
+        QuickActionButton(
+            label           = "+ Add Expense",
+            backgroundColor = AddExpenseRed,
+            onClick         = onAddExpenseClick,
+            modifier        = Modifier.weight(1f)
         )
     }
 }
 
-private fun Modifier.align(alignment: Alignment): Modifier = this
-
-// ──────────────────────────────────────────────
-// Preview
-// ──────────────────────────────────────────────
-
-@Preview(showBackground = true, backgroundColor = 0xFFF3EEFF)
+// ─────────────────────────────────────────────
+//  Preview
+// ─────────────────────────────────────────────
+@Preview(showBackground = true, backgroundColor = 0xFFF5F3FF)
 @Composable
-fun QuickActionButtonPreview() {
+private fun QuickActionRowPreview() {
     MaterialTheme {
-        Box(modifier = Modifier.padding(20.dp)) {
-            QuickActionGrid(
-                actions = listOf(
-                    QuickActionData(
-                        label = "Send",
-                        icon = Icons.Rounded.Send,
-                        gradientColors = QuickActionDefaults.purpleGradient
-                    ),
-                    QuickActionData(
-                        label = "Receive",
-                        icon = Icons.Rounded.CallReceived,
-                        gradientColors = QuickActionDefaults.tealGradient
-                    ),
-                    QuickActionData(
-                        label = "Pay",
-                        icon = Icons.Rounded.Payments,
-                        gradientColors = QuickActionDefaults.peachGradient
-                    ),
-                    QuickActionData(
-                        label = "History",
-                        icon = Icons.Rounded.History,
-                        gradientColors = QuickActionDefaults.indigoGradient,
-                        badgeCount = 3
-                    )
-                ),
-                onActionClick = {}
-            )
+        Box(modifier = Modifier.padding(16.dp)) {
+            QuickActionRow()
         }
     }
 }
