@@ -34,9 +34,9 @@ import com.example.financeflow.navigation.BottomNavItem
 //  Design Tokens — Fintech Palette
 // ─────────────────────────────────────────────
 private val NavBarBackground   = Color(0xFFFFFFFF)
-private val SelectedBubble     = Color(0xFFEDE7FF) // Soft Lavender indicator
-private val SelectedIconTint   = Color(0xFF7C4DFF) // Vibrant Purple
-private val UnselectedIconTint = Color(0xFFB0B0C3) // Muted Gray-Blue
+private val SelectedBubble     = Color(0xFFEDE7FF)
+private val SelectedIconTint   = Color(0xFF7C4DFF)
+private val UnselectedIconTint = Color(0xFFB0B0C3)
 private val SelectedLabelColor = Color(0xFF7C4DFF)
 
 private val bottomNavItems = listOf(
@@ -51,34 +51,31 @@ private val bottomNavItems = listOf(
 /**
  * BottomNavigationBar
  *
- * Custom floating fintech-style navigation bar.
- * Replaces default Material3 NavigationBar with a slimmed-down Surface
- * to match the high-end Figma design.
+ * Floating pill-shaped fintech nav bar.
+ * Compact version to prevent "short screen" feeling.
  */
 @Composable
 fun BottomNavigationBar(
     currentDestination: NavDestination?,
     onItemClick: (BottomNavItem) -> Unit
 ) {
-    // Box provides the floating container with padding from screen edges
+    // We use a small bottom padding to stay above system navigation bar
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 14.dp)
+            .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+            .padding(horizontal = 24.dp, vertical = 8.dp)
     ) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp),
+                .height(64.dp), // More compact height
             color = NavBarBackground,
             shape = RoundedCornerShape(32.dp),
-            shadowElevation = 16.dp // Soft elevation
+            shadowElevation = 12.dp
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -98,11 +95,6 @@ fun BottomNavigationBar(
     }
 }
 
-/**
- * BottomNavTab
- *
- * Individual tab with animated circular indicator and scaling icon.
- */
 @Composable
 private fun RowScope.BottomNavTab(
     item: BottomNavItem,
@@ -111,9 +103,8 @@ private fun RowScope.BottomNavTab(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
-    // Animations
     val iconScale by animateFloatAsState(
-        targetValue   = if (isSelected) 1.25f else 1.0f,
+        targetValue   = if (isSelected) 1.2f else 1.0f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label         = "icon_scale"
     )
@@ -124,7 +115,7 @@ private fun RowScope.BottomNavTab(
     )
 
     val bubbleSize by animateDpAsState(
-        targetValue   = if (isSelected) 46.dp else 0.dp,
+        targetValue   = if (isSelected) 42.dp else 0.dp,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
         label         = "bubble_size"
     )
@@ -135,17 +126,13 @@ private fun RowScope.BottomNavTab(
             .fillMaxHeight()
             .clickable(
                 interactionSource = interactionSource,
-                indication        = null, // Clean look without standard ripple
+                indication        = null,
                 onClick           = onClick
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(48.dp)
-        ) {
-            // Animated Circular Selection Indicator
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(44.dp)) {
             if (bubbleSize > 0.dp) {
                 Box(
                     modifier = Modifier
@@ -154,30 +141,24 @@ private fun RowScope.BottomNavTab(
                         .background(SelectedBubble)
                 )
             }
-
             Icon(
-                imageVector        = item.icon,
+                imageVector = item.icon,
                 contentDescription = item.title,
-                tint               = iconTint,
-                modifier           = Modifier
-                    .size(24.dp)
-                    .graphicsLayer {
-                        scaleX = iconScale
-                        scaleY = iconScale
-                    }
+                tint = iconTint,
+                modifier = Modifier.size(22.dp).graphicsLayer {
+                    scaleX = iconScale
+                    scaleY = iconScale
+                }
             )
         }
-
-        // Animated label visibility
         if (isSelected) {
             Text(
                 text  = item.title,
                 style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize   = 9.sp,
+                    fontSize = 8.sp,
                     fontWeight = FontWeight.Bold,
-                    color      = SelectedLabelColor
-                ),
-                modifier = Modifier.padding(top = 2.dp)
+                    color = SelectedLabelColor
+                )
             )
         }
     }
