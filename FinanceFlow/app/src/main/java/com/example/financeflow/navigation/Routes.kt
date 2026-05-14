@@ -1,10 +1,14 @@
 package com.example.financeflow.navigation
 
-sealed class Routes(val route: String) {
+object Routes {
 
-    data object Login : Routes("login")
+    const val LOGIN = "login"
+    const val REGISTER = "register"
+    const val HOME = "home"
 
-    data object Register : Routes("register")
-
-    data object Home : Routes("home")
+    const val INCOME = "income"
+    const val EXPENSES = "expenses"
+    const val SAVINGS = "savings"
+    const val GOALS = "goals"
+    const val INSIGHTS = "insights"
 }

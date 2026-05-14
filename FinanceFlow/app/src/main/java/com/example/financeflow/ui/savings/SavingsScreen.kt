@@ -1,10 +1,9 @@
-package com.example.financeflow.ui.screens.auth
+package com.example.financeflow.ui.savings
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 
 @Composable
-fun LoginScreen() {
-
-    Text("Login Screen")
+fun SavingsScreen() {
+    Text("Savings Screen")
 }
