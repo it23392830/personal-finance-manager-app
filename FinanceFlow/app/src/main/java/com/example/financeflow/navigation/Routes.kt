@@ -11,4 +11,5 @@ object Routes {
     const val SAVINGS = "savings"
     const val GOALS = "goals"
     const val INSIGHTS = "insights"
+    const val DASHBOARD = "dashboard"
 }

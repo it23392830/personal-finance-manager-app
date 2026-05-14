@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.financeflow.ui.auth.LoginScreen
 import com.example.financeflow.ui.auth.RegisterScreen
+import com.example.financeflow.ui.dashboard.DashboardScreen
 import com.example.financeflow.ui.dashboard.HomeScreen
 import com.example.financeflow.ui.income.IncomeScreen
 import com.example.financeflow.ui.expenses.ExpensesScreen
@@ -24,7 +25,7 @@ fun AppNavGraph() {
     ) {
 
         composable(Routes.LOGIN) {
-            LoginScreen()
+            LoginScreen(navController)
         }
 
         composable(Routes.REGISTER) {
@@ -53,6 +54,10 @@ fun AppNavGraph() {
 
         composable(Routes.INSIGHTS) {
             InsightsScreen()
+        }
+
+        composable(Routes.DASHBOARD) {
+            DashboardScreen()
         }
     }
 }

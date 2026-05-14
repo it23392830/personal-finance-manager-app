@@ -16,9 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import com.example.financeflow.navigation.Routes
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(
+    navController: NavHostController
+) {
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -66,7 +70,7 @@ fun LoginScreen() {
 
         Button(
             onClick = {
-
+                navController.navigate(Routes.DASHBOARD)
             }
         ) {
 
