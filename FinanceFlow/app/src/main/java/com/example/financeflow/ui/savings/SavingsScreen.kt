@@ -19,17 +19,17 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.financeflow.navigation.Routes
-import com.example.financeflow.ui.components.BackgroundPurple
-import com.example.financeflow.ui.components.HeaderCard
-import com.example.financeflow.ui.components.LifetimeStatisticsCard
-import com.example.financeflow.ui.components.SavingGoal
-import com.example.financeflow.ui.components.SavingHistoryEntry
-import com.example.financeflow.ui.components.SavingsByGoalCard
-import com.example.financeflow.ui.components.SavingsHistoryCard
+import com.example.financeflow.ui.components.savings.BackgroundPurple
+import com.example.financeflow.ui.components.savings.HeaderCard
+import com.example.financeflow.ui.components.savings.LifetimeStatisticsCard
+import com.example.financeflow.ui.components.savings.SavingGoal
+import com.example.financeflow.ui.components.savings.SavingHistoryEntry
+import com.example.financeflow.ui.components.savings.SavingsByGoalCard
+import com.example.financeflow.ui.components.savings.SavingsHistoryCard
 import com.example.financeflow.ui.components.SavingsInsightsCard
-import com.example.financeflow.ui.components.SavingsThisMonthCard
-import com.example.financeflow.ui.components.defaultGoals
-import com.example.financeflow.ui.components.dummyHistory
+import com.example.financeflow.ui.components.savings.SavingsThisMonthCard
+import com.example.financeflow.ui.components.savings.defaultGoals
+import com.example.financeflow.ui.components.savings.dummyHistory
 
 // SavingsScreen
 //
@@ -90,7 +90,10 @@ fun SavingsScreen(navController: NavController) {
         item {
             HeaderCard(
                 selectedMonth = "May 2026",
-                onMonthSelected = { /* UI only */ }
+                onMonthSelected = { /* UI only */ },
+                onProfileClick = {
+                    navController.navigate(Routes.PROFILE)
+                }
             )
         }
 
