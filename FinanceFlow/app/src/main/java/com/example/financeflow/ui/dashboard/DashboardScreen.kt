@@ -1,0 +1,130 @@
+package com.example.financeflow.ui.dashboard
+
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.*
+import com.example.financeflow.navigation.BottomNavItem
+import com.example.financeflow.navigation.Routes
+import com.example.financeflow.ui.components.BottomNavigationBar
+import com.example.financeflow.ui.expenses.ExpensesScreen
+import com.example.financeflow.ui.goals.GoalsScreen
+import com.example.financeflow.ui.dashboard.HomeScreen
+import com.example.financeflow.ui.income.IncomeScreen
+import com.example.financeflow.ui.insights.DailyReportScreen
+import com.example.financeflow.ui.insights.InsightsScreen
+import com.example.financeflow.ui.insights.MonthlyReportScreen
+import com.example.financeflow.ui.insights.WeeklyReportScreen
+import com.example.financeflow.ui.savings.SavingsScreen
+
+@Composable
+fun DashboardScreen(rootNavController: NavHostController) {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
+    Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        bottomBar = {
+            BottomNavigationBar(
+                currentDestination = currentDestination,
+                onItemClick = { item ->
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        val topPadding = WindowInsets.systemBars.asPaddingValues().calculateTopPadding()
+        
+        NavHost(
+            navController = navController,
+            startDestination = Routes.HOME,
+            modifier = Modifier.padding(top = topPadding)
+        ) {
+            composable(Routes.HOME) { 
+                HomeScreen(
+                    onAddIncomeClick = { rootNavController.navigate(Routes.ADD_INCOME) },
+                    onAddExpenseClick = { rootNavController.navigate(Routes.EXPENSES) },
+                    onIncomeClick = { navController.navigate(Routes.INCOME) },
+                    onGoalsClick = { navController.navigate(Routes.GOALS) },
+                    onExpensesClick = { navController.navigate(Routes.EXPENSES) },
+                    onSavingsClick = { navController.navigate(Routes.SAVINGS) },
+                    onGoalCardClick = { navController.navigate(Routes.GOALS) }
+                )
+            }
+            composable(Routes.INCOME) { IncomeScreen(rootNavController) }
+            composable(Routes.EXPENSES) { ExpensesScreen() }
+            composable(Routes.SAVINGS) { SavingsScreen() }
+            composable(Routes.GOALS) { GoalsScreen() }
+            composable(Routes.INSIGHTS) { 
+                InsightsScreen(
+                    onViewReports = { navController.navigate(Routes.DAILY_REPORT) }
+                )
+            }
+
+            composable(Routes.DAILY_REPORT) {
+                DailyReportScreen(
+                    onNavigateUp = { navController.popBackStack() },
+                    onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
+                    onTabSelected = { tab ->
+                        when (tab) {
+                            "Weekly" -> navController.navigate(Routes.WEEKLY_REPORT) {
+                                popUpTo(Routes.DAILY_REPORT) { inclusive = true }
+                            }
+                            "Monthly" -> navController.navigate(Routes.MONTHLY_REPORT) {
+                                popUpTo(Routes.DAILY_REPORT) { inclusive = true }
+                            }
+                        }
+                    }
+                )
+            }
+
+            composable(Routes.WEEKLY_REPORT) {
+                WeeklyReportScreen(
+                    onNavigateUp = { navController.popBackStack() },
+                    onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
+                    onTabSelected = { tab ->
+                        when (tab) {
+                            "Daily" -> navController.navigate(Routes.DAILY_REPORT) {
+                                popUpTo(Routes.WEEKLY_REPORT) { inclusive = true }
+                            }
+                            "Monthly" -> navController.navigate(Routes.MONTHLY_REPORT) {
+                                popUpTo(Routes.WEEKLY_REPORT) { inclusive = true }
+                            }
+                        }
+                    }
+                )
+            }
+
+            composable(Routes.MONTHLY_REPORT) {
+                MonthlyReportScreen(
+                    onNavigateUp = { navController.popBackStack() },
+                    onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
+                    onTabSelected = { tab ->
+                        when (tab) {
+                            "Daily" -> navController.navigate(Routes.DAILY_REPORT) {
+                                popUpTo(Routes.MONTHLY_REPORT) { inclusive = true }
+                            }
+                            "Weekly" -> navController.navigate(Routes.WEEKLY_REPORT) {
+                                popUpTo(Routes.MONTHLY_REPORT) { inclusive = true }
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
