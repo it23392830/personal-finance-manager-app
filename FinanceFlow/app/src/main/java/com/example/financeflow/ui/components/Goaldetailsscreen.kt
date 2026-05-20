@@ -41,7 +41,9 @@ private val CardWhite  = Color(0xFFFFFFFF)
 // No ViewModel / Repository / Navigation / Firebase.
 
 @Composable
-fun GoalDetailsScreen() {
+fun GoalDetailsScreen(
+    onAddContribution: () -> Unit = {}
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -69,7 +71,7 @@ fun GoalDetailsScreen() {
         }
 
         // ── 3. Add Contribution button card
-        item { AddContributionCard(onAddContribution = { /* UI stub */ }) }
+        item { AddContributionCard(onAddContribution = onAddContribution) }
 
         // ── 4. Contribution History
         item {
