@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -383,8 +386,12 @@ fun SavingsByGoalCard(goals: List<SavingGoal> = dummyGoals) {
 @Composable
 fun GoalProgressItem(
     goal: SavingGoal,
-    onMoreClick: () -> Unit = {}
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {}
 ) {
+    // Each goal row owns its own menu state so cards open independently.
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxWidth()) {
 
         // Top row: name, amount, menu icon
@@ -407,15 +414,26 @@ fun GoalProgressItem(
                 color = Color.DarkGray
             )
             Spacer(modifier = Modifier.width(4.dp))
-            IconButton(
-                onClick = onMoreClick,
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "More options",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(18.dp)
+            Box {
+                // The menu icon acts as the anchor for the floating action card.
+                IconButton(
+                    onClick = { menuExpanded = true },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "More options",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                // The popup opens directly below the three-dot icon.
+                ActionMenuCard(
+                    expanded = menuExpanded,
+                    onDismiss = { menuExpanded = false },
+                    onEdit = onEditClick,
+                    onDelete = onDeleteClick
                 )
             }
         }
