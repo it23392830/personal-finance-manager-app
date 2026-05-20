@@ -22,6 +22,7 @@ import com.example.financeflow.ui.expenses.ExpensesScreen
 import com.example.financeflow.ui.goals.GoalsScreen
 import com.example.financeflow.ui.income.IncomeScreen
 import com.example.financeflow.ui.insights.InsightsScreen
+import com.example.financeflow.ui.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.SavingsScreen
 
 private val bottomNavRoutes = setOf(
@@ -73,10 +74,11 @@ fun AppNavGraph() {
             composable(Routes.HOME)      { HomeScreen() }
             composable(Routes.INCOME)    { IncomeScreen() }
             composable(Routes.EXPENSES)  { ExpensesScreen() }
-            composable(Routes.SAVINGS)   { SavingsScreen() }
+            composable(Routes.SAVINGS)   { SavingsScreen(navController) }
             composable(Routes.GOALS)     { GoalsScreen() }
             composable(Routes.INSIGHTS)  { InsightsScreen() }
             composable(Routes.DASHBOARD) { DashboardScreen() }
+            composable(Routes.GOAL_DETAILS) { GoalDetailsScreen() }
         }
     }
 }
