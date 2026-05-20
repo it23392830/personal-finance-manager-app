@@ -54,7 +54,10 @@ val dummyHistory = listOf(
 )
 
 @Composable
-fun SavingsHistoryCard(entries: List<SavingHistoryEntry> = dummyHistory) {
+fun SavingsHistoryCard(
+    entries: List<SavingHistoryEntry> = dummyHistory,
+    onEditClick: () -> Unit = {}
+) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Savings History",
@@ -65,7 +68,10 @@ fun SavingsHistoryCard(entries: List<SavingHistoryEntry> = dummyHistory) {
         )
 
         entries.forEach { entry ->
-            HistoryItem(entry = entry)
+            HistoryItem(
+                entry = entry,
+                onEditClick = onEditClick
+            )
             Spacer(modifier = Modifier.height(10.dp))
         }
     }
@@ -131,8 +137,8 @@ fun HistoryItem(
                     ActionMenuCard(
                         expanded = menuExpanded,
                         onDismiss = { menuExpanded = false },
-                        onEdit = onEditClick,
-                        onDelete = onDeleteClick
+                        onEditClick = onEditClick,
+                        onDeleteClick = onDeleteClick
                     )
                 }
             }
