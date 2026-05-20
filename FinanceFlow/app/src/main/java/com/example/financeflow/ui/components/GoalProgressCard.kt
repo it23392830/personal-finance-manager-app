@@ -59,7 +59,7 @@ data class GoalProgressData(
         get() = currentDailyRate >= dailySavingsNeeded
 }
 
-/** New Saving Goal Data Model */
+// SavingGoal — data model for a single saving goal row
 data class SavingGoal(
     val name: String,
     val savedAmount: String,
@@ -68,11 +68,11 @@ data class SavingGoal(
     val progressLabel: String     // e.g. "40.1% complete"
 )
 
-// Dummy Data
+// defaultGoals — used as the initial list for the Savings by Goal section.
 
 fun goalProgressSample() = GoalProgressData()
 
-val dummyGoals = listOf(
+val defaultGoals: List<SavingGoal> = listOf(
     SavingGoal(
         name = "MacBook Pro M4",
         savedAmount = "LKR 196,400",
@@ -95,6 +95,9 @@ val dummyGoals = listOf(
         progressLabel = "13.3% complete"
     )
 )
+
+// Keep the old name so existing callers do not need to change.
+val dummyGoals: List<SavingGoal> = defaultGoals
 
 // Composables (Original)
 
@@ -344,10 +347,20 @@ private fun DailySavingsPanel(
     }
 }
 
-// Composables (New)
-
+// SavingsByGoalCard
+//
+// Wrapper card that lists every GoalProgressItem.
+//
+// Parameters:
+//   goals          - live list driven from SavingsScreen state
+//   onEditClick    - called with the tapped goal
+//   onDeleteClick  - called with the tapped goal
 @Composable
-fun SavingsByGoalCard(goals: List<SavingGoal> = dummyGoals) {
+fun SavingsByGoalCard(
+    goals: List<SavingGoal> = defaultGoals,
+    onEditClick: (SavingGoal) -> Unit = {},
+    onDeleteClick: (SavingGoal) -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -367,34 +380,53 @@ fun SavingsByGoalCard(goals: List<SavingGoal> = dummyGoals) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Goal rows
-            goals.forEachIndexed { index, goal ->
-                GoalProgressItem(goal = goal)
-                // Divider between items but not after last
-                if (index < goals.lastIndex) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 14.dp),
-                        color = Color(0xFFF0F0F0),
-                        thickness = 1.dp
+            if (goals.isEmpty()) {
+                // Friendly empty state
+                Text(
+                    text = "No goals yet. Add one to get started!",
+                    fontSize = 13.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            } else {
+                goals.forEachIndexed { index, goal ->
+                    GoalProgressItem(
+                        goal = goal,
+                        onEditClick = { onEditClick(goal) },
+                        onDeleteClick = { onDeleteClick(goal) }
                     )
+                    // Divider between rows, not after the last one
+                    if (index < goals.lastIndex) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 14.dp),
+                            color = Color(0xFFF0F0F0),
+                            thickness = 1.dp
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+// GoalProgressItem
+//
+// A single goal row containing:
+//   - Goal name + saved amount + three-dot menu
+//   - Orange rounded progress bar
+//   - Progress label and target amount
 @Composable
 fun GoalProgressItem(
     goal: SavingGoal,
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {}
 ) {
-    // Each goal row owns its own menu state so cards open independently.
+    // Controls visibility of the action dropdown.
     var menuExpanded by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
 
-        // Top row: name, amount, menu icon
+        // Top row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -415,10 +447,10 @@ fun GoalProgressItem(
             )
             Spacer(modifier = Modifier.width(4.dp))
             Box {
-                // The menu icon acts as the anchor for the floating action card.
+                // Three-dot button + action menu
                 IconButton(
                     onClick = { menuExpanded = true },
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(28.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
@@ -428,19 +460,24 @@ fun GoalProgressItem(
                     )
                 }
 
-                // The popup opens directly below the three-dot icon.
                 ActionMenuCard(
                     expanded = menuExpanded,
                     onDismiss = { menuExpanded = false },
-                    onEdit = onEditClick,
-                    onDelete = onDeleteClick
+                    onEditClick = {
+                        menuExpanded = false
+                        onEditClick()
+                    },
+                    onDeleteClick = {
+                        menuExpanded = false
+                        onDeleteClick()
+                    }
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Orange progress bar
+        // Orange rounded progress bar
         LinearProgressIndicator(
             progress = { goal.progressPercent },
             modifier = Modifier
@@ -453,7 +490,7 @@ fun GoalProgressItem(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Bottom row: progress label left, target right
+        // Bottom labels
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -499,7 +536,17 @@ fun PreviewSavingsByGoalCard() {
 fun PreviewGoalProgressItem() {
     MaterialTheme {
         Box(modifier = Modifier.padding(16.dp)) {
-            GoalProgressItem(goal = dummyGoals[0])
+            GoalProgressItem(goal = defaultGoals[0])
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFEDE2FF, name = "Empty Goal List")
+@Composable
+fun PreviewEmptyGoalCard() {
+    MaterialTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            SavingsByGoalCard(goals = emptyList())
         }
     }
 }
