@@ -6,6 +6,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -17,11 +21,11 @@ import androidx.compose.ui.unit.sp
 
 // Data model for a single history entry
 data class SavingHistoryEntry(
-    val month: String,       // e.g. "May 2026"
-    val date: String,        // e.g. "2026.05.05"
-    val savingRate: String,  // e.g. "28%"
-    val income: String,      // e.g. "LKR 187,500"
-    val saved: String        // e.g. "LKR 53,200"
+    val month: String,
+    val date: String,
+    val savingRate: String,
+    val income: String,
+    val saved: String
 )
 
 // Hardcoded dummy history entries
@@ -48,6 +52,7 @@ val dummyHistory = listOf(
         saved = "LKR 48,900"
     )
 )
+
 @Composable
 fun SavingsHistoryCard(entries: List<SavingHistoryEntry> = dummyHistory) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -59,18 +64,21 @@ fun SavingsHistoryCard(entries: List<SavingHistoryEntry> = dummyHistory) {
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        // One card per entry
         entries.forEach { entry ->
             HistoryItem(entry = entry)
             Spacer(modifier = Modifier.height(10.dp))
         }
     }
 }
+
 @Composable
 fun HistoryItem(
     entry: SavingHistoryEntry,
-    onMoreClick: () -> Unit = {}
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {}
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -79,8 +87,6 @@ fun HistoryItem(
         colors = CardDefaults.cardColors(containerColor = CardWhite)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-
-            // Header row: month, date, savings-rate badge, 3-dot
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -100,7 +106,6 @@ fun HistoryItem(
                     )
                 }
 
-                // Savings rate badge (orange text)
                 Text(
                     text = entry.savingRate,
                     fontSize = 16.sp,
@@ -110,15 +115,24 @@ fun HistoryItem(
 
                 Spacer(modifier = Modifier.width(4.dp))
 
-                IconButton(
-                    onClick = onMoreClick,
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "More",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(18.dp)
+                Box {
+                    IconButton(
+                        onClick = { menuExpanded = true },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    ActionMenuCard(
+                        expanded = menuExpanded,
+                        onDismiss = { menuExpanded = false },
+                        onEdit = onEditClick,
+                        onDelete = onDeleteClick
                     )
                 }
             }
@@ -128,12 +142,10 @@ fun HistoryItem(
                 color = Color(0xFFF0F0F0)
             )
 
-            // Income / Saved row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Income column
                 Column {
                     Text(text = "Income", fontSize = 12.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(4.dp))
@@ -145,7 +157,6 @@ fun HistoryItem(
                     )
                 }
 
-                // Saved column (right-aligned, orange)
                 Column(horizontalAlignment = Alignment.End) {
                     Text(text = "Saved", fontSize = 12.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(4.dp))
@@ -161,7 +172,6 @@ fun HistoryItem(
     }
 }
 
-// Previews
 @Preview(showBackground = true, backgroundColor = 0xFFEDE2FF)
 @Composable
 fun PreviewSavingsHistoryCard() {
