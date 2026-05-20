@@ -10,6 +10,6 @@ object Routes {
     const val GOALS = "goals"
     const val INSIGHTS = "insights"
     const val DASHBOARD = "dashboard"
-    const val GOAL_DETAILS = "goal_details"
     const val ADD_SAVING = "add_saving"
+    const val GOAL_DETAILS = "goal_details"
 }
