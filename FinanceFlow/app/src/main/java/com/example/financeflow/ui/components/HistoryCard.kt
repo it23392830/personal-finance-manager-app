@@ -56,7 +56,8 @@ val dummyHistory = listOf(
 @Composable
 fun SavingsHistoryCard(
     entries: List<SavingHistoryEntry> = dummyHistory,
-    onEditClick: () -> Unit = {}
+    onEditClick: () -> Unit = {},
+    onDeleteClick: (SavingHistoryEntry) -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -70,7 +71,8 @@ fun SavingsHistoryCard(
         entries.forEach { entry ->
             HistoryItem(
                 entry = entry,
-                onEditClick = onEditClick
+                onEditClick = onEditClick,
+                onDeleteClick = { onDeleteClick(entry) }
             )
             Spacer(modifier = Modifier.height(10.dp))
         }
@@ -83,6 +85,7 @@ fun HistoryItem(
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {}
 ) {
+    // Controls whether the three-dot menu is expanded for this row.
     var menuExpanded by remember { mutableStateOf(false) }
 
     Card(
@@ -122,6 +125,7 @@ fun HistoryItem(
                 Spacer(modifier = Modifier.width(4.dp))
 
                 Box {
+                    // The MoreVert icon anchors the action menu for each record.
                     IconButton(
                         onClick = { menuExpanded = true },
                         modifier = Modifier.size(24.dp)
@@ -137,8 +141,14 @@ fun HistoryItem(
                     ActionMenuCard(
                         expanded = menuExpanded,
                         onDismiss = { menuExpanded = false },
-                        onEditClick = onEditClick,
-                        onDeleteClick = onDeleteClick
+                        onEditClick = {
+                            onEditClick()
+                            menuExpanded = false
+                        },
+                        onDeleteClick = {
+                            onDeleteClick()
+                            menuExpanded = false
+                        }
                     )
                 }
             }
