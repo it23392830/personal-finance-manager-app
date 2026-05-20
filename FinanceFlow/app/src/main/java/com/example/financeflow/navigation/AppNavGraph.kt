@@ -84,11 +84,3 @@ fun AppNavGraph() {
         }
     }
 }
-
-// ─────────────────────────────────────────────
-//  Stub screens
-// ─────────────────────────────────────────────
-@Composable
-fun GoalsScreen() {
-    // Content should have some bottom padding to not be hidden by floating nav
-}
