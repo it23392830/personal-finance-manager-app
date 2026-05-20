@@ -20,6 +20,10 @@ import com.example.financeflow.ui.components.BottomNavigationBar
 import com.example.financeflow.ui.dashboard.DashboardScreen
 import com.example.financeflow.ui.dashboard.HomeScreen
 import com.example.financeflow.ui.income.*
+import com.example.financeflow.ui.insights.DailyReportScreen
+import com.example.financeflow.ui.insights.InsightsScreen
+import com.example.financeflow.ui.insights.MonthlyReportScreen
+import com.example.financeflow.ui.insights.WeeklyReportScreen
 
 private val bottomNavRoutes = setOf(
     Routes.HOME,
@@ -117,8 +121,63 @@ fun AppNavGraph() {
             composable(Routes.EXPENSES)  { ExpensesScreen() }
             composable(Routes.SAVINGS)   { SavingsScreen() }
             composable(Routes.GOALS)     { GoalsScreen() }
-            composable(Routes.INSIGHTS)  { InsightsScreen() }
+            composable(Routes.INSIGHTS)  { 
+                InsightsScreen(
+                    onViewReports = { navController.navigate(Routes.DAILY_REPORT) }
+                )
+            }
             composable(Routes.DASHBOARD) { DashboardScreen(navController) }
+
+            composable(Routes.DAILY_REPORT) {
+                DailyReportScreen(
+                    onNavigateUp = { navController.popBackStack() },
+                    onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
+                    onTabSelected = { tab ->
+                        when (tab) {
+                            "Weekly" -> navController.navigate(Routes.WEEKLY_REPORT) {
+                                popUpTo(Routes.DAILY_REPORT) { inclusive = true }
+                            }
+                            "Monthly" -> navController.navigate(Routes.MONTHLY_REPORT) {
+                                popUpTo(Routes.DAILY_REPORT) { inclusive = true }
+                            }
+                        }
+                    }
+                )
+            }
+
+            composable(Routes.WEEKLY_REPORT) {
+                WeeklyReportScreen(
+                    onNavigateUp = { navController.popBackStack() },
+                    onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
+                    onTabSelected = { tab ->
+                        when (tab) {
+                            "Daily" -> navController.navigate(Routes.DAILY_REPORT) {
+                                popUpTo(Routes.WEEKLY_REPORT) { inclusive = true }
+                            }
+                            "Monthly" -> navController.navigate(Routes.MONTHLY_REPORT) {
+                                popUpTo(Routes.WEEKLY_REPORT) { inclusive = true }
+                            }
+                        }
+                    }
+                )
+            }
+
+            composable(Routes.MONTHLY_REPORT) {
+                MonthlyReportScreen(
+                    onNavigateUp = { navController.popBackStack() },
+                    onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
+                    onTabSelected = { tab ->
+                        when (tab) {
+                            "Daily" -> navController.navigate(Routes.DAILY_REPORT) {
+                                popUpTo(Routes.MONTHLY_REPORT) { inclusive = true }
+                            }
+                            "Weekly" -> navController.navigate(Routes.WEEKLY_REPORT) {
+                                popUpTo(Routes.MONTHLY_REPORT) { inclusive = true }
+                            }
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -132,10 +191,6 @@ fun GoalsScreen() {
 
 @Composable
 fun SavingsScreen() {
-}
-
-@Composable
-fun InsightsScreen() {
 }
 
 @Composable
