@@ -22,6 +22,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.components.*
+import com.example.financeflow.ui.components.savings.GoalProgressCard
+import com.example.financeflow.ui.components.savings.GoalProgressData
 
 // ─────────────────────────────────────────────
 //  Design Tokens
@@ -47,12 +49,12 @@ private val sampleBalanceData = BalanceCardData(
 )
 
 private val sampleGoalData = GoalProgressData(
-    goalTitle           = "MacBook Pro M4 Goal",
-    currentAmount       = 11_200L,
-    targetAmount        = 490_000L,
-    daysRemaining       = 267,
-    dailySavingsNeeded  = 1_794L,
-    currentDailyRate    = 1_774L
+    goalTitle = "MacBook Pro M4 Goal",
+    currentAmount = 11_200L,
+    targetAmount = 490_000L,
+    daysRemaining = 267,
+    dailySavingsNeeded = 1_794L,
+    currentDailyRate = 1_774L
 )
 
 private data class IncomeSourceItem(
