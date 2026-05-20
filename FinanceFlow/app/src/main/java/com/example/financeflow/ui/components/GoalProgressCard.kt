@@ -3,6 +3,7 @@ package com.example.financeflow.ui.components
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -31,7 +32,6 @@ private val ProgressFillStart= Color(0xFF7C4DFF)
 private val ProgressFillEnd  = Color(0xFFB39DDB)
 private val DaysChipBg       = Color(0xFFF3EDFF)
 private val SavingsInfoBg    = Color(0xFFFFFDE7)
-private val SavingsInfoBorder= Color(0xFFFFECB3)
 private val WarningAmber     = Color(0xFFFF9800)
 
 // ─────────────────────────────────────────────
@@ -57,28 +57,19 @@ data class GoalProgressData(
 }
 
 // ─────────────────────────────────────────────
-//  Hardcoded sample  (remove / replace later)
+//  Hardcoded sample
 // ─────────────────────────────────────────────
 fun goalProgressSample() = GoalProgressData()
 
-// ─────────────────────────────────────────────
-//  Public composable
-// ─────────────────────────────────────────────
 /**
  * GoalProgressCard
- *
- * Displays a savings goal with animated progress bar,
- * days remaining chip, and daily savings info panel.
- *
- * @param data      Goal data. Replace with ViewModel state later.
- * @param modifier  External layout modifier.
  */
 @Composable
 fun GoalProgressCard(
     data: GoalProgressData = goalProgressSample(),
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    // Animate progress bar on first composition
     var animationPlayed by remember { mutableStateOf(false) }
     val animatedProgress by animateFloatAsState(
         targetValue    = if (animationPlayed) data.progressFraction else 0f,
@@ -98,28 +89,21 @@ fun GoalProgressCard(
             )
             .clip(RoundedCornerShape(20.dp))
             .background(CardWhite)
+            .clickable(onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-
-            // ── Header row ──────────────────────────────────
             GoalHeaderRow(
                 title         = data.goalTitle,
                 daysRemaining = data.daysRemaining
             )
-
-            // ── Amount row ──────────────────────────────────
             GoalAmountRow(
                 current        = data.currentAmount,
                 target         = data.targetAmount,
                 currencySymbol = data.currencySymbol,
                 percent        = data.progressPercent
             )
-
-            // ── Progress bar ────────────────────────────────
             GoalProgressBar(progress = animatedProgress)
-
-            // ── Savings info panel ──────────────────────────
             DailySavingsPanel(
                 needed         = data.dailySavingsNeeded,
                 currentRate    = data.currentDailyRate,
@@ -129,10 +113,6 @@ fun GoalProgressCard(
         }
     }
 }
-
-// ─────────────────────────────────────────────
-//  Private sub-composables
-// ─────────────────────────────────────────────
 
 @Composable
 private fun GoalHeaderRow(title: String, daysRemaining: Int) {
@@ -149,8 +129,6 @@ private fun GoalHeaderRow(title: String, daysRemaining: Int) {
                 fontSize   = 16.sp
             )
         )
-
-        // Days remaining chip
         Surface(
             shape = RoundedCornerShape(50),
             color = DaysChipBg
@@ -197,7 +175,6 @@ private fun GoalAmountRow(
                 )
             )
         }
-
         Column(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(2.dp)
@@ -224,7 +201,6 @@ private fun GoalAmountRow(
 @Composable
 private fun GoalProgressBar(progress: Float) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        // Percentage label
         Text(
             text  = "${"%.1f".format(progress * 100)}% complete",
             style = MaterialTheme.typography.labelSmall.copy(
@@ -233,8 +209,6 @@ private fun GoalProgressBar(progress: Float) {
                 fontWeight = FontWeight.Medium
             )
         )
-
-        // Custom gradient progress bar
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -300,8 +274,6 @@ private fun DailySavingsPanel(
                     )
                 )
             }
-
-            // On-track indicator
             Surface(
                 shape = RoundedCornerShape(50),
                 color = if (isOnTrack)
@@ -323,9 +295,6 @@ private fun DailySavingsPanel(
     }
 }
 
-// ─────────────────────────────────────────────
-//  Preview
-// ─────────────────────────────────────────────
 @Preview(showBackground = true, backgroundColor = 0xFFF5F3FF)
 @Composable
 private fun GoalProgressCardPreview() {
