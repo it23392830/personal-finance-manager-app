@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -18,6 +17,16 @@ import com.example.financeflow.model.*
 import com.google.firebase.Timestamp
 
 import androidx.navigation.NavController
+import com.example.financeflow.ui.components.Income.AddIncomeDialog
+import com.example.financeflow.ui.components.Income.DeleteIncomeDialog
+import com.example.financeflow.ui.components.Income.EditIncomeDialog
+import com.example.financeflow.ui.components.Income.IncomeCard
+import com.example.financeflow.ui.components.Income.IncomeSummaryCard
+import com.example.financeflow.ui.components.Income.MonthSelector
+import com.example.financeflow.ui.components.Income.MonthYear
+import com.example.financeflow.ui.components.Income.SalaryReminderCard
+import com.example.financeflow.ui.components.Income.TransactionCard
+import com.example.financeflow.ui.components.Income.generateMonthOptions
 
 private val ScreenBg = Color(0xFFF3ECFF)
 private val TextDark = Color(0xFF1F2937)
