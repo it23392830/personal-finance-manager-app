@@ -23,8 +23,8 @@ private val ActionMenuDeleteRed = Color(0xFFEF4444)
 fun ActionMenuCard(
     expanded: Boolean,
     onDismiss: () -> Unit,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     DropdownMenu(
         expanded = expanded,
@@ -37,7 +37,7 @@ fun ActionMenuCard(
         ) {
             Button(
                 onClick = {
-                    onEdit()
+                    onEditClick()
                     onDismiss()
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -52,7 +52,7 @@ fun ActionMenuCard(
 
             Button(
                 onClick = {
-                    onDelete()
+                    onDeleteClick()
                     onDismiss()
                 },
                 modifier = Modifier.fillMaxWidth(),
