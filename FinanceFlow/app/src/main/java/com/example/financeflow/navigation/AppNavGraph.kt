@@ -22,7 +22,7 @@ import com.example.financeflow.ui.expenses.ExpensesScreen
 import com.example.financeflow.ui.goals.GoalsScreen
 import com.example.financeflow.ui.income.IncomeScreen
 import com.example.financeflow.ui.insights.InsightsScreen
-import com.example.financeflow.ui.savings.GoalDetailsScreen
+import com.example.financeflow.ui.savings.AddSavingScreen
 import com.example.financeflow.ui.savings.SavingsScreen
 
 private val bottomNavRoutes = setOf(
@@ -78,7 +78,9 @@ fun AppNavGraph() {
             composable(Routes.GOALS)     { GoalsScreen() }
             composable(Routes.INSIGHTS)  { InsightsScreen() }
             composable(Routes.DASHBOARD) { DashboardScreen() }
-            composable(Routes.GOAL_DETAILS) { GoalDetailsScreen() }
+            composable(Routes.ADD_SAVING) { 
+                AddSavingScreen(onNavigateBack = { navController.popBackStack() }) 
+            }
         }
     }
 }
@@ -88,10 +90,5 @@ fun AppNavGraph() {
 // ─────────────────────────────────────────────
 @Composable
 fun GoalsScreen() {
-    // Content should have some bottom padding to not be hidden by floating nav
-}
-
-@Composable
-fun SavingsScreen() {
     // Content should have some bottom padding to not be hidden by floating nav
 }
