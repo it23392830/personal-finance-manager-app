@@ -23,6 +23,7 @@ import com.example.financeflow.ui.components.BackgroundPurple
 import com.example.financeflow.ui.components.HeaderCard
 import com.example.financeflow.ui.components.LifetimeStatisticsCard
 import com.example.financeflow.ui.components.SavingGoal
+import com.example.financeflow.ui.components.SavingHistoryEntry
 import com.example.financeflow.ui.components.SavingsByGoalCard
 import com.example.financeflow.ui.components.SavingsHistoryCard
 import com.example.financeflow.ui.components.SavingsInsightsCard
@@ -36,12 +37,15 @@ import com.example.financeflow.ui.components.dummyHistory
 //
 // State managed here (no ViewModel):
 //   - goals       : mutableStateListOf for live add/remove
+//   - history     : mutableStateListOf for live history deletes
 //   - editingGoal : the goal currently being edited
+//   - showEditSavingsPopup : controls the savings-record edit popup
+//   - showDeleteDialog : controls the delete confirmation popup
 //
 // Flow:
 //   Three-dot icon -> ActionMenuCard ->
 //     Edit   -> opens EditGoalAllocationScreen
-//     Delete -> removes the selected goal row
+//     Delete -> opens DeleteConfirmationDialog and removes selected item
 @Composable
 fun SavingsScreen(navController: NavController) {
 
@@ -50,8 +54,25 @@ fun SavingsScreen(navController: NavController) {
         mutableStateListOf(*defaultGoals.toTypedArray())
     }
 
+    // Live history list that supports delete actions immediately.
+    val history: SnapshotStateList<SavingHistoryEntry> = remember {
+        mutableStateListOf(*dummyHistory.toTypedArray())
+    }
+
     // Holds the goal currently selected for editing.
     var editingGoal by remember { mutableStateOf<SavingGoal?>(null) }
+
+    // Controls the history-record edit popup overlay.
+    var showEditSavingsPopup by remember { mutableStateOf(false) }
+
+    // Controls the delete confirmation popup.
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    // Tracks which goal should be deleted when the dialog is confirmed.
+    var selectedGoal by remember { mutableStateOf<SavingGoal?>(null) }
+
+    // Tracks which history item should be deleted when the dialog is confirmed.
+    var selectedHistory by remember { mutableStateOf<SavingHistoryEntry?>(null) }
 
     LazyColumn(
         modifier = Modifier
@@ -99,13 +120,25 @@ fun SavingsScreen(navController: NavController) {
             SavingsByGoalCard(
                 goals = goals,
                 onEditClick = { goal -> editingGoal = goal },
-                onDeleteClick = { goal -> goals.remove(goal) }
+                onDeleteClick = { goal ->
+                    selectedGoal = goal
+                    selectedHistory = null
+                    showDeleteDialog = true
+                }
             )
         }
 
         // 5. Savings History
         item {
-            SavingsHistoryCard(entries = dummyHistory)
+            SavingsHistoryCard(
+                entries = history,
+                onEditClick = { showEditSavingsPopup = true },
+                onDeleteClick = { historyEntry ->
+                    selectedHistory = historyEntry
+                    selectedGoal = null
+                    showDeleteDialog = true
+                }
+            )
         }
 
         // 6. Savings Insights card
@@ -123,6 +156,31 @@ fun SavingsScreen(navController: NavController) {
             progressPercent = goal.progressPercent,
             progressLabel = goal.progressLabel,
             onDismiss = { editingGoal = null }
+        )
+    }
+
+    // Overlay popup for editing a savings-history record.
+    if (showEditSavingsPopup) {
+        EditSavingsRecordScreen(
+            onDismiss = { showEditSavingsPopup = false }
+        )
+    }
+
+    // Shared delete dialog for goals and history items.
+    if (showDeleteDialog) {
+        DeleteConfirmationDialog(
+            onDelete = {
+                selectedGoal?.let { goals.remove(it) }
+                selectedHistory?.let { history.remove(it) }
+                selectedGoal = null
+                selectedHistory = null
+                showDeleteDialog = false
+            },
+            onDismiss = {
+                selectedGoal = null
+                selectedHistory = null
+                showDeleteDialog = false
+            }
         )
     }
 }
