@@ -467,6 +467,7 @@ fun GoalProgressItem(
                         menuExpanded = false
                         onEditClick()
                     },
+                    // Delete is handled by the parent screen via callback.
                     onDeleteClick = {
                         menuExpanded = false
                         onDeleteClick()
