@@ -12,6 +12,7 @@ import com.example.financeflow.ui.goals.GoalsScreen
 import com.example.financeflow.ui.dashboard.HomeScreen
 import com.example.financeflow.ui.income.IncomeScreen
 import com.example.financeflow.ui.insights.InsightsScreen
+import com.example.financeflow.ui.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.SavingsScreen
 
 @Composable
@@ -61,9 +62,10 @@ fun DashboardScreen() {
             composable(Routes.HOME) { HomeScreen() }
             composable(Routes.INCOME) { IncomeScreen() }
             composable(Routes.EXPENSES) { ExpensesScreen() }
-            composable(Routes.SAVINGS) { SavingsScreen() }
+            composable(Routes.SAVINGS) { SavingsScreen(navController) }
             composable(Routes.GOALS) { GoalsScreen() }
             composable(Routes.INSIGHTS) { InsightsScreen() }
+            composable(Routes.GOAL_DETAILS) { GoalDetailsScreen() }
         }
     }
 }
