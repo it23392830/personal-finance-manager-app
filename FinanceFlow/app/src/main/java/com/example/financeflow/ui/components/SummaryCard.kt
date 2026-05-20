@@ -18,11 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
-
-// ─────────────────────────────────────────────
 //  Design Tokens
-// ─────────────────────────────────────────────
-private val CardWhite       = Color(0xFFFFFFFF)
+// CardWhite is provided by SavingsCard.kt in the same package
 private val TextPrimary     = Color(0xFF1A1A2E)
 private val TextSecondary   = Color(0xFF6B7280)
 private val PrimaryPurple   = Color(0xFF7C4DFF)
@@ -39,10 +36,7 @@ val IconRed       = Color(0xFFFF5252)
 val IconBlue      = Color(0xFF2196F3)
 val IconOrange    = Color(0xFFFF9800)
 val IconPurple    = Color(0xFF7C4DFF)
-
-// ─────────────────────────────────────────────
 //  Data model
-// ─────────────────────────────────────────────
 data class SummaryCardData(
     val title: String,
     val amount: Long,
@@ -53,10 +47,7 @@ data class SummaryCardData(
     val badgeText: String? = null,       // e.g. "28 %"
     val badgeColor: Color = PrimaryPurple
 )
-
-// ─────────────────────────────────────────────
 //  Hardcoded sample list  (remove / replace later)
-// ─────────────────────────────────────────────
 fun moneyFlowSampleData(): List<SummaryCardData> = listOf(
     SummaryCardData(
         title           = "Total Income",
@@ -88,10 +79,7 @@ fun moneyFlowSampleData(): List<SummaryCardData> = listOf(
         iconBackground  = PastelOrange
     )
 )
-
-// ─────────────────────────────────────────────
 //  Public composable
-// ─────────────────────────────────────────────
 /**
  * SummaryCard
  *
@@ -181,10 +169,6 @@ fun SummaryCard(
         }
     }
 }
-
-// ─────────────────────────────────────────────
-//  Section wrapper — Money Flow list
-// ─────────────────────────────────────────────
 /**
  * MoneyFlowSection
  *
@@ -210,10 +194,7 @@ fun MoneyFlowSection(
         }
     }
 }
-
-// ─────────────────────────────────────────────
 //  Preview
-// ─────────────────────────────────────────────
 @Preview(showBackground = true, backgroundColor = 0xFFF5F3FF)
 @Composable
 private fun SummaryCardPreview() {
