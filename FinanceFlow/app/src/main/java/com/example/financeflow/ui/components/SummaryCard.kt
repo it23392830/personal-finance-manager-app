@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
+import com.example.financeflow.ui.components.savings.CardWhite
+
 //  Design Tokens
 // CardWhite is provided by SavingsCard.kt in the same package
 private val TextPrimary     = Color(0xFF1A1A2E)
