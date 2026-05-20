@@ -111,8 +111,10 @@ fun IncomeScreenContent(
 
             contentPadding =
                 PaddingValues(
-                    horizontal = 16.dp,
-                    vertical = 24.dp
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 24.dp,
+                    bottom = 120.dp
                 ),
 
             verticalArrangement =
@@ -204,15 +206,6 @@ fun IncomeScreenContent(
                     )
 
                 }
-
-            }
-
-            item {
-
-                Spacer(
-                    modifier =
-                        Modifier.height(80.dp)
-                )
 
             }
 
