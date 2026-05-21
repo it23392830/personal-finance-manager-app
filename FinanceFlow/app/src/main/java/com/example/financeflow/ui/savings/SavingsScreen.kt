@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.financeflow.navigation.Routes
+import com.example.financeflow.ui.components.DeleteConfirmationDialog
 import com.example.financeflow.ui.components.savings.BackgroundPurple
 import com.example.financeflow.ui.components.savings.HeaderCard
 import com.example.financeflow.ui.components.savings.LifetimeStatisticsCard
@@ -31,47 +32,21 @@ import com.example.financeflow.ui.components.savings.SavingsThisMonthCard
 import com.example.financeflow.ui.components.savings.defaultGoals
 import com.example.financeflow.ui.components.savings.dummyHistory
 
-// SavingsScreen
-//
-// Root composable for the Savings section of FinanceFlow.
-//
-// State managed here (no ViewModel):
-//   - goals       : mutableStateListOf for live add/remove
-//   - history     : mutableStateListOf for live history deletes
-//   - editingGoal : the goal currently being edited
-//   - showEditSavingsPopup : controls the savings-record edit popup
-//   - showDeleteDialog : controls the delete confirmation popup
-//
-// Flow:
-//   Three-dot icon -> ActionMenuCard ->
-//     Edit   -> opens EditGoalAllocationScreen
-//     Delete -> opens DeleteConfirmationDialog and removes selected item
 @Composable
 fun SavingsScreen(navController: NavController) {
 
-    // Live goal list that supports edit/delete UI updates immediately.
     val goals: SnapshotStateList<SavingGoal> = remember {
         mutableStateListOf(*defaultGoals.toTypedArray())
     }
 
-    // Live history list that supports delete actions immediately.
     val history: SnapshotStateList<SavingHistoryEntry> = remember {
         mutableStateListOf(*dummyHistory.toTypedArray())
     }
 
-    // Holds the goal currently selected for editing.
     var editingGoal by remember { mutableStateOf<SavingGoal?>(null) }
-
-    // Controls the history-record edit popup overlay.
     var showEditSavingsPopup by remember { mutableStateOf(false) }
-
-    // Controls the delete confirmation popup.
     var showDeleteDialog by remember { mutableStateOf(false) }
-
-    // Tracks which goal should be deleted when the dialog is confirmed.
     var selectedGoal by remember { mutableStateOf<SavingGoal?>(null) }
-
-    // Tracks which history item should be deleted when the dialog is confirmed.
     var selectedHistory by remember { mutableStateOf<SavingHistoryEntry?>(null) }
 
     LazyColumn(
@@ -86,7 +61,6 @@ fun SavingsScreen(navController: NavController) {
         ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Header card
         item {
             HeaderCard(
                 selectedMonth = "May 2026",
@@ -97,7 +71,6 @@ fun SavingsScreen(navController: NavController) {
             )
         }
 
-        // 2. Savings This Month card
         item {
             SavingsThisMonthCard(
                 amount = "LKR 53,200",
@@ -109,7 +82,6 @@ fun SavingsScreen(navController: NavController) {
             )
         }
 
-        // 3. Lifetime Statistics card
         item {
             LifetimeStatisticsCard(
                 totalSaved = "LKR 301,600",
@@ -118,7 +90,6 @@ fun SavingsScreen(navController: NavController) {
             )
         }
 
-        // 4. Savings by Goal card with live edit/delete actions
         item {
             SavingsByGoalCard(
                 goals = goals,
@@ -131,7 +102,6 @@ fun SavingsScreen(navController: NavController) {
             )
         }
 
-        // 5. Savings History
         item {
             SavingsHistoryCard(
                 entries = history,
@@ -144,13 +114,11 @@ fun SavingsScreen(navController: NavController) {
             )
         }
 
-        // 6. Savings Insights card
         item {
             SavingsInsightsCard()
         }
     }
 
-    // Floating edit overlay shown when a goal is selected.
     editingGoal?.let { goal ->
         EditGoalAllocationScreen(
             goalName = goal.name,
@@ -162,14 +130,12 @@ fun SavingsScreen(navController: NavController) {
         )
     }
 
-    // Overlay popup for editing a savings-history record.
     if (showEditSavingsPopup) {
         EditSavingsRecordScreen(
             onDismiss = { showEditSavingsPopup = false }
         )
     }
 
-    // Shared delete dialog for goals and history items.
     if (showDeleteDialog) {
         DeleteConfirmationDialog(
             onDelete = {
