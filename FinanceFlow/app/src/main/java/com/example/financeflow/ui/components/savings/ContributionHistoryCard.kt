@@ -23,7 +23,8 @@ data class ContributionEntry(
 )
 
 // Hardcoded dummy contribution entries
-// ─────────────────────────────────────────────────────────────────────────────
+
+
 val dummyContributions = listOf(
     ContributionEntry(
         month  = "May 2026",
