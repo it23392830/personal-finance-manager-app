@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 // Design Tokens
-// CardWhite and OrangeAccent are provided by SavingsCard.kt in the same package
 private val TextPrimary      = Color(0xFF1A1A2E)
 private val TextSecondary    = Color(0xFF6B7280)
 private val PrimaryPurple    = Color(0xFF7C4DFF)
@@ -35,12 +31,10 @@ private val ProgressFillStart= Color(0xFF7C4DFF)
 private val ProgressFillEnd  = Color(0xFFB39DDB)
 private val DaysChipBg       = Color(0xFFF3EDFF)
 private val SavingsInfoBg    = Color(0xFFFFFDE7)
-private val SavingsInfoBorder= Color(0xFFFFECB3)
 private val WarningAmber     = Color(0xFFFF9800)
 
 // Data models
 
-/** Original Goal Data Model */
 data class GoalProgressData(
     val goalTitle: String          = "MacBook Pro M4 Goal",
     val currentAmount: Long        = 11_200L,
@@ -60,7 +54,6 @@ data class GoalProgressData(
         get() = currentDailyRate >= dailySavingsNeeded
 }
 
-// SavingGoal — data model for a single saving goal row
 data class SavingGoal(
     val name: String,
     val savedAmount: String,
@@ -68,8 +61,6 @@ data class SavingGoal(
     val progressPercent: Float,   // 0f – 1f
     val progressLabel: String     // e.g. "40.1% complete"
 )
-
-// defaultGoals — used as the initial list for the Savings by Goal section.
 
 fun goalProgressSample() = GoalProgressData()
 
@@ -97,10 +88,7 @@ val defaultGoals: List<SavingGoal> = listOf(
     )
 )
 
-// Keep the old name so existing callers do not need to change.
 val dummyGoals: List<SavingGoal> = defaultGoals
-
-// Composables (Original)
 
 @Composable
 fun GoalProgressCard(
@@ -108,7 +96,6 @@ fun GoalProgressCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
-    // Animate progress bar on first composition
     var animationPlayed by remember { mutableStateOf(false) }
     val animatedProgress by animateFloatAsState(
         targetValue    = if (animationPlayed) data.progressFraction else 0f,
@@ -132,25 +119,17 @@ fun GoalProgressCard(
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-
-            // Header row
             GoalHeaderRow(
                 title         = data.goalTitle,
                 daysRemaining = data.daysRemaining
             )
-
-            // Amount row
             GoalAmountRow(
                 current        = data.currentAmount,
                 target         = data.targetAmount,
                 currencySymbol = data.currencySymbol,
                 percent        = data.progressPercent
             )
-
-            // Progress bar
             GoalProgressBar(progress = animatedProgress)
-
-            // Savings info panel
             DailySavingsPanel(
                 needed         = data.dailySavingsNeeded,
                 currentRate    = data.currentDailyRate,
@@ -176,8 +155,6 @@ private fun GoalHeaderRow(title: String, daysRemaining: Int) {
                 fontSize   = 16.sp
             )
         )
-
-        // Days remaining chip
         Surface(
             shape = RoundedCornerShape(50),
             color = DaysChipBg
@@ -224,7 +201,6 @@ private fun GoalAmountRow(
                 )
             )
         }
-
         Column(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(2.dp)
@@ -251,7 +227,6 @@ private fun GoalAmountRow(
 @Composable
 private fun GoalProgressBar(progress: Float) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        // Percentage label
         Text(
             text  = "${"%.1f".format(progress * 100)}% complete",
             style = MaterialTheme.typography.labelSmall.copy(
@@ -260,8 +235,6 @@ private fun GoalProgressBar(progress: Float) {
                 fontWeight = FontWeight.Medium
             )
         )
-
-        // Custom gradient progress bar
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -327,8 +300,6 @@ private fun DailySavingsPanel(
                     )
                 )
             }
-
-            // On-track indicator
             Surface(
                 shape = RoundedCornerShape(50),
                 color = if (isOnTrack)
@@ -350,14 +321,6 @@ private fun DailySavingsPanel(
     }
 }
 
-// SavingsByGoalCard
-//
-// Wrapper card that lists every GoalProgressItem.
-//
-// Parameters:
-//   goals          - live list driven from SavingsScreen state
-//   onEditClick    - called with the tapped goal
-//   onDeleteClick  - called with the tapped goal
 @Composable
 fun SavingsByGoalCard(
     goals: List<SavingGoal> = defaultGoals,
@@ -372,19 +335,14 @@ fun SavingsByGoalCard(
         colors = CardDefaults.cardColors(containerColor = CardWhite)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-
-            // Section title
             Text(
                 text = "Savings by Goal",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.DarkGray
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
             if (goals.isEmpty()) {
-                // Friendly empty state
                 Text(
                     text = "No goals yet. Add one to get started!",
                     fontSize = 13.sp,
@@ -398,7 +356,6 @@ fun SavingsByGoalCard(
                         onEditClick = { onEditClick(goal) },
                         onDeleteClick = { onDeleteClick(goal) }
                     )
-                    // Divider between rows, not after the last one
                     if (index < goals.lastIndex) {
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 14.dp),
@@ -412,24 +369,15 @@ fun SavingsByGoalCard(
     }
 }
 
-// GoalProgressItem
-//
-// A single goal row containing:
-//   - Goal name + saved amount + three-dot menu
-//   - Orange rounded progress bar
-//   - Progress label and target amount
 @Composable
 fun GoalProgressItem(
     goal: SavingGoal,
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {}
 ) {
-    // Controls visibility of the action dropdown.
     var menuExpanded by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-
-        // Top row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -450,7 +398,6 @@ fun GoalProgressItem(
             )
             Spacer(modifier = Modifier.width(4.dp))
             Box {
-                // Three-dot button + action menu
                 IconButton(
                     onClick = { menuExpanded = true },
                     modifier = Modifier.size(28.dp)
@@ -470,7 +417,6 @@ fun GoalProgressItem(
                         menuExpanded = false
                         onEditClick()
                     },
-                    // Delete is handled by the parent screen via callback.
                     onDeleteClick = {
                         menuExpanded = false
                         onDeleteClick()
@@ -478,10 +424,7 @@ fun GoalProgressItem(
                 )
             }
         }
-
         Spacer(modifier = Modifier.height(8.dp))
-
-        // Orange rounded progress bar
         LinearProgressIndicator(
             progress = { goal.progressPercent },
             modifier = Modifier
@@ -491,10 +434,7 @@ fun GoalProgressItem(
             trackColor = Color(0xFFF0E6D0),
             strokeCap = StrokeCap.Round
         )
-
         Spacer(modifier = Modifier.height(6.dp))
-
-        // Bottom labels
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -512,8 +452,6 @@ fun GoalProgressItem(
         }
     }
 }
-
-// Previews
 
 @Preview(showBackground = true, backgroundColor = 0xFFF5F3FF)
 @Composable

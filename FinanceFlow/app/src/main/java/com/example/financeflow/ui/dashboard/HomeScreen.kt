@@ -189,7 +189,8 @@ private fun MonthlySummarySection(data: MonthlySummaryData) {
 
         Row(
             modifier              = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment     = Alignment.CenterVertically
         ) {
             SummaryStatTile(
                 label      = "Savings Rate",
@@ -200,6 +201,7 @@ private fun MonthlySummarySection(data: MonthlySummaryData) {
                 textColor  = Color(0xFF2DBD6E),
                 modifier   = Modifier.weight(1f)
             )
+            Spacer(modifier = Modifier.width(12.dp))
             SummaryStatTile(
                 label      = "Optional Budget",
                 value      = "${data.optionalBudgetPercent}%",

@@ -1,0 +1,38 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="400dp"
+    android:height="200dp"
+    android:viewportWidth="400"
+    android:viewportHeight="200">
+    <!-- WELCOME Wordmark and Cats Illustration -->
+    <!-- Base Shadow -->
+    <path
+        android:fillColor="#EEEEEE"
+        android:pathData="M20,175 Q200,185 380,175 L380,185 Q200,195 20,185 Z" />
+
+    <!-- WELCOME Letters (Stylized) -->
+    <path
+        android:fillColor="#3F3D56"
+        android:pathData="M40,165 L55,165 L60,130 L65,165 L80,165 L70,105 L55,105 Z M90,105 L125,105 L125,115 L100,115 L100,130 L120,130 L120,140 L100,140 L100,155 L125,155 L125,165 L90,165 Z M135,105 L145,105 L145,155 L170,155 L170,165 L135,165 Z M180,135 A25,25 0 1,0 230,135 L230,135 A25,25 0 1,0 180,135 M190,135 A15,15 0 1,1 220,135 A15,15 0 1,1 190,135 Z M240,105 L255,105 L265,135 L275,105 L290,105 L290,165 L280,165 L280,125 L270,165 L260,165 L250,125 L250,165 L240,165 Z M300,105 L335,105 L335,115 L310,115 L310,130 L330,130 L330,140 L310,140 L310,155 L335,155 L335,165 L300,165 Z" />
+
+    <!-- Cat 1 (Left) -->
+    <path
+        android:fillColor="#3F3D56"
+        android:pathData="M90,95 Q105,45 120,95 L115,105 L95,105 Z" />
+    <path
+        android:fillColor="#7C4DFF"
+        android:pathData="M100,55 L110,55 L105,65 Z" /> <!-- Bow/Ear detail -->
+
+    <!-- Cat 2 (Right) -->
+    <path
+        android:fillColor="#3F3D56"
+        android:pathData="M270,95 Q285,45 300,95 L295,105 L275,105 Z" />
+    <path
+        android:fillColor="#7C4DFF"
+        android:pathData="M280,55 L290,55 L285,65 Z" />
+
+    <!-- Little dots -->
+    <path android:fillColor="#7C4DFF" android:pathData="M60,80 A3,3 0 1,1 66,80 A3,3 0 1,1 60,80" />
+    <path android:fillColor="#7C4DFF" android:pathData="M160,60 A4,4 0 1,1 168,60 A4,4 0 1,1 160,60" />
+    <path android:fillColor="#7C4DFF" android:pathData="M240,75 A3,3 0 1,1 246,75 A3,3 0 1,1 240,75" />
+    <path android:fillColor="#7C4DFF" android:pathData="M350,90 A5,5 0 1,1 360,90 A5,5 0 1,1 350,90" />
+</vector>
