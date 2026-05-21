@@ -21,9 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Color tokens (local to this file — mirrors the app-wide palette)
-// ─────────────────────────────────────────────────────────────────────────────
 private val FormYellow   = Color(0xFFF7E4A7)
 private val OrangeBar    = Color(0xFFF5A623)
 private val GreenBtn     = Color(0xFF3DBD7D)
@@ -33,7 +31,6 @@ private val LabelGray    = Color(0xFF888888)
 private val DarkText     = Color(0xFF1A1A1A)
 private val CardWhite    = Color(0xFFFFFFFF)
 
-// ─────────────────────────────────────────────────────────────────────────────
 // EditGoalAllocationScreen
 //
 // Full-screen Dialog that renders:
@@ -50,7 +47,6 @@ private val CardWhite    = Color(0xFFFFFFFF)
 //   progressPercent – 0f..1f fraction for the bar       (e.g. 0.401f)
 //   progressLabel   – human label below bar             (e.g. "40.1% complete")
 //   onDismiss       – called when the dialog should close (Save or Cancel)
-// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun EditGoalAllocationScreen(
     goalName:        String  = "MacBook Pro M4",
@@ -179,9 +175,7 @@ fun EditGoalAllocationScreen(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // EditFormField — labelled OutlinedTextField used inside the popup
-// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 private fun EditFormField(
     label:        String,
@@ -216,9 +210,7 @@ private fun EditFormField(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // EditActionButton — reusable solid-color rounded button for the popup
-// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 private fun EditActionButton(
     text:            String,
@@ -239,9 +231,7 @@ private fun EditActionButton(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Previews
-// ─────────────────────────────────────────────────────────────────────────────
 @Preview(showBackground = true, showSystemUi = true, name = "EditGoalAllocationScreen")
 @Composable
 fun PreviewEditGoalAllocationScreen() {
