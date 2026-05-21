@@ -31,7 +31,7 @@ fun AddExpenseScreen(
     var expenseType by remember { mutableStateOf("ESSENTIAL") }
     var isRecurring by remember { mutableStateOf(false) }
     var recurringFrequency by remember { mutableStateOf("Monthly") }
-    
+
     val categories = listOf("Food", "Transport", "Shopping", "Bills", "Entertainment", "Health")
     val subCategories = mapOf(
         "Food" to listOf("Groceries", "Dining", "Coffee", "Snacks"),

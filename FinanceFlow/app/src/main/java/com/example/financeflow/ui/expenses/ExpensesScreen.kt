@@ -74,7 +74,7 @@ fun ExpensesScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                val groupedExpenses = expenses.groupBy { 
+                val groupedExpenses = expenses.groupBy {
                     SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(it.date))
                 }
 
