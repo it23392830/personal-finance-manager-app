@@ -9,6 +9,8 @@ data class Goal(
     val id: String = "",
     val userId: String = "",
     val title: String = "",
+    val description: String = "",
+    val category: String = "General",
     val targetAmount: Double = 0.0,
     val currentSavedAmount: Double = 0.0,
     val currency: String = "LKR",
@@ -53,11 +55,11 @@ data class Goal(
 }
 
 enum class GoalBadge(val id: String, val label: String, val threshold: Double, val emoji: String) {
-    STARTED("BADGE_STARTED", "Journey Begun", 0.01, "🚀"),
+    STARTED("BADGE_STARTED", "Getting Started", 0.01, "🚀"),
     QUARTER("BADGE_25", "Quarter Way", 0.25, "🥉"),
-    HALFWAY("BADGE_50", "Halfway Hero", 0.50, "🥈"),
+    HALFWAY("BADGE_50", "Half Way", 0.50, "🥈"),
     THREE_QUARTER("BADGE_75", "Almost There", 0.75, "🥇"),
-    COMPLETED("BADGE_100", "Goal Crusher", 1.00, "🏆");
+    COMPLETED("BADGE_100", "Goal Achieved", 1.00, "🏆");
 
     companion object {
         fun checkNewBadges(goal: Goal): List<GoalBadge> {
@@ -72,6 +74,8 @@ enum class GoalBadge(val id: String, val label: String, val threshold: Double, v
 fun Goal.toMap(): Map<String, Any> = mapOf(
     "userId" to userId,
     "title" to title,
+    "description" to description,
+    "category" to category,
     "targetAmount" to targetAmount,
     "currentSavedAmount" to currentSavedAmount,
     "currency" to currency,
@@ -87,6 +91,8 @@ fun Map<String, Any>.toGoal(id: String): Goal = Goal(
     id = id,
     userId = this["userId"] as? String ?: "",
     title = this["title"] as? String ?: "",
+    description = this["description"] as? String ?: "",
+    category = this["category"] as? String ?: "General",
     targetAmount = (this["targetAmount"] as? Number)?.toDouble() ?: 0.0,
     currentSavedAmount = (this["currentSavedAmount"] as? Number)?.toDouble() ?: 0.0,
     currency = this["currency"] as? String ?: "LKR",

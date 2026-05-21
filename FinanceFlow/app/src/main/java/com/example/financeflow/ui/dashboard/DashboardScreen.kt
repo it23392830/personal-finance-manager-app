@@ -68,7 +68,12 @@ fun DashboardScreen(rootNavController: NavHostController) {
             composable(Routes.INCOME) { IncomeScreen(rootNavController) }
             composable(Routes.EXPENSES) { ExpensesScreen() }
             composable(Routes.SAVINGS) { SavingsScreen() }
-            composable(Routes.GOALS) { GoalsScreen() }
+            composable(Routes.GOALS) { 
+                GoalsScreen(
+                    onNavigateToDetail = { goalId -> rootNavController.navigate("goal_detail/$goalId") },
+                    onNavigateToCreate = { rootNavController.navigate("goal_create") }
+                )
+            }
             composable(Routes.INSIGHTS) { 
                 InsightsScreen(
                     onViewReports = { navController.navigate(Routes.DAILY_REPORT) }

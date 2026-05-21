@@ -24,6 +24,11 @@ import com.example.financeflow.ui.insights.DailyReportScreen
 import com.example.financeflow.ui.insights.InsightsScreen
 import com.example.financeflow.ui.insights.MonthlyReportScreen
 import com.example.financeflow.ui.insights.WeeklyReportScreen
+import com.example.financeflow.ui.goals.GoalsScreen
+import com.example.financeflow.ui.goals.GoalDetailScreen
+import com.example.financeflow.ui.goals.CreateGoalScreen
+import com.example.financeflow.ui.savings.SavingsScreen
+import com.example.financeflow.ui.expenses.ExpensesScreen
 
 private val bottomNavRoutes = setOf(
     Routes.HOME,
@@ -99,7 +104,6 @@ fun AppNavGraph() {
                 EditIncomeScreen(
                     onCancel = { navController.popBackStack() },
                     onSaveChanges = { _, _, _, _, _, _ ->
-                        // In a real app, you would call ViewModel to save changes
                         navController.popBackStack()
                     }
                 )
@@ -112,7 +116,6 @@ fun AppNavGraph() {
                 DeleteIncomeScreen(
                     onCancel = { navController.popBackStack() },
                     onConfirmDelete = {
-                        // In a real app, you would call ViewModel to delete
                         navController.popBackStack()
                     }
                 )
@@ -120,7 +123,30 @@ fun AppNavGraph() {
 
             composable(Routes.EXPENSES)  { ExpensesScreen() }
             composable(Routes.SAVINGS)   { SavingsScreen() }
-            composable(Routes.GOALS)     { GoalsScreen() }
+            
+            // Goals Module Navigation
+            composable(Routes.GOALS) { 
+                GoalsScreen(
+                    onNavigateToDetail = { goalId -> navController.navigate("goal_detail/$goalId") },
+                    onNavigateToCreate = { navController.navigate("goal_create") }
+                )
+            }
+            composable(
+                route = "goal_detail/{goalId}",
+                arguments = listOf(navArgument("goalId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val goalId = backStackEntry.arguments?.getString("goalId") ?: ""
+                GoalDetailScreen(
+                    goalId = goalId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("goal_create") {
+                CreateGoalScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
             composable(Routes.INSIGHTS)  { 
                 InsightsScreen(
                     onViewReports = { navController.navigate(Routes.DAILY_REPORT) }
@@ -180,19 +206,4 @@ fun AppNavGraph() {
             }
         }
     }
-}
-
-// ─────────────────────────────────────────────
-//  Stub screens
-// ─────────────────────────────────────────────
-@Composable
-fun GoalsScreen() {
-}
-
-@Composable
-fun SavingsScreen() {
-}
-
-@Composable
-fun ExpensesScreen() {
 }
