@@ -29,8 +29,14 @@ data class GoalDetailState(
 
 data class CreateGoalState(
     val title: String = "",
+    val icon: String = "💻",
     val targetAmount: String = "",
-    val deadlineMonths: Int = 12,
+    val currentSavings: String = "",
+    val deadline: String = "01/07/2027",
+    val monthlyTarget: String = "",
+    val category: String = "Technology",
+    val color: String = "Purple",
+    val description: String = "",
     val isSubmitting: Boolean = false,
     val isSuccess: Boolean = false,
     val error: String? = null
@@ -165,9 +171,17 @@ class GoalViewModel @Inject constructor(
 
     private val _createGoalState = MutableStateFlow(CreateGoalState())
     val createGoalState: StateFlow<CreateGoalState> = _createGoalState.asStateFlow()
+    
     fun onCreateTitleChanged(title: String) { _createGoalState.update { it.copy(title = title) } }
+    fun onCreateIconChanged(icon: String) { _createGoalState.update { it.copy(icon = icon) } }
     fun onCreateTargetAmountChanged(amount: String) { _createGoalState.update { it.copy(targetAmount = amount) } }
-    fun onCreateDeadlineMonthsChanged(months: Int) { _createGoalState.update { it.copy(deadlineMonths = months) } }
+    fun onCreateCurrentSavingsChanged(savings: String) { _createGoalState.update { it.copy(currentSavings = savings) } }
+    fun onCreateDeadlineChanged(deadline: String) { _createGoalState.update { it.copy(deadline = deadline) } }
+    fun onCreateMonthlyTargetChanged(target: String) { _createGoalState.update { it.copy(monthlyTarget = target) } }
+    fun onCreateCategoryChanged(category: String) { _createGoalState.update { it.copy(category = category) } }
+    fun onCreateColorChanged(color: String) { _createGoalState.update { it.copy(color = color) } }
+    fun onCreateDescriptionChanged(desc: String) { _createGoalState.update { it.copy(description = desc) } }
+
     fun submitCreateGoal() { _createGoalState.update { it.copy(isSuccess = true) } }
     fun resetCreateGoalState() { _createGoalState.value = CreateGoalState() }
 

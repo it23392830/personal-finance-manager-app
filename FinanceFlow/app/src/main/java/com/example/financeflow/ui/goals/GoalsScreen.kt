@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.financeflow.model.Goal
 import com.example.financeflow.model.GoalAllocation
@@ -52,23 +53,39 @@ fun formatCurrency(amount: Double, currency: String = "LKR"): String {
 
 fun getCategoryColor(category: String): Color = when (category) {
     "Technology" -> Color(0xFF8A2BE2) // Purple
-    "Security" -> Color(0xFF2196F3)   // Blue
-    "Lifestyle" -> Color(0xFF4CAF50)  // Green
-    else -> Color(0xFF9C27B0)
+    "Security"   -> Color(0xFF2196F3) // Blue
+    "Lifestyle"  -> Color(0xFF4CAF50) // Green
+    else         -> Color(0xFF9C27B0)
 }
 
 fun getCategoryGradient(category: String): List<Color> = when (category) {
     "Technology" -> listOf(Color(0xFF8A2BE2), Color(0xFF6F00FF))
-    "Security" -> listOf(Color(0xFF2196F3), Color(0xFF03A9F4))
-    "Lifestyle" -> listOf(Color(0xFF4CAF50), Color(0xFF00C853))
-    else -> listOf(Color(0xFF9C27B0), Color(0xFFE1BEE7))
+    "Security"   -> listOf(Color(0xFF2196F3), Color(0xFF03A9F4))
+    "Lifestyle"  -> listOf(Color(0xFF4CAF50), Color(0xFF00C853))
+    else         -> listOf(Color(0xFF9C27B0), Color(0xFFE1BEE7))
 }
 
 fun getCategoryIcon(category: String): ImageVector = when (category) {
     "Technology" -> Icons.Default.Laptop
-    "Security" -> Icons.Default.Shield
-    "Lifestyle" -> Icons.Default.Flight
-    else -> Icons.Default.Star
+    "Security"   -> Icons.Default.Shield
+    "Lifestyle"  -> Icons.Default.Flight
+    "Vehicle"    -> Icons.Default.DirectionsCar
+    "Home"       -> Icons.Default.Home
+    "Education"  -> Icons.Default.School
+    "Health"     -> Icons.Default.Favorite
+    else         -> Icons.Default.Star
+}
+
+fun getColorFromName(name: String): Color = when (name) {
+    "Purple" -> Color(0xFF7C4DFF)
+    "Blue"   -> Color(0xFF2196F3)
+    "Green"  -> Color(0xFF4CAF50)
+    "Yellow" -> Color(0xFFFFEB3B)
+    "Orange" -> Color(0xFFFF9800)
+    "Red"    -> Color(0xFFF44336)
+    "Pink"   -> Color(0xFFE91E63)
+    "Black"  -> Color(0xFF000000)
+    else     -> Color.Gray
 }
 
 // ─── Integrated Goals Dashboard ──────────────────────────────────────────────
@@ -96,6 +113,7 @@ fun GoalsScreen(
     val detailState by viewModel.goalDetailState.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
     var showAddContribution by remember { mutableStateOf(false) }
+    var showCreateGoal by remember { mutableStateOf(false) }
     var selectedBadge by remember { mutableStateOf<GoalBadge?>(null) }
 
     LaunchedEffect(uiState.goals) {
@@ -115,7 +133,7 @@ fun GoalsScreen(
             item {
                 GoalsHeader(
                     selectedGoal = detailState.goal,
-                    onCreateGoal = onNavigateToCreate
+                    onCreateGoal = { showCreateGoal = true }
                 )
             }
 
@@ -128,7 +146,7 @@ fun GoalsScreen(
                     }
                 }
                 uiState.goals.isEmpty() -> {
-                    item { EmptyGoalsState(onCreateGoal = onNavigateToCreate) }
+                    item { EmptyGoalsState(onCreateGoal = { showCreateGoal = true }) }
                 }
                 else -> {
                     item {
@@ -227,7 +245,7 @@ fun GoalsScreen(
 
                     item {
                         Button(
-                            onClick = onNavigateToCreate,
+                            onClick = { showCreateGoal = true },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 24.dp, vertical = 24.dp)
@@ -249,6 +267,13 @@ fun GoalsScreen(
         AddContributionDialog(
             goalId = detailState.goal!!.id,
             onDismiss = { showAddContribution = false },
+            viewModel = viewModel
+        )
+    }
+
+    if (showCreateGoal) {
+        CreateGoalDialog(
+            onDismiss = { showCreateGoal = false },
             viewModel = viewModel
         )
     }
@@ -524,7 +549,7 @@ private fun MilestoneItem(badge: GoalBadge, unlocked: Boolean, goal: Goal, onCli
 private fun GoalMilestonesSection(goal: Goal, onBadgeClick: (GoalBadge) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("${goal.title} Milestones", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.Black)
-        GoalBadge.values().forEach { badge ->
+        GoalBadge.entries.forEach { badge ->
             val unlocked = badge.id in goal.unlockedBadges
             MilestoneItem(badge, unlocked, goal, onClick = { onBadgeClick(badge) })
         }
@@ -599,9 +624,265 @@ private fun AddContributionField(label: String, value: String, onValueChange: (S
     }
 }
 
+// ─── Create Goal Dialog (Replicating Mockup) ───────────────────────────────────
+
+@Composable
+fun CreateGoalDialog(
+    onDismiss: () -> Unit,
+    viewModel: GoalViewModel
+) {
+    val uiState by viewModel.createGoalState.collectAsState()
+    val icons = listOf("💻", "🛡️", "✈️", "🚐", "🏠", "🎓", "❤️", "⭐", "🎯", "📱", "🌴", "💰")
+    val categories = listOf("Technology", "Security", "Lifestyle", "Vehicle", "Home", "Education", "Health", "Other")
+    val colors = listOf("Purple", "Blue", "Green", "Yellow", "Orange", "Red", "Pink", "Black")
+
+    LaunchedEffect(uiState.isSuccess) { 
+        if (uiState.isSuccess) { 
+            viewModel.resetCreateGoalState()
+            onDismiss() 
+        } 
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFF3E5F5),
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Default.Add, null, tint = Color(0xFF9C27B0), modifier = Modifier.padding(4.dp))
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Text("Create Goal", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+                    }
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, null, tint = Color.Black)
+                    }
+                }
+
+                // Icon Grid
+                Text("Icon", fontWeight = FontWeight.Bold, color = Color.Black)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    icons.take(6).forEach { icon ->
+                        IconSelectionBox(icon, isSelected = uiState.icon == icon, onClick = { viewModel.onCreateIconChanged(icon) })
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    icons.drop(6).forEach { icon ->
+                        IconSelectionBox(icon, isSelected = uiState.icon == icon, onClick = { viewModel.onCreateIconChanged(icon) })
+                    }
+                }
+
+                // Goal Name
+                CreateGoalField("Goal Name", uiState.title, viewModel::onCreateTitleChanged, "e.g. - Paris Trip")
+
+                // Amounts Row
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    CreateGoalField("Target Amount", uiState.targetAmount, viewModel::onCreateTargetAmountChanged, "(LKR)", Modifier.weight(1f), KeyboardType.Decimal)
+                    CreateGoalField("Current Savings", uiState.currentSavings, viewModel::onCreateCurrentSavingsChanged, "(LKR)", Modifier.weight(1f), KeyboardType.Decimal)
+                }
+
+                // Deadline
+                CreateGoalField("Deadline", uiState.deadline, viewModel::onCreateDeadlineChanged, "01/07/2027")
+
+                // Monthly Target
+                CreateGoalField("Monthly Contribution Target (LKR)", uiState.monthlyTarget, viewModel::onCreateMonthlyTargetChanged, "Auto-calculated if empty")
+
+                // Category & Color
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    CreateGoalDropdown("Category", uiState.category, categories, viewModel::onCreateCategoryChanged, Modifier.weight(1f))
+                    CreateGoalDropdown("Colour", uiState.color, colors, viewModel::onCreateColorChanged, Modifier.weight(1f), isColor = true)
+                }
+
+                // Description
+                CreateGoalField("Description (Optional)", uiState.description, viewModel::onCreateDescriptionChanged, "What's this goal for?", singleLine = false)
+
+                Spacer(Modifier.height(8.dp))
+
+                // Buttons
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF5F5F5))
+                    ) {
+                        Text("Cancel", color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = { viewModel.submitCreateGoal() },
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0))
+                    ) {
+                        Text("Create Goal", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IconSelectionBox(icon: String, isSelected: Boolean, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.size(40.dp),
+        shape = RoundedCornerShape(8.dp),
+        color = if (isSelected) Color(0xFFF3E5F5) else Color(0xFFF5F5F5),
+        border = if (isSelected) BorderStroke(1.dp, Color(0xFF9C27B0)) else null
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(icon, fontSize = 20.sp)
+        }
+    }
+}
+
+@Composable
+private fun CreateGoalField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    singleLine: Boolean = true
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(label, fontWeight = FontWeight.Bold, color = Color.Black, fontSize = 14.sp)
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder, color = Color.Gray, fontSize = 14.sp) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            singleLine = singleLine,
+            maxLines = if (singleLine) 1 else 3,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
+                focusedContainerColor = Color(0xFFF5F5F5),
+                unfocusedContainerColor = Color(0xFFF5F5F5),
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            )
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CreateGoalDropdown(
+    label: String,
+    value: String,
+    options: List<String>,
+    onSelected: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    isColor: Boolean = false
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(label, fontWeight = FontWeight.Bold, color = Color.Black, fontSize = 14.sp)
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it }
+        ) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = {},
+                readOnly = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                shape = RoundedCornerShape(12.dp),
+                trailingIcon = { 
+                    Icon(
+                        Icons.Default.KeyboardArrowDown, 
+                        null, 
+                        tint = Color.Gray,
+                        modifier = Modifier.size(20.dp)
+                    ) 
+                },
+                leadingIcon = if (isColor) {
+                    { Box(Modifier.size(12.dp).clip(CircleShape).background(getColorFromName(value))) }
+                } else null,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedContainerColor = Color(0xFFF5F5F5),
+                    unfocusedContainerColor = Color(0xFFF5F5F5),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier
+                    .background(Color.White)
+                    .width(IntrinsicSize.Max)
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { 
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            ) {
+                                if (isColor) {
+                                    Box(Modifier.size(12.dp).clip(CircleShape).background(getColorFromName(option)))
+                                    Spacer(Modifier.width(12.dp))
+                                }
+                                Text(
+                                    text = option,
+                                    color = Color.Black,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        },
+                        onClick = { onSelected(option); expanded = false },
+                        contentPadding = PaddingValues(0.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateGoalScreen(onNavigateBack: () -> Unit, viewModel: GoalViewModel = hiltViewModel()) {
+    // Redundant as we use Dialog, but kept for compatibility
     val uiState by viewModel.createGoalState.collectAsState()
     LaunchedEffect(uiState.isSuccess) { if (uiState.isSuccess) { viewModel.resetCreateGoalState(); onNavigateBack() } }
     Scaffold(topBar = { TopAppBar(title = { Text("New Goal") }, navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } }) }) { padding ->
