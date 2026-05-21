@@ -21,7 +21,6 @@ import androidx.compose.material.icons.outlined.*
 import com.example.financeflow.ui.components.savings.CardWhite
 
 //  Design Tokens
-// CardWhite is provided by SavingsCard.kt in the same package
 private val TextPrimary     = Color(0xFF1A1A2E)
 private val TextSecondary   = Color(0xFF6B7280)
 private val PrimaryPurple   = Color(0xFF7C4DFF)
@@ -38,6 +37,7 @@ val IconRed       = Color(0xFFFF5252)
 val IconBlue      = Color(0xFF2196F3)
 val IconOrange    = Color(0xFFFF9800)
 val IconPurple    = Color(0xFF7C4DFF)
+
 //  Data model
 data class SummaryCardData(
     val title: String,
@@ -49,7 +49,8 @@ data class SummaryCardData(
     val badgeText: String? = null,       // e.g. "28 %"
     val badgeColor: Color = PrimaryPurple
 )
-//  Hardcoded sample list  (remove / replace later)
+
+//  Hardcoded sample list
 fun moneyFlowSampleData(): List<SummaryCardData> = listOf(
     SummaryCardData(
         title           = "Total Income",
@@ -81,14 +82,9 @@ fun moneyFlowSampleData(): List<SummaryCardData> = listOf(
         iconBackground  = PastelOrange
     )
 )
-//  Public composable
+
 /**
  * SummaryCard
- *
- * A compact, reusable stat tile used in the Money Flow section.
- *
- * @param data      Content and style configuration.
- * @param modifier  External layout modifier.
  */
 @Composable
 fun SummaryCard(
@@ -101,8 +97,8 @@ fun SummaryCard(
             .shadow(
                 elevation     = 3.dp,
                 shape         = RoundedCornerShape(16.dp),
-                ambientColor  = Color(0xFF7C4DFF).copy(alpha = 0.07f),
-                spotColor     = Color(0xFF7C4DFF).copy(alpha = 0.10f)
+                ambientColor  = PrimaryPurple.copy(alpha = 0.07f),
+                spotColor     = PrimaryPurple.copy(alpha = 0.10f)
             )
             .clip(RoundedCornerShape(16.dp))
             .background(CardWhite)
@@ -171,11 +167,9 @@ fun SummaryCard(
         }
     }
 }
+
 /**
  * MoneyFlowSection
- *
- * Renders the full "Your Money Flow" card stack.
- * Pass a list of [SummaryCardData] — defaults to hardcoded sample.
  */
 @Composable
 fun MoneyFlowSection(
@@ -196,7 +190,7 @@ fun MoneyFlowSection(
         }
     }
 }
-//  Preview
+
 @Preview(showBackground = true, backgroundColor = 0xFFF5F3FF)
 @Composable
 private fun SummaryCardPreview() {
