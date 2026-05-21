@@ -1,10 +1,9 @@
-package com.example.financeflow.ui.components
+package com.example.financeflow.ui.savings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,24 +28,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-@Composable
-fun FinanceCard(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(PaddingValues(16.dp))
-        ) {
-            content()
-        }
-    }
-}
-
 private val DeleteDialogRed = Color(0xFFFF4A4A)
 private val DeleteDialogPurple = Color(0xFF9C6CF7)
 private val DeleteDialogText = Color(0xFF1A1A1A)
@@ -65,18 +46,18 @@ fun DeleteConfirmationDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Box(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Companion.Black.copy(alpha = 0.45f))
+                .background(Color.Black.copy(alpha = 0.45f))
                 .padding(horizontal = 24.dp),
-            contentAlignment = Alignment.Companion.Center
+            contentAlignment = Alignment.Center
         ) {
             Card(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .fillMaxWidth(0.9f)
                     .shadow(elevation = 10.dp, shape = RoundedCornerShape(25.dp)),
                 shape = RoundedCornerShape(25.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Companion.White)
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -85,7 +66,7 @@ fun DeleteConfirmationDialog(
                     Text(
                         text = "Delete Saving Entry?",
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Companion.Bold,
+                        fontWeight = FontWeight.Bold,
                         color = DeleteDialogText
                     )
 
@@ -134,13 +115,13 @@ private fun DeleteDialogButton(
         shape = RoundedCornerShape(15.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,
-            contentColor = Color.Companion.White
+            contentColor = Color.White
         )
     ) {
         Text(
             text = text,
             fontSize = 14.sp,
-            fontWeight = FontWeight.Companion.Bold
+            fontWeight = FontWeight.Bold
         )
     }
 }

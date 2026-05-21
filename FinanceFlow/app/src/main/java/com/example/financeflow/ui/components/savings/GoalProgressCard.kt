@@ -1,38 +1,18 @@
-package com.example.financeflow.ui.components
+package com.example.financeflow.ui.components.savings
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,24 +25,30 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val TextPrimary = Color(0xFF1A1A2E)
-private val TextSecondary = Color(0xFF6B7280)
-private val PrimaryPurple = Color(0xFF7C4DFF)
-private val ProgressTrack = Color(0xFFEDE7FF)
-private val ProgressFillStart = Color(0xFF7C4DFF)
-private val ProgressFillEnd = Color(0xFFB39DDB)
-private val DaysChipBg = Color(0xFFF3EDFF)
-private val SavingsInfoBg = Color(0xFFFFFDE7)
-private val WarningAmber = Color(0xFFFF9800)
+// Design Tokens
+// CardWhite and OrangeAccent are provided by SavingsCard.kt in the same package
+private val TextPrimary      = Color(0xFF1A1A2E)
+private val TextSecondary    = Color(0xFF6B7280)
+private val PrimaryPurple    = Color(0xFF7C4DFF)
+private val ProgressTrack    = Color(0xFFEDE7FF)
+private val ProgressFillStart= Color(0xFF7C4DFF)
+private val ProgressFillEnd  = Color(0xFFB39DDB)
+private val DaysChipBg       = Color(0xFFF3EDFF)
+private val SavingsInfoBg    = Color(0xFFFFFDE7)
+private val SavingsInfoBorder= Color(0xFFFFECB3)
+private val WarningAmber     = Color(0xFFFF9800)
 
+// Data models
+
+/** Original Goal Data Model */
 data class GoalProgressData(
-    val goalTitle: String = "MacBook Pro M4 Goal",
-    val currentAmount: Long = 11_200L,
-    val targetAmount: Long = 490_000L,
-    val daysRemaining: Int = 267,
-    val dailySavingsNeeded: Long = 1_794L,
-    val currentDailyRate: Long = 1_774L,
-    val currencySymbol: String = "LKR"
+    val goalTitle: String          = "MacBook Pro M4 Goal",
+    val currentAmount: Long        = 11_200L,
+    val targetAmount: Long         = 490_000L,
+    val daysRemaining: Int         = 267,
+    val dailySavingsNeeded: Long   = 1_794L,
+    val currentDailyRate: Long     = 1_774L,
+    val currencySymbol: String     = "LKR"
 ) {
     val progressFraction: Float
         get() = (currentAmount.toFloat() / targetAmount).coerceIn(0f, 1f)
@@ -74,35 +60,60 @@ data class GoalProgressData(
         get() = currentDailyRate >= dailySavingsNeeded
 }
 
+// SavingGoal — data model for a single saving goal row
 data class SavingGoal(
     val name: String,
     val savedAmount: String,
     val targetAmount: String,
-    val progressPercent: Float,
-    val progressLabel: String
+    val progressPercent: Float,   // 0f – 1f
+    val progressLabel: String     // e.g. "40.1% complete"
 )
+
+// defaultGoals — used as the initial list for the Savings by Goal section.
 
 fun goalProgressSample() = GoalProgressData()
 
 val defaultGoals: List<SavingGoal> = listOf(
-    SavingGoal("MacBook Pro M4", "LKR 196,400", "Target: LKR 490,000", 0.401f, "40.1% complete"),
-    SavingGoal("Emergency Fund", "LKR 14,000", "Target: LKR 30,000", 0.283f, "28.3% complete"),
-    SavingGoal("Vacation", "LKR 20,000", "Target: LKR 150,000", 0.133f, "13.3% complete")
+    SavingGoal(
+        name = "MacBook Pro M4",
+        savedAmount = "LKR 196,400",
+        targetAmount = "Target: LKR 490,000",
+        progressPercent = 0.401f,
+        progressLabel = "40.1% complete"
+    ),
+    SavingGoal(
+        name = "Emergency Fund",
+        savedAmount = "LKR 14,000",
+        targetAmount = "Target: LKR 30,000",
+        progressPercent = 0.283f,
+        progressLabel = "28.3% complete"
+    ),
+    SavingGoal(
+        name = "Vacation",
+        savedAmount = "LKR 20,000",
+        targetAmount = "Target: LKR 150,000",
+        progressPercent = 0.133f,
+        progressLabel = "13.3% complete"
+    )
 )
 
+// Keep the old name so existing callers do not need to change.
 val dummyGoals: List<SavingGoal> = defaultGoals
+
+// Composables (Original)
 
 @Composable
 fun GoalProgressCard(
     data: GoalProgressData = goalProgressSample(),
-    onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
+    // Animate progress bar on first composition
     var animationPlayed by remember { mutableStateOf(false) }
     val animatedProgress by animateFloatAsState(
-        targetValue = if (animationPlayed) data.progressFraction else 0f,
-        animationSpec = tween(durationMillis = 900),
-        label = "goalProgress"
+        targetValue    = if (animationPlayed) data.progressFraction else 0f,
+        animationSpec  = tween(durationMillis = 900),
+        label          = "goalProgress"
     )
     LaunchedEffect(Unit) { animationPlayed = true }
 
@@ -110,30 +121,41 @@ fun GoalProgressCard(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 4.dp,
-                shape = RoundedCornerShape(20.dp),
+                elevation    = 4.dp,
+                shape        = RoundedCornerShape(20.dp),
                 ambientColor = PrimaryPurple.copy(alpha = 0.08f),
-                spotColor = PrimaryPurple.copy(alpha = 0.14f)
+                spotColor    = PrimaryPurple.copy(alpha = 0.14f)
             )
             .clip(RoundedCornerShape(20.dp))
             .background(CardWhite)
-            .clickable(onClick = onClick)
+            .clickable { onClick() }
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            GoalHeaderRow(title = data.goalTitle, daysRemaining = data.daysRemaining)
-            GoalAmountRow(
-                current = data.currentAmount,
-                target = data.targetAmount,
-                currencySymbol = data.currencySymbol,
-                percent = data.progressPercent
+
+            // Header row
+            GoalHeaderRow(
+                title         = data.goalTitle,
+                daysRemaining = data.daysRemaining
             )
-            GoalProgressBar(progress = animatedProgress)
-            DailySavingsPanel(
-                needed = data.dailySavingsNeeded,
-                currentRate = data.currentDailyRate,
+
+            // Amount row
+            GoalAmountRow(
+                current        = data.currentAmount,
+                target         = data.targetAmount,
                 currencySymbol = data.currencySymbol,
-                isOnTrack = data.isOnTrack
+                percent        = data.progressPercent
+            )
+
+            // Progress bar
+            GoalProgressBar(progress = animatedProgress)
+
+            // Savings info panel
+            DailySavingsPanel(
+                needed         = data.dailySavingsNeeded,
+                currentRate    = data.currentDailyRate,
+                currencySymbol = data.currencySymbol,
+                isOnTrack      = data.isOnTrack
             )
         }
     }
@@ -142,26 +164,31 @@ fun GoalProgressCard(
 @Composable
 private fun GoalHeaderRow(title: String, daysRemaining: Int) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier              = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment     = Alignment.CenterVertically
     ) {
         Text(
-            text = title,
+            text  = title,
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-                fontSize = 16.sp
+                color      = TextPrimary,
+                fontSize   = 16.sp
             )
         )
-        Surface(shape = RoundedCornerShape(50), color = DaysChipBg) {
+
+        // Days remaining chip
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = DaysChipBg
+        ) {
             Text(
-                text = "$daysRemaining days left",
+                text     = "$daysRemaining days left",
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    color = PrimaryPurple,
+                style    = MaterialTheme.typography.labelSmall.copy(
+                    color      = PrimaryPurple,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 11.sp
+                    fontSize   = 11.sp
                 )
             )
         }
@@ -176,41 +203,45 @@ private fun GoalAmountRow(
     percent: Float
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier              = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Bottom
+        verticalAlignment     = Alignment.Bottom
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "Current",
+                text  = "Current",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = TextSecondary,
+                    color    = TextSecondary,
                     fontSize = 11.sp
                 )
             )
             Text(
-                text = "$currencySymbol ${"%,d".format(current)}",
+                text  = "$currencySymbol ${"%,d".format(current)}",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.ExtraBold,
-                    color = TextPrimary,
-                    fontSize = 22.sp
+                    color      = TextPrimary,
+                    fontSize   = 22.sp
                 )
             )
         }
-        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
             Text(
-                text = "Target",
+                text  = "Target",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = TextSecondary,
+                    color    = TextSecondary,
                     fontSize = 11.sp
                 )
             )
             Text(
-                text = "$currencySymbol ${"%,d".format(target)}",
+                text  = "$currencySymbol ${"%,d".format(target)}",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryPurple,
-                    fontSize = 16.sp
+                    color      = PrimaryPurple,
+                    fontSize   = 16.sp
                 )
             )
         }
@@ -220,14 +251,17 @@ private fun GoalAmountRow(
 @Composable
 private fun GoalProgressBar(progress: Float) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // Percentage label
         Text(
-            text = "${"%.1f".format(progress * 100)}% complete",
+            text  = "${"%.1f".format(progress * 100)}% complete",
             style = MaterialTheme.typography.labelSmall.copy(
-                color = TextSecondary,
-                fontSize = 11.sp,
+                color      = TextSecondary,
+                fontSize   = 11.sp,
                 fontWeight = FontWeight.Medium
             )
         )
+
+        // Custom gradient progress bar
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -265,45 +299,50 @@ private fun DailySavingsPanel(
             .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment     = Alignment.CenterVertically
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "Daily savings needed",
+                    text  = "Daily savings needed",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextSecondary,
+                        color    = TextSecondary,
                         fontSize = 12.sp
                     )
                 )
                 Text(
-                    text = "$currencySymbol ${"%,d".format(needed)}",
+                    text  = "$currencySymbol ${"%,d".format(needed)}",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = TextPrimary,
-                        fontSize = 18.sp
+                        color      = TextPrimary,
+                        fontSize   = 18.sp
                     )
                 )
                 Text(
-                    text = "Current rate: $currencySymbol ${"%,d".format(currentRate)}/day",
+                    text  = "Current rate: $currencySymbol ${"%,d".format(currentRate)}/day",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = if (isOnTrack) Color(0xFF2DBD6E) else WarningAmber,
+                        color    = if (isOnTrack) Color(0xFF2DBD6E) else WarningAmber,
                         fontSize = 11.sp
                     )
                 )
             }
+
+            // On-track indicator
             Surface(
                 shape = RoundedCornerShape(50),
-                color = if (isOnTrack) Color(0xFF2DBD6E).copy(alpha = 0.12f) else WarningAmber.copy(alpha = 0.12f)
+                color = if (isOnTrack)
+                    Color(0xFF2DBD6E).copy(alpha = 0.12f)
+                else
+                    WarningAmber.copy(alpha = 0.12f)
             ) {
                 Text(
-                    text = if (isOnTrack) "On Track" else "Behind",
+                    text     = if (isOnTrack) "✓ On Track" else "⚠ Behind",
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = if (isOnTrack) Color(0xFF2DBD6E) else WarningAmber,
+                    style    = MaterialTheme.typography.labelSmall.copy(
+                        color      = if (isOnTrack) Color(0xFF2DBD6E) else WarningAmber,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp
+                        fontSize   = 11.sp
                     )
                 )
             }
@@ -311,6 +350,14 @@ private fun DailySavingsPanel(
     }
 }
 
+// SavingsByGoalCard
+//
+// Wrapper card that lists every GoalProgressItem.
+//
+// Parameters:
+//   goals          - live list driven from SavingsScreen state
+//   onEditClick    - called with the tapped goal
+//   onDeleteClick  - called with the tapped goal
 @Composable
 fun SavingsByGoalCard(
     goals: List<SavingGoal> = defaultGoals,
@@ -325,6 +372,8 @@ fun SavingsByGoalCard(
         colors = CardDefaults.cardColors(containerColor = CardWhite)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
+
+            // Section title
             Text(
                 text = "Savings by Goal",
                 fontSize = 16.sp,
@@ -335,6 +384,7 @@ fun SavingsByGoalCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             if (goals.isEmpty()) {
+                // Friendly empty state
                 Text(
                     text = "No goals yet. Add one to get started!",
                     fontSize = 13.sp,
@@ -348,6 +398,7 @@ fun SavingsByGoalCard(
                         onEditClick = { onEditClick(goal) },
                         onDeleteClick = { onDeleteClick(goal) }
                     )
+                    // Divider between rows, not after the last one
                     if (index < goals.lastIndex) {
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 14.dp),
@@ -361,15 +412,24 @@ fun SavingsByGoalCard(
     }
 }
 
+// GoalProgressItem
+//
+// A single goal row containing:
+//   - Goal name + saved amount + three-dot menu
+//   - Orange rounded progress bar
+//   - Progress label and target amount
 @Composable
 fun GoalProgressItem(
     goal: SavingGoal,
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {}
 ) {
+    // Controls visibility of the action dropdown.
     var menuExpanded by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
+
+        // Top row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -390,6 +450,7 @@ fun GoalProgressItem(
             )
             Spacer(modifier = Modifier.width(4.dp))
             Box {
+                // Three-dot button + action menu
                 IconButton(
                     onClick = { menuExpanded = true },
                     modifier = Modifier.size(28.dp)
@@ -409,6 +470,7 @@ fun GoalProgressItem(
                         menuExpanded = false
                         onEditClick()
                     },
+                    // Delete is handled by the parent screen via callback.
                     onDeleteClick = {
                         menuExpanded = false
                         onDeleteClick()
@@ -419,6 +481,7 @@ fun GoalProgressItem(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Orange rounded progress bar
         LinearProgressIndicator(
             progress = { goal.progressPercent },
             modifier = Modifier
@@ -431,15 +494,26 @@ fun GoalProgressItem(
 
         Spacer(modifier = Modifier.height(6.dp))
 
+        // Bottom labels
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = goal.progressLabel, fontSize = 11.sp, color = Color.Gray)
-            Text(text = goal.targetAmount, fontSize = 11.sp, color = Color.Gray)
+            Text(
+                text = goal.progressLabel,
+                fontSize = 11.sp,
+                color = Color.Gray
+            )
+            Text(
+                text = goal.targetAmount,
+                fontSize = 11.sp,
+                color = Color.Gray
+            )
         }
     }
 }
+
+// Previews
 
 @Preview(showBackground = true, backgroundColor = 0xFFF5F3FF)
 @Composable

@@ -19,11 +19,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
+import com.example.financeflow.ui.components.savings.CardWhite
 
-// ─────────────────────────────────────────────
 //  Design Tokens
-// ─────────────────────────────────────────────
-private val CardWhite       = Color(0xFFFFFFFF)
 private val TextPrimary     = Color(0xFF1A1A2E)
 private val TextSecondary   = Color(0xFF6B7280)
 private val PrimaryPurple   = Color(0xFF7C4DFF)
@@ -41,9 +39,7 @@ val IconBlue      = Color(0xFF2196F3)
 val IconOrange    = Color(0xFFFF9800)
 val IconPurple    = Color(0xFF7C4DFF)
 
-// ─────────────────────────────────────────────
 //  Data model
-// ─────────────────────────────────────────────
 data class SummaryCardData(
     val title: String,
     val amount: Long,
@@ -55,9 +51,7 @@ data class SummaryCardData(
     val badgeColor: Color = PrimaryPurple
 )
 
-// ─────────────────────────────────────────────
-//  Hardcoded sample list  (remove / replace later)
-// ─────────────────────────────────────────────
+//  Hardcoded sample list
 fun moneyFlowSampleData(): List<SummaryCardData> = listOf(
     SummaryCardData(
         title           = "Total Income",
@@ -105,8 +99,8 @@ fun SummaryCard(
             .shadow(
                 elevation     = 3.dp,
                 shape         = RoundedCornerShape(16.dp),
-                ambientColor  = Color(0xFF7C4DFF).copy(alpha = 0.07f),
-                spotColor     = Color(0xFF7C4DFF).copy(alpha = 0.10f)
+                ambientColor  = PrimaryPurple.copy(alpha = 0.07f),
+                spotColor     = PrimaryPurple.copy(alpha = 0.10f)
             )
             .clip(RoundedCornerShape(16.dp))
             .background(CardWhite)

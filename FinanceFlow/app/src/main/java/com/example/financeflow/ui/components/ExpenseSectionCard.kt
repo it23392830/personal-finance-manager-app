@@ -19,11 +19,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.financeflow.ui.components.savings.CardWhite
 
-// ─────────────────────────────────────────────
 //  Design Tokens
-// ─────────────────────────────────────────────
-private val CardWhite       = Color(0xFFFFFFFF)
+// CardWhite is provided by SavingsCard.kt in the same package
 private val TextPrimary     = Color(0xFF1A1A2E)
 private val TextSecondary   = Color(0xFF6B7280)
 private val DividerColor    = Color(0xFFF0EBF8)
@@ -39,10 +38,7 @@ private val OptHeaderBg     = Color(0xFFE8F5E9)
 private val OptHeaderText   = Color(0xFF2E7D32)
 private val OptIcon         = Color(0xFF2DBD6E)
 private val OptAmount       = Color(0xFF2DBD6E)
-
-// ─────────────────────────────────────────────
 //  Data models
-// ─────────────────────────────────────────────
 enum class ExpenseType { MUST, OPTIONAL }
 
 data class ExpenseItem(
@@ -93,10 +89,7 @@ data class ExpenseSectionData(
             ExpenseType.OPTIONAL -> OptAmount
         }
 }
-
-// ─────────────────────────────────────────────
 //  Hardcoded sample  (remove / replace later)
-// ─────────────────────────────────────────────
 fun expenseSampleData(): List<ExpenseSectionData> = listOf(
     ExpenseSectionData(
         type        = ExpenseType.MUST,
@@ -119,10 +112,6 @@ fun expenseSampleData(): List<ExpenseSectionData> = listOf(
         )
     )
 )
-
-// ─────────────────────────────────────────────
-//  Public composable — single section card
-// ─────────────────────────────────────────────
 /**
  * ExpenseSectionCard
  *
@@ -150,10 +139,7 @@ fun ExpenseSectionCard(
             .background(CardWhite)
     ) {
         Column {
-            // ── Section header ───────────────────────────
             ExpenseSectionHeader(data = data)
-
-            // ── Line items ───────────────────────────────
             Column(
                 modifier = Modifier.padding(
                     horizontal = 16.dp,
@@ -171,10 +157,6 @@ fun ExpenseSectionCard(
         }
     }
 }
-
-// ─────────────────────────────────────────────
-//  Public composable — full breakdown wrapper
-// ─────────────────────────────────────────────
 /**
  * ExpenseBreakdownSection
  *
@@ -200,10 +182,7 @@ fun ExpenseBreakdownSection(
         }
     }
 }
-
-// ─────────────────────────────────────────────
 //  Private sub-composables
-// ─────────────────────────────────────────────
 
 @Composable
 private fun ExpenseSectionHeader(data: ExpenseSectionData) {
@@ -285,10 +264,7 @@ private fun ExpenseLineItem(
         }
     }
 }
-
-// ─────────────────────────────────────────────
 //  Preview
-// ─────────────────────────────────────────────
 @Preview(showBackground = true, backgroundColor = 0xFFF5F3FF)
 @Composable
 private fun ExpenseBreakdownPreview() {
