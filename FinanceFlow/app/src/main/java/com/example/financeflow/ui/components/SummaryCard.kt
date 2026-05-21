@@ -1,6 +1,7 @@
 package com.example.financeflow.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -89,6 +90,7 @@ fun moneyFlowSampleData(): List<SummaryCardData> = listOf(
 @Composable
 fun SummaryCard(
     data: SummaryCardData,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -102,13 +104,13 @@ fun SummaryCard(
             )
             .clip(RoundedCornerShape(16.dp))
             .background(CardWhite)
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(
             verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Icon bubble
             Box(
                 modifier          = Modifier
                     .size(44.dp)
@@ -124,7 +126,6 @@ fun SummaryCard(
                 )
             }
 
-            // Title + amount
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
@@ -147,7 +148,6 @@ fun SummaryCard(
                 )
             }
 
-            // Optional percentage badge
             data.badgeText?.let { badge ->
                 Surface(
                     shape = RoundedCornerShape(8.dp),
@@ -174,6 +174,10 @@ fun SummaryCard(
 @Composable
 fun MoneyFlowSection(
     items: List<SummaryCardData> = moneyFlowSampleData(),
+    onIncomeClick: () -> Unit = {},
+    onGoalsClick: () -> Unit = {},
+    onExpensesClick: () -> Unit = {},
+    onSavingsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -186,7 +190,17 @@ fun MoneyFlowSection(
             )
         )
         items.forEach { item ->
-            SummaryCard(data = item)
+            SummaryCard(
+                data = item,
+                onClick = {
+                    when (item.title) {
+                        "Total Income" -> onIncomeClick()
+                        "Allocated to Goals" -> onGoalsClick()
+                        "Reserved for Must Expenses" -> onExpensesClick()
+                        "Available for Optional Spending" -> onSavingsClick()
+                    }
+                }
+            )
         }
     }
 }

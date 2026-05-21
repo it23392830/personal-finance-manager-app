@@ -31,13 +31,11 @@ import com.example.financeflow.ui.components.savings.GoalProgressData
 private val ScaffoldBg       = Color(0xFFF5F3FF)
 private val TextPrimary      = Color(0xFF1A1A2E)
 private val TextSecondary    = Color(0xFF6B7280)
-private val PrimaryPurple    = Color(0xFF7C4DFF)
-private val CardWhite        = Color(0xFFFFFFFF)
+private val CardWhite        = Color.White
 private val ProgressTrackBg  = Color(0xFFFFE0E0)
-private val ProgressFill     = Color(0xFFFF5252)
 
 // ─────────────────────────────────────────────
-//  Hardcoded sample data  (remove / replace later)
+//  Hardcoded sample data
 // ─────────────────────────────────────────────
 private val sampleBalanceData = BalanceCardData(
     userName         = "Kavindu",
@@ -82,20 +80,18 @@ private val sampleMonthlySummary = MonthlySummaryData()
 private const val OPTIONAL_BUDGET_USED_PERCENT = 83
 private val OPTIONAL_BUDGET_REMAINING          = 13_900L
 
-// ─────────────────────────────────────────────
-//  HomeScreen
-// ─────────────────────────────────────────────
 /**
  * HomeScreen
- *
- * Main dashboard screen. Composes all reusable components in a LazyColumn.
- * All callbacks are no-ops until navigation is wired up.
- * All data is hardcoded — swap for ViewModel state when ready.
  */
 @Composable
 fun HomeScreen(
-    onAddIncomeClick: () -> Unit  = {},
-    onAddExpenseClick: () -> Unit = {}
+    onAddIncomeClick: () -> Unit = {},
+    onAddExpenseClick: () -> Unit = {},
+    onIncomeClick: () -> Unit = {},
+    onGoalsClick: () -> Unit = {},
+    onExpensesClick: () -> Unit = {},
+    onSavingsClick: () -> Unit = {},
+    onGoalCardClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -108,22 +104,14 @@ fun HomeScreen(
                 start  = 16.dp,
                 end    = 16.dp,
                 top    = 20.dp,
-                bottom = 88.dp   // clearance for the external bottom nav bar
+                bottom = 120.dp
             ),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-
-            // ── 1. Balance Card (includes greeting + streak) ──
             item {
                 BalanceCard(data = sampleBalanceData)
             }
 
-            // ── 2. Money Flow Section ─────────────────────────
-            item {
-                MoneyFlowSection(items = moneyFlowSampleData())
-            }
-
-            // ── 3. Quick Action Buttons ───────────────────────
             item {
                 QuickActionRow(
                     onAddIncomeClick  = onAddIncomeClick,
@@ -131,29 +119,37 @@ fun HomeScreen(
                 )
             }
 
-            // ── 4. Goal Progress ──────────────────────────────
+            item {
+                MoneyFlowSection(
+                    items = moneyFlowSampleData(),
+                    onIncomeClick = onIncomeClick,
+                    onGoalsClick = onGoalsClick,
+                    onExpensesClick = onExpensesClick,
+                    onSavingsClick = onSavingsClick
+                )
+            }
+
             item {
                 SectionHeader(title = "Savings Goal")
                 Spacer(modifier = Modifier.height(10.dp))
-                GoalProgressCard(data = sampleGoalData)
+                GoalProgressCard(
+                    data = sampleGoalData,
+                    onClick = onGoalCardClick
+                )
             }
 
-            // ── 5. Monthly Summary ────────────────────────────
             item {
                 MonthlySummarySection(data = sampleMonthlySummary)
             }
 
-            // ── 6. Income Sources ─────────────────────────────
             item {
                 IncomeSourcesCard(sources = sampleIncomeSources)
             }
 
-            // ── 7. Expense Breakdown ──────────────────────────
             item {
                 ExpenseBreakdownSection(sections = expenseSampleData())
             }
 
-            // ── 8. Budget Usage Progress ──────────────────────
             item {
                 BudgetUsageBar(
                     usedPercent      = OPTIONAL_BUDGET_USED_PERCENT,
@@ -163,7 +159,6 @@ fun HomeScreen(
         }
     }
 }
-
 
 @Composable
 private fun SectionHeader(
@@ -180,8 +175,6 @@ private fun SectionHeader(
         )
     )
 }
-
-// ─── Monthly Summary ──────────────────────────────────────────────────────────
 
 @Composable
 private fun MonthlySummarySection(data: MonthlySummaryData) {
@@ -265,8 +258,6 @@ private fun SummaryStatTile(
     }
 }
 
-// ─── Income Sources Card ──────────────────────────────────────────────────────
-
 @Composable
 private fun IncomeSourcesCard(sources: List<IncomeSourceItem>) {
     Box(
@@ -275,7 +266,7 @@ private fun IncomeSourcesCard(sources: List<IncomeSourceItem>) {
             .shadow(
                 elevation    = 3.dp,
                 shape        = RoundedCornerShape(16.dp),
-                ambientColor = PrimaryPurple.copy(alpha = 0.07f)
+                ambientColor = Color(0xFF7C4DFF).copy(alpha = 0.07f)
             )
             .clip(RoundedCornerShape(16.dp))
             .background(CardWhite)
@@ -331,8 +322,6 @@ private fun IncomeSourcesCard(sources: List<IncomeSourceItem>) {
     }
 }
 
-// ─── Budget Usage Bar ─────────────────────────────────────────────────────────
-
 @Composable
 private fun BudgetUsageBar(
     usedPercent: Int,
@@ -382,7 +371,6 @@ private fun BudgetUsageBar(
                 )
             }
 
-            // Progress bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -406,10 +394,6 @@ private fun BudgetUsageBar(
     }
 }
 
-
-// ─────────────────────────────────────────────
-//  Preview
-// ─────────────────────────────────────────────
 @Preview(showBackground = true, backgroundColor = 0xFFF5F3FF, showSystemUi = true)
 @Composable
 private fun HomeScreenPreview() {
