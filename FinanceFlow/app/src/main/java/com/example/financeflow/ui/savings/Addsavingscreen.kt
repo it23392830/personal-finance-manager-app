@@ -26,9 +26,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // Color tokens
-// ─────────────────────────────────────────────────────────────────────────────
+
 private val BgPurple      = Color(0xFFEDE2FF)
 private val FormYellow    = Color(0xFFF7E4A7)
 private val CardWhite     = Color(0xFFFFFFFF)
@@ -39,9 +39,9 @@ private val FieldBorder   = Color(0xFFD0C4E8)
 private val LabelGray     = Color(0xFF888888)
 private val DarkText      = Color(0xFF1A1A1A)
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // Hardcoded dropdown options
-// ─────────────────────────────────────────────────────────────────────────────
+
 private val currencyOptions = listOf(
     "LKR (Sri Lankan Rupee)",
     "USD (US Dollar)",
@@ -57,13 +57,13 @@ private val goalOptions = listOf(
     "Other"
 )
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // AddSavingScreen
 //
 // Full-page form for adding a new saving entry.
 // Uses Column + verticalScroll() for scrollability.
 // All state is local — no ViewModel, no database, no backend.
-// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 fun AddSavingScreen(
     onNavigateBack: () -> Unit = {}
@@ -191,10 +191,10 @@ fun AddSavingScreen(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // AddSavingHeaderCard
 // Top white card: title, subtitle, DarkMode + Person icons
-// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun AddSavingHeaderCard() {
     Card(
@@ -243,9 +243,9 @@ private fun AddSavingHeaderCard() {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // FormFieldLabel — small bold label above each field
-// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun FormFieldLabel(text: String) {
     Text(
@@ -257,10 +257,10 @@ private fun FormFieldLabel(text: String) {
     )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // AmountField
 // Outlined numeric text field with a dropdown-arrow trailing icon
-// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun AmountField(
     value: String,
@@ -287,11 +287,11 @@ private fun AmountField(
     )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // DropdownField
 // Tappable box that opens a DropdownMenu with the provided options.
 // Optionally shows a leading icon.
-// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun DropdownField(
     value: String,
@@ -363,10 +363,10 @@ private fun DropdownField(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // DescriptionField
 // Multi-line outlined text field for optional description
-// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun DescriptionField(
     value: String,
@@ -389,10 +389,10 @@ private fun DescriptionField(
     )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // DateField
 // Outlined text field pre-filled with a date, trailing calendar icon
-// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun DateField(
     value: String,
@@ -415,9 +415,9 @@ private fun DateField(
     )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // fieldColors — shared OutlinedTextField color scheme
-// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun fieldColors() = OutlinedTextFieldDefaults.colors(
     focusedContainerColor   = CardWhite,
@@ -429,9 +429,9 @@ private fun fieldColors() = OutlinedTextFieldDefaults.colors(
     unfocusedTextColor      = DarkText
 )
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // ActionButton — reusable solid-color rounded button
-// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun ActionButton(
     text: String,
@@ -458,9 +458,9 @@ private fun ActionButton(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // Previews
-// ─────────────────────────────────────────────────────────────────────────────
+
 @Preview(showBackground = true, showSystemUi = true, name = "AddSavingScreen – Full")
 @Composable
 fun PreviewAddSavingScreen() {
