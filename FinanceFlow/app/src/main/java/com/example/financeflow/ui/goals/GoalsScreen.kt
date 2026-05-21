@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -717,9 +718,9 @@ fun CreateGoalDialog(
                 CreateGoalField("Monthly Contribution Target (LKR)", uiState.monthlyTarget, viewModel::onCreateMonthlyTargetChanged, "Auto-calculated if empty")
 
                 // Category & Color
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    CreateGoalDropdown("Category", uiState.category, categories, viewModel::onCreateCategoryChanged, Modifier.weight(1f))
-                    CreateGoalDropdown("Colour", uiState.color, colors, viewModel::onCreateColorChanged, Modifier.weight(1f), isColor = true)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    CreateGoalDropdown("Category", uiState.category, categories, viewModel::onCreateCategoryChanged, Modifier.weight(1.1f))
+                    CreateGoalDropdown("Colour", uiState.color, colors, viewModel::onCreateColorChanged, Modifier.weight(0.9f), isColor = true)
                 }
 
                 // Description
@@ -794,7 +795,8 @@ private fun CreateGoalField(
                 unfocusedContainerColor = Color(0xFFF5F5F5),
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black
-            )
+            ),
+            textStyle = TextStyle(fontSize = 13.sp)
         )
     }
 }
@@ -816,34 +818,45 @@ private fun CreateGoalDropdown(
             expanded = expanded,
             onExpandedChange = { expanded = it }
         ) {
-            OutlinedTextField(
-                value = value,
-                onValueChange = {},
-                readOnly = true,
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(48.dp)
                     .menuAnchor(),
                 shape = RoundedCornerShape(12.dp),
-                trailingIcon = { 
+                color = Color(0xFFF5F5F5),
+                onClick = { expanded = true }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isColor) {
+                        Box(
+                            Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(getColorFromName(value))
+                        )
+                        Spacer(Modifier.width(4.dp))
+                    }
+                    Text(
+                        text = value,
+                        color = Color.Black,
+                        fontSize = 10.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Visible,
+                        modifier = Modifier.weight(1f)
+                    )
                     Icon(
                         Icons.Default.KeyboardArrowDown, 
                         null, 
                         tint = Color.Gray,
-                        modifier = Modifier.size(20.dp)
-                    ) 
-                },
-                leadingIcon = if (isColor) {
-                    { Box(Modifier.size(12.dp).clip(CircleShape).background(getColorFromName(value))) }
-                } else null,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                )
-            )
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
