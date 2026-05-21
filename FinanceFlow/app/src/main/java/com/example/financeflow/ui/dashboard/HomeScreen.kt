@@ -24,12 +24,12 @@ import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.components.Home.BalanceCard
 import com.example.financeflow.ui.components.Home.BalanceCardData
 import com.example.financeflow.ui.components.Home.ExpenseBreakdownSection
-import com.example.financeflow.ui.components.Home.GoalProgressCard
-import com.example.financeflow.ui.components.Home.GoalProgressData
 import com.example.financeflow.ui.components.Home.MoneyFlowSection
 import com.example.financeflow.ui.components.Home.QuickActionRow
 import com.example.financeflow.ui.components.Home.expenseSampleData
 import com.example.financeflow.ui.components.Home.moneyFlowSampleData
+import com.example.financeflow.ui.components.savings.GoalProgressCard
+import com.example.financeflow.ui.components.savings.GoalProgressData
 
 // ─────────────────────────────────────────────
 //  Design Tokens
@@ -189,7 +189,8 @@ private fun MonthlySummarySection(data: MonthlySummaryData) {
 
         Row(
             modifier              = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment     = Alignment.CenterVertically
         ) {
             SummaryStatTile(
                 label      = "Savings Rate",
@@ -200,6 +201,7 @@ private fun MonthlySummarySection(data: MonthlySummaryData) {
                 textColor  = Color(0xFF2DBD6E),
                 modifier   = Modifier.weight(1f)
             )
+            Spacer(modifier = Modifier.width(12.dp))
             SummaryStatTile(
                 label      = "Optional Budget",
                 value      = "${data.optionalBudgetPercent}%",

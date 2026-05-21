@@ -8,13 +8,16 @@ object Routes {
     const val FORGOT_PASSWORD  = "forgot_password"
     const val WELCOME          = "welcome"
     const val HOME = "home"
-
     const val INCOME = "income"
     const val EXPENSES = "expenses"
     const val SAVINGS = "savings"
     const val GOALS = "goals"
     const val INSIGHTS = "insights"
     const val DASHBOARD = "dashboard"
+
+    const val ADD_SAVING = "add_saving"
+    const val GOAL_DETAILS = "goal_details"
+    const val PROFILE = "profile"
 
     const val ADD_INCOME = "add_income"
     const val EDIT_INCOME = "edit_income/{incomeId}"
