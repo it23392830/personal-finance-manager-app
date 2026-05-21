@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.components
+package com.example.financeflow.ui.components.Home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
