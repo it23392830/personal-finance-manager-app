@@ -22,12 +22,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 val OrangeAccent = Color(0xFFF5A623)
 val GreenAccent  = Color(0xFF4CAF50)
 val CardWhite    = Color(0xFFFFFFFF)
 val BackgroundPurple = Color(0xFFEDE2FF)
-// HeaderCard
-// Contains: title, subtitle, two icon buttons, month-selector dropdown
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HeaderCard(
@@ -69,7 +69,6 @@ fun HeaderCard(
                     )
                 }
 
-                // Dark-mode icon
                 Icon(
                     imageVector = Icons.Default.DarkMode,
                     contentDescription = "Dark Mode",
@@ -79,7 +78,6 @@ fun HeaderCard(
                         .clickable { }
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                // Profile icon
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "Profile",
@@ -139,8 +137,7 @@ fun HeaderCard(
         }
     }
 }
-// SavingsThisMonthCard
-// Large amount, income + rate mini-cards, CTA button
+
 @Composable
 fun SavingsThisMonthCard(
     amount: String = "LKR 53,200",
@@ -176,14 +173,12 @@ fun SavingsThisMonthCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Total Income mini-card
                 MiniStatCard(
                     label = "Total Income",
                     value = totalIncome,
                     borderColor = GreenAccent,
                     modifier = Modifier.weight(1f)
                 )
-                // Saving Rate mini-card
                 MiniStatCard(
                     label = "Saving Rate",
                     value = savingRate,
@@ -219,6 +214,7 @@ fun SavingsThisMonthCard(
         }
     }
 }
+
 @Composable
 fun MiniStatCard(
     label: String,
@@ -245,7 +241,7 @@ fun MiniStatCard(
         }
     }
 }
-// Previews
+
 @Preview(showBackground = true, backgroundColor = 0xFFEDE2FF)
 @Composable
 fun PreviewHeaderCard() {
