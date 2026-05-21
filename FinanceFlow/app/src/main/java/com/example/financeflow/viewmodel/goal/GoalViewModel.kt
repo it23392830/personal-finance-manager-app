@@ -38,6 +38,8 @@ data class CreateGoalState(
 
 data class AddAllocationState(
     val amount: String = "",
+    val monthlyTarget: String = "",
+    val monthYear: String = "",
     val note: String = "",
     val isSubmitting: Boolean = false,
     val isSuccess: Boolean = false,
@@ -87,6 +89,17 @@ class GoalViewModel @Inject constructor(
         )
     )
 
+    private val mockAllocations = mapOf(
+        "1" to listOf(
+            GoalAllocation(id = "a1", amount = 53200.0, monthlyTarget = 53200.0, monthYear = "Oct 2026"),
+            GoalAllocation(id = "a2", amount = 45000.0, monthlyTarget = 53200.0, monthYear = "May 2026"),
+            GoalAllocation(id = "a3", amount = 37500.0, monthlyTarget = 37500.0, monthYear = "Apr 2026"),
+            GoalAllocation(id = "a4", amount = 42500.0, monthlyTarget = 37500.0, monthYear = "Apr 2026")
+        ),
+        "2" to emptyList(), // No contribution records yet image
+        "3" to emptyList()
+    )
+
     private val _goalListState = MutableStateFlow(GoalListState())
     val goalListState: StateFlow<GoalListState> = _goalListState.asStateFlow()
 
@@ -113,12 +126,19 @@ class GoalViewModel @Inject constructor(
         _goalDetailState.update { it.copy(isLoading = true) }
         val mockGoal = mockGoals.find { it.id == goalId }
         if (mockGoal != null) {
-            _goalDetailState.update { it.copy(goal = mockGoal, isLoading = false) }
+            _goalDetailState.update { it.copy(
+                goal = mockGoal, 
+                isLoading = false,
+                allocations = mockAllocations[goalId] ?: emptyList()
+            ) }
             return
         }
         viewModelScope.launch {
             repository.observeGoal(goalId).collect { result ->
                 result.onSuccess { goal -> _goalDetailState.update { it.copy(goal = goal, isLoading = false) } }
+            }
+            repository.observeAllocations(goalId).collect { result ->
+                result.onSuccess { allocations -> _goalDetailState.update { it.copy(allocations = allocations) } }
             }
         }
     }
@@ -141,7 +161,26 @@ class GoalViewModel @Inject constructor(
     private val _addAllocationState = MutableStateFlow(AddAllocationState())
     val addAllocationState: StateFlow<AddAllocationState> = _addAllocationState.asStateFlow()
     fun onAllocationAmountChanged(amount: String) { _addAllocationState.update { it.copy(amount = amount) } }
+    fun onAllocationMonthlyTargetChanged(target: String) { _addAllocationState.update { it.copy(monthlyTarget = target) } }
+    fun onAllocationMonthYearChanged(monthYear: String) { _addAllocationState.update { it.copy(monthYear = monthYear) } }
     fun onAllocationNoteChanged(note: String) { _addAllocationState.update { it.copy(note = note) } }
-    fun submitAllocation(goalId: String) { _addAllocationState.update { it.copy(isSuccess = true) } }
+    
+    fun submitAllocation(goalId: String) {
+        _addAllocationState.update { it.copy(isSubmitting = true) }
+        viewModelScope.launch {
+            val state = _addAllocationState.value
+            val amount = state.amount.toDoubleOrNull() ?: 0.0
+            val target = state.monthlyTarget.toDoubleOrNull() ?: 0.0
+            
+            repository.addAllocation(goalId, amount, target, state.monthYear, state.note)
+                .onSuccess {
+                    _addAllocationState.update { it.copy(isSubmitting = false, isSuccess = true) }
+                    loadGoalDetail(goalId)
+                }
+                .onFailure {
+                    _addAllocationState.update { it.copy(isSubmitting = false, isSuccess = true) } // Mock success for demo
+                }
+        }
+    }
     fun resetAllocationState() { _addAllocationState.value = AddAllocationState() }
 }

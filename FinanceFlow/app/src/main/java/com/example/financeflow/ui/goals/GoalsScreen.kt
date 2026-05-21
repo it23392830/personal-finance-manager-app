@@ -66,7 +66,7 @@ fun GoalsScreen(
     val uiState by viewModel.goalListState.collectAsState()
     val detailState by viewModel.goalDetailState.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
-    var showAddAllocation by remember { mutableStateOf(false) }
+    var showAddContribution by remember { mutableStateOf(false) }
 
     // Auto-select first goal on load if none selected
     LaunchedEffect(uiState.goals) {
@@ -90,7 +90,7 @@ fun GoalsScreen(
             when {
                 uiState.isLoading -> {
                     item {
-                        Box(Modifier.fillParentMaxHeight(0.6f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Box(modifier = Modifier.fillParentMaxHeight(0.6f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(color = Color(0xFF8A2BE2))
                         }
                     }
@@ -121,17 +121,21 @@ fun GoalsScreen(
                     // Integrated Detail Section opens at the bottom
                     if (detailState.goal != null) {
                         val goal = detailState.goal!!
-                        val themeColor = if (goal.category == "Lifestyle") Color(0xFF4CAF50) else Color(0xFF8A2BE2)
+                        val themeColor = getCategoryColor(goal.category)
                         
                         item {
-                            Spacer(Modifier.height(32.dp))
-                            Text(
-                                text = "Goal Details",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(start = 20.dp, bottom = 12.dp)
-                            )
+                            Spacer(modifier = Modifier.height(32.dp))
                             GoalDetailHeader(goal)
+                        }
+
+                        item {
+                            GoalSummaryGrid(goal)
+                        }
+
+                        if (!goal.isOnTrack) {
+                            item {
+                                GoalWarningCard(goal)
+                            }
                         }
 
                         item {
@@ -160,25 +164,39 @@ fun GoalsScreen(
 
                         if (selectedTab == 0) {
                             item {
-                                Box(Modifier.padding(horizontal = 20.dp)) {
+                                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
                                     GoalMilestonesSection(goal)
                                 }
                             }
                             item {
-                                Box(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+                                Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
                                     GoalInsightSection(goal)
                                 }
                             }
                         } else {
+                            item {
+                                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                                    MonthlyContributionsHeader(onAddClick = { showAddContribution = true })
+                                }
+                            }
                             if (detailState.allocations.isEmpty()) {
                                 item {
-                                    Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                                        Text("No contributions yet", color = Color.Gray)
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 48.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "No contribution records yet",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Color.Gray
+                                        )
                                     }
                                 }
                             } else {
                                 items(items = detailState.allocations, key = { it.id }) { allocation ->
-                                    Box(Modifier.padding(horizontal = 20.dp)) {
+                                    Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
                                         AllocationItem(allocation, goal.currency)
                                     }
                                 }
@@ -187,7 +205,7 @@ fun GoalsScreen(
 
                         item {
                             Button(
-                                onClick = { showAddAllocation = true },
+                                onClick = { showAddContribution = true },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(20.dp)
@@ -196,8 +214,8 @@ fun GoalsScreen(
                                 colors = ButtonDefaults.buttonColors(containerColor = themeColor)
                             ) {
                                 Icon(Icons.Default.Add, contentDescription = null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Add Funds", fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Add Contribution", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -211,160 +229,97 @@ fun GoalsScreen(
                         }
                     }
                     
-                    item { Spacer(Modifier.height(80.dp)) }
+                    item { Spacer(modifier = Modifier.height(80.dp)) }
                 }
             }
         }
     }
 
-    if (showAddAllocation && detailState.goal != null) {
-        AddAllocationBottomSheet(
+    if (showAddContribution && detailState.goal != null) {
+        AddContributionDialog(
             goalId = detailState.goal!!.id,
-            goalTitle = detailState.goal!!.title,
-            onDismiss = { showAddAllocation = false },
+            onDismiss = { showAddContribution = false },
             viewModel = viewModel
         )
     }
 }
 
-// ─── Navigation Wrappers ───────────────────────────────────────────────────
+// ─── Goal Summary Components ────────────────────────────────────────────────
 
 @Composable
-fun GoalDetailScreen(
-    goalId: String,
-    onNavigateBack: () -> Unit,
-    viewModel: GoalViewModel = hiltViewModel()
-) {
-    LaunchedEffect(goalId) {
-        viewModel.loadGoalDetail(goalId)
-    }
-    GoalsScreen(viewModel = viewModel)
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CreateGoalScreen(
-    onNavigateBack: () -> Unit,
-    viewModel: GoalViewModel = hiltViewModel()
-) {
-    val uiState by viewModel.createGoalState.collectAsState()
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
-            viewModel.resetCreateGoalState()
-            onNavigateBack()
-        }
-    }
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("New Goal", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) { 
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") 
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            OutlinedTextField(value = uiState.title, onValueChange = viewModel::onCreateTitleChanged, label = { Text("Goal Name") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = uiState.targetAmount, onValueChange = viewModel::onCreateTargetAmountChanged, label = { Text("Target Amount (LKR)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-            Text("Timeframe: ${uiState.deadlineMonths} months")
-            Slider(value = uiState.deadlineMonths.toFloat(), onValueChange = { viewModel.onCreateDeadlineMonthsChanged(it.toInt()) }, valueRange = 1f..36f)
-            Button(onClick = viewModel::submitCreateGoal, modifier = Modifier.fillMaxWidth().height(52.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8A2BE2))) { Text("Create Goal") }
-        }
-    }
-}
-
-// ─── UI Components ──────────────────────────────────────────────────────────
-
-@Composable
-private fun GoalsHeader(onCreateGoal: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
-            .background(Brush.verticalGradient(listOf(Color(0xFF9D50BB), Color(0xFF6E48AA))))
-            .padding(24.dp).padding(top = 16.dp)
+private fun GoalSummaryGrid(goal: Goal) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text("Financial Goals", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text("Track your progress & stay motivated", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
-                }
-                Button(
-                    onClick = onCreateGoal,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f)),
-                    shape = RoundedCornerShape(12.dp), modifier = Modifier.height(36.dp)
-                ) {
-                    Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("New Goal", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-            Spacer(Modifier.height(24.dp))
-            Surface(color = Color.White.copy(alpha = 0.15f), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-                Text("May 2026", color = Color.White, modifier = Modifier.padding(16.dp), fontWeight = FontWeight.Medium)
-            }
+        SummaryCard(
+            label = "Required Saved",
+            value = "Rs. ${String.format(Locale.US, "%,.0f", goal.monthlySavingTarget)}",
+            subLabel = "Monthly Target",
+            color = Color(0xFFE8EAF6),
+            modifier = Modifier.weight(1f)
+        )
+        SummaryCard(
+            label = "Current Rate",
+            value = "Rs. ${String.format(Locale.US, "%,.0f", goal.monthlySavingTarget * 0.92)}",
+            subLabel = "monthly average",
+            color = Color(0xFFE8F5E9),
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun SummaryCard(label: String, value: String, subLabel: String, color: Color, modifier: Modifier) {
+    Surface(modifier = modifier, shape = RoundedCornerShape(16.dp), color = color) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = Color.DarkGray)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(subLabel, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
         }
     }
 }
 
 @Composable
-fun GoalCard(
-    goal: Goal,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+private fun GoalWarningCard(goal: Goal) {
     Card(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 0.dp),
-        border = BorderStroke(if (isSelected) 2.dp else 1.dp, if (isSelected) Color(0xFF8A2BE2) else Color(0xFFEEEEEE))
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF9C4)),
+        border = BorderStroke(1.dp, Color(0xFFFFF176))
     ) {
         Row(
-            modifier = Modifier.padding(16.dp), 
+            modifier = Modifier.padding(12.dp), 
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(shape = RoundedCornerShape(12.dp), color = getCategoryColor(goal.category).copy(alpha = 0.1f), modifier = Modifier.size(48.dp)) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(getCategoryIcon(goal.category), null, tint = getCategoryColor(goal.category), modifier = Modifier.size(24.dp))
-                }
+            Icon(Icons.Default.ErrorOutline, null, tint = Color(0xFFFBC02D), modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(text = "Need to increase contributions", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Text(text = "You need LKR 4,100 more per month.", style = MaterialTheme.typography.labelSmall, color = Color.DarkGray)
             }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(goal.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("${goal.category} · ${goal.daysRemaining}d left", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                Spacer(Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = { (goal.progressPercentage / 100).toFloat() },
-                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
-                    color = Color(0xFF2D2D2D), trackColor = Color(0xFFF0F0F0)
-                )
-            }
-            Spacer(Modifier.width(12.dp))
-            StatusChip(isOnTrack = goal.isOnTrack)
         }
     }
 }
+
+// ─── Sub-Components ─────────────────────────────────────────────────────────
 
 @Composable
 private fun GoalDetailHeader(goal: Goal) {
-    val gradientColors = if (goal.category == "Lifestyle") listOf(Color(0xFF00C853), Color(0xFFB2FF59)) else listOf(Color(0xFF9D50BB), Color(0xFF6E48AA))
-    Card(Modifier.fillMaxWidth().padding(horizontal = 20.dp), shape = RoundedCornerShape(24.dp)) {
-        Column(Modifier.background(Brush.verticalGradient(gradientColors)).padding(20.dp)) {
+    val gradientColors = when (goal.category) {
+        "Lifestyle" -> listOf(Color(0xFF00C853), Color(0xFFB2FF59))
+        "Security" -> listOf(Color(0xFF1976D2), Color(0xFF64B5F6))
+        else -> listOf(Color(0xFF9D50BB), Color(0xFF6E48AA))
+    }
+    
+    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), shape = RoundedCornerShape(24.dp)) {
+        Column(modifier = Modifier.background(Brush.verticalGradient(gradientColors)).padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(getCategoryIcon(goal.category), null, tint = Color.White, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(goal.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color.White)
-                Spacer(Modifier.weight(1f))
+                Spacer(modifier = Modifier.weight(1f))
                 Surface(shape = RoundedCornerShape(8.dp), color = Color.White.copy(alpha = 0.2f)) {
                     Text(
                         text = if (goal.isOnTrack) "On Track" else "Behind", 
@@ -375,17 +330,29 @@ private fun GoalDetailHeader(goal: Goal) {
                     )
                 }
             }
-            Spacer(Modifier.height(16.dp))
-            Text("Target: ${formatCurrency(goal.targetAmount, goal.currency)}", color = Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(24.dp))
-            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Target: ${formatCurrency(goal.targetAmount, goal.currency)}", 
+                color = Color.White, 
+                style = MaterialTheme.typography.bodyMedium, 
+                fontWeight = FontWeight.Bold
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Progress", color = Color.White, fontWeight = FontWeight.Bold)
                 Text("${String.format(Locale.US, "%.1f", goal.progressPercentage)}%", color = Color.White, fontWeight = FontWeight.Bold)
             }
-            Spacer(Modifier.height(8.dp))
-            LinearProgressIndicator(progress = { (goal.progressPercentage / 100).toFloat() }, modifier = Modifier.fillMaxWidth().height(10.dp).clip(CircleShape), color = Color.White, trackColor = Color.White.copy(alpha = 0.3f), strokeCap = StrokeCap.Round)
-            Spacer(Modifier.height(12.dp))
-            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { (goal.progressPercentage / 100).toFloat() }, 
+                modifier = Modifier.fillMaxWidth().height(10.dp).clip(CircleShape), 
+                color = Color.White, 
+                trackColor = Color.White.copy(alpha = 0.3f), 
+                strokeCap = StrokeCap.Round
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(formatCurrency(goal.currentSavedAmount, goal.currency), color = Color.White, fontSize = 12.sp)
                 Text(formatCurrency(goal.targetAmount, goal.currency), color = Color.White, fontSize = 12.sp)
             }
@@ -396,12 +363,64 @@ private fun GoalDetailHeader(goal: Goal) {
 @Composable
 private fun GoalMilestonesSection(goal: Goal) {
     var selectedBadge by remember { mutableStateOf<GoalBadge?>(null) }
-    if (selectedBadge != null) MilestoneDetailDialog(badge = selectedBadge!!, unlocked = selectedBadge!!.id in goal.unlockedBadges, onDismiss = { selectedBadge = null })
+    if (selectedBadge != null) {
+        MilestoneDetailDialog(
+            badge = selectedBadge!!, 
+            unlocked = selectedBadge!!.id in goal.unlockedBadges, 
+            onDismiss = { selectedBadge = null }
+        )
+    }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = "${goal.title} Milestones", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        GoalBadge.entries.forEach { badge ->
+        GoalBadge.values().forEach { badge ->
             val unlocked = badge.id in goal.unlockedBadges
-            MilestoneItem(badge = badge, unlocked = unlocked, onClick = { selectedBadge = badge })
+            MilestoneItem(badge = badge, unlocked = unlocked, goal = goal, onClick = { selectedBadge = badge })
+        }
+    }
+}
+
+@Composable
+private fun MilestoneItem(badge: GoalBadge, unlocked: Boolean, goal: Goal, onClick: () -> Unit) {
+    val categoryColor = getCategoryColor(goal.category)
+    Card(
+        onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = if (unlocked) Color.White else Color(0xFFF5F5F5)),
+        border = BorderStroke(1.dp, Color(0xFFEEEEEE))
+    ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Surface(
+                shape = CircleShape, 
+                color = if (unlocked) categoryColor.copy(alpha = 0.15f) else Color(0xFFF0F0F0), 
+                modifier = Modifier.size(44.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = badge.emoji, 
+                        fontSize = 20.sp, 
+                        modifier = Modifier.graphicsLayer { alpha = if (unlocked) 1f else 0.3f }
+                    )
+                }
+            }
+            Spacer(Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(badge.label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = if (unlocked) Color.Black else Color.Gray)
+                Text(
+                    text = if (unlocked) "Achieved" else "Required: ${(badge.threshold * 100).toInt()}%", 
+                    style = MaterialTheme.typography.labelSmall, 
+                    color = Color.Gray
+                )
+            }
+            if (unlocked) {
+                Surface(shape = RoundedCornerShape(8.dp), color = categoryColor.copy(alpha = 0.1f), modifier = Modifier.padding(start = 8.dp)) {
+                    Text(
+                        text = "Unlocked", 
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), 
+                        style = MaterialTheme.typography.labelSmall, 
+                        color = categoryColor, 
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
     }
 }
@@ -411,7 +430,7 @@ private fun MilestoneDetailDialog(badge: GoalBadge, unlocked: Boolean, onDismiss
     Dialog(onDismissRequest = onDismiss) {
         Card(shape = RoundedCornerShape(28.dp), modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(if (unlocked) badge.emoji else "🔒", fontSize = 64.sp)
+                Text(text = badge.emoji, fontSize = 64.sp, modifier = Modifier.graphicsLayer { alpha = if (unlocked) 1f else 0.4f })
                 Spacer(Modifier.height(20.dp))
                 Text(badge.label, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(12.dp))
@@ -438,7 +457,7 @@ private fun TabButton(text: String, selected: Boolean, onClick: () -> Unit, modi
         color = if (selected) Color.White else Color.Transparent,
         shadowElevation = if (selected) 2.dp else 0.dp
     ) {
-        Text(text, Modifier.padding(vertical = 10.dp), textAlign = TextAlign.Center, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, color = if (selected) Color.Black else Color.Gray, fontSize = 14.sp)
+        Text(text, modifier = Modifier.padding(vertical = 10.dp), textAlign = TextAlign.Center, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, color = if (selected) Color.Black else Color.Gray, fontSize = 14.sp)
     }
 }
 
@@ -446,14 +465,132 @@ private fun TabButton(text: String, selected: Boolean, onClick: () -> Unit, modi
 private fun StatusChip(isOnTrack: Boolean) {
     val (color, text) = if (isOnTrack) Pair(Color(0xFFE8F5E9), "On Track") else Pair(Color(0xFFFFF3E0), "Behind")
     Surface(shape = RoundedCornerShape(8.dp), color = color) {
-        Text(text, Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = if (isOnTrack) Color(0xFF2E7D32) else Color(0xFFEF6C00))
+        Text(text, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = if (isOnTrack) Color(0xFF2E7D32) else Color(0xFFEF6C00))
     }
 }
 
+@Composable
+private fun AllocationItem(allocation: GoalAllocation, currency: String) {
+    val isMet = allocation.amount >= allocation.monthlyTarget
+    Card(
+        modifier = Modifier.fillMaxWidth(), 
+        shape = RoundedCornerShape(16.dp), 
+        colors = CardDefaults.cardColors(containerColor = Color.White), 
+        border = BorderStroke(1.dp, Color(0xFFF0F0F0))
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp), 
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(shape = RoundedCornerShape(8.dp), color = Color(0xFFF5F5F5), modifier = Modifier.size(40.dp)) {
+                Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.CalendarToday, null, tint = Color.Gray, modifier = Modifier.size(20.dp)) }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = allocation.monthYear, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                Text(text = "Target: ${formatCurrency(allocation.monthlyTarget, currency)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(text = formatCurrency(allocation.amount, currency), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = if (isMet) Color(0xFF2E7D32) else Color(0xFFC62828))
+                Surface(shape = RoundedCornerShape(8.dp), color = if (isMet) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)) {
+                    Text(text = if (isMet) "Met" else "Below", modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = if (isMet) Color(0xFF2E7D32) else Color(0xFFC62828), fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AddContributionDialog(
+    goalId: String,
+    onDismiss: () -> Unit,
+    viewModel: GoalViewModel
+) {
+    val uiState by viewModel.addAllocationState.collectAsState()
+    
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            viewModel.resetAllocationState()
+            onDismiss()
+        }
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Add, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Add Contribution",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                AddContributionField("Month", uiState.monthYear, viewModel::onAllocationMonthYearChanged)
+                AddContributionField("Contribution Amount (LKR)", uiState.amount, viewModel::onAllocationAmountChanged, KeyboardType.Decimal)
+                AddContributionField("Monthly Target (LKR)", uiState.monthlyTarget, viewModel::onAllocationMonthlyTargetChanged, KeyboardType.Decimal)
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel", color = Color.Gray, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = { viewModel.submitAllocation(goalId) },
+                        modifier = Modifier.weight(1.5f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                    ) {
+                        Text("+ Add Contribution", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddContributionField(label: String, value: String, onValueChange: (String) -> Unit, type: KeyboardType = KeyboardType.Text) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            keyboardOptions = KeyboardOptions(keyboardType = type),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = Color(0xFFF5F5F5),
+                focusedContainerColor = Color(0xFFF5F5F5),
+                unfocusedBorderColor = Color.Transparent,
+                focusedBorderColor = Color.Transparent
+            )
+        )
+    }
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
 private fun getCategoryColor(category: String): Color = when (category) {
-    "Technology" -> Color(0xFF2196F3)
-    "Security" -> Color(0xFF4CAF50)
-    "Lifestyle" -> Color(0xFFFF9800)
+    "Technology" -> Color(0xFF8A2BE2)
+    "Security" -> Color(0xFF2196F3)
+    "Lifestyle" -> Color(0xFF4CAF50)
     else -> Color(0xFF9C27B0)
 }
 
@@ -465,12 +602,85 @@ private fun getCategoryIcon(category: String): ImageVector = when (category) {
 }
 
 @Composable
+fun GoalDetailScreen(
+    goalId: String,
+    onNavigateBack: () -> Unit,
+    viewModel: GoalViewModel = hiltViewModel()
+) {
+    LaunchedEffect(goalId) {
+        viewModel.loadGoalDetail(goalId)
+    }
+    GoalsScreen(viewModel = viewModel)
+}
+
+@Composable
+private fun GoalsHeader(onCreateGoal: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
+            .background(Brush.verticalGradient(listOf(Color(0xFF9D50BB), Color(0xFF6E48AA))))
+            .padding(24.dp)
+            .padding(top = 16.dp)
+    ) {
+        Column {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column {
+                    Text("Financial Goals", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Track your progress & stay motivated", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
+                }
+                Button(
+                    onClick = onCreateGoal,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f)),
+                    shape = RoundedCornerShape(12.dp), modifier = Modifier.height(36.dp)
+                ) {
+                    Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("New Goal", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Surface(color = Color.White.copy(alpha = 0.15f), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                Text("May 2026", color = Color.White, modifier = Modifier.padding(16.dp), fontWeight = FontWeight.Medium)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MonthlyContributionsHeader(onAddClick: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Text("Monthly Contributions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        OutlinedButton(
+            onClick = onAddClick, 
+            shape = RoundedCornerShape(12.dp), 
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp), 
+            modifier = Modifier.height(32.dp), 
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray)
+        ) {
+            Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("+ Add", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun EmptyGoalsState(onCreateGoal: () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth().padding(64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("🎯", fontSize = 64.sp)
+        Text("No goals yet", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Button(onClick = onCreateGoal, modifier = Modifier.padding(top = 16.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8A2BE2))) { Text("Create a Goal") }
+    }
+}
+
+@Composable
 private fun GoalInsightSection(goal: Goal) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(text = "Goal Insights", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         InsightCard(
             title = "Keep it up!", 
-            description = "At your current rate, you'll reach your ${goal.title} goal in ~${String.format(Locale.US, "%.1f", goal.monthsRemaining)} months.",
+            description = "At your current rate, you'll reach your ${goal.title} goal in ~${String.format(Locale.US, "%.1f", goal.monthsRemaining)} months.", 
             icon = Icons.AutoMirrored.Filled.TrendingUp, 
             color = Color(0xFFE3F2FD)
         )
@@ -497,99 +707,88 @@ private fun InsightCard(title: String, description: String, icon: ImageVector, c
     }
 }
 
-@Composable
-private fun MilestoneItem(badge: GoalBadge, unlocked: Boolean, onClick: () -> Unit) {
-    Card(
-        onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = if (unlocked) Color.White else Color(0xFFF5F5F5)),
-        border = BorderStroke(1.dp, Color(0xFFEEEEEE))
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp), 
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(shape = CircleShape, color = if (unlocked) Color(0xFFE8F5E9) else Color(0xFFE0E0E0), modifier = Modifier.size(40.dp)) {
-                Box(contentAlignment = Alignment.Center) {
-                    if (unlocked) Icon(Icons.Default.Check, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(20.dp))
-                    else Text(badge.emoji, fontSize = 16.sp, modifier = Modifier.graphicsLayer { alpha = 0.5f })
-                }
-            }
-            Spacer(Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(badge.label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = if (unlocked) Color.Black else Color.Gray)
-                Text(
-                    text = if (unlocked) "Achieved" else "Required: ${(badge.threshold * 100).toInt()}%", 
-                    style = MaterialTheme.typography.labelSmall, 
-                    color = Color.Gray
-                )
-            }
-            if (unlocked) Surface(shape = RoundedCornerShape(8.dp), color = Color(0xFFF3E5F5), modifier = Modifier.padding(start = 8.dp)) {
-                Text("Unlocked", Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = Color(0xFF8A2BE2), fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
-
-@Composable
-private fun AllocationItem(allocation: GoalAllocation, currency: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), 
-        horizontalArrangement = Arrangement.SpaceBetween, 
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(shape = CircleShape, color = Color(0xFFE8F5E9), modifier = Modifier.size(36.dp)) {
-                Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp), tint = Color(0xFF2E7D32)) }
-            }
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text(allocation.note.ifBlank { "Funds added" }, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                Text(formatDate(allocation.allocatedAt), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            }
-        }
-        Text(text = "+${formatCurrency(allocation.amount, currency)}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
-    }
-    HorizontalDivider(color = Color(0xFFEEEEEE))
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddAllocationBottomSheet(goalId: String, goalTitle: String, onDismiss: () -> Unit, viewModel: GoalViewModel) {
-    val uiState by viewModel.addAllocationState.collectAsState()
-    LaunchedEffect(uiState.isSuccess) { if (uiState.isSuccess) onDismiss() }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+fun CreateGoalScreen(
+    onNavigateBack: () -> Unit,
+    viewModel: GoalViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.createGoalState.collectAsState()
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            viewModel.resetCreateGoalState()
+            onNavigateBack()
+        }
+    }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("New Goal", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
+                }
+            )
+        }
+    ) { padding ->
         Column(
-            modifier = Modifier.fillMaxWidth().padding(24.dp).padding(bottom = 32.dp), 
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Text(text = "Add Funds to $goalTitle", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            OutlinedTextField(value = uiState.amount, onValueChange = viewModel::onAllocationAmountChanged, label = { Text("Amount") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = uiState.note, onValueChange = viewModel::onAllocationNoteChanged, label = { Text("Note (optional)") }, modifier = Modifier.fillMaxWidth())
-            Button(onClick = { viewModel.submitAllocation(goalId) }, modifier = Modifier.fillMaxWidth().height(52.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8A2BE2))) { Text("Add Funds") }
+            OutlinedTextField(value = uiState.title, onValueChange = viewModel::onCreateTitleChanged, label = { Text("Goal Name") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = uiState.targetAmount, onValueChange = viewModel::onCreateTargetAmountChanged, label = { Text("Target Amount (LKR)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+            Text("Timeframe: ${uiState.deadlineMonths} months")
+            Slider(value = uiState.deadlineMonths.toFloat(), onValueChange = { viewModel.onCreateDeadlineMonthsChanged(it.toInt()) }, valueRange = 1f..36f)
+            Button(onClick = viewModel::submitCreateGoal, modifier = Modifier.fillMaxWidth().height(52.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8A2BE2))) { Text("Create Goal") }
         }
     }
 }
 
 @Composable
-fun BadgeUnlockDialog(badges: List<GoalBadge>, onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("🎉", fontSize = 48.sp)
-                Text("Badge Unlocked!", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                badges.forEach { Text("${it.emoji} ${it.label}", style = MaterialTheme.typography.bodyLarge) }
-                Spacer(Modifier.height(16.dp))
-                Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8A2BE2))) { Text("Awesome!") }
+fun GoalCard(
+    goal: Goal,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val categoryColor = getCategoryColor(goal.category)
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) categoryColor.copy(alpha = 0.05f) else Color.White
+        ),
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) categoryColor else Color(0xFFEEEEEE)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = categoryColor.copy(alpha = 0.1f),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(getCategoryIcon(goal.category), null, tint = categoryColor)
+                }
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(goal.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                Text(goal.category, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "${(goal.progressPercentage).toInt()}%",
+                    fontWeight = FontWeight.Bold,
+                    color = categoryColor
+                )
+                StatusChip(goal.isOnTrack)
             }
         }
-    }
-}
-
-@Composable
-private fun EmptyGoalsState(onCreateGoal: () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().padding(64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("🎯", fontSize = 64.sp)
-        Text("No goals yet", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Button(onClick = onCreateGoal, modifier = Modifier.padding(top = 16.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8A2BE2))) { Text("Create a Goal") }
     }
 }

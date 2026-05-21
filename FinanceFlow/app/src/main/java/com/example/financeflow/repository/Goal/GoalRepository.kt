@@ -102,6 +102,8 @@ class GoalRepository @Inject constructor(
     suspend fun addAllocation(
         goalId: String,
         amount: Double,
+        monthlyTarget: Double = 0.0,
+        monthYear: String = "",
         note: String = ""
     ): Result<List<GoalBadge>> = runCatching {
         val collection = goalsCollection() ?: throw Exception("User not authenticated")
@@ -132,6 +134,8 @@ class GoalRepository @Inject constructor(
                 id = allocationRef.id,
                 goalId = goalId,
                 amount = amount,
+                monthlyTarget = monthlyTarget,
+                monthYear = monthYear,
                 note = note,
                 allocatedAt = Timestamp.now()
             )
