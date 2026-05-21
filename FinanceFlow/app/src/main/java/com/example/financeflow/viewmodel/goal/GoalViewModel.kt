@@ -96,7 +96,7 @@ class GoalViewModel @Inject constructor(
             GoalAllocation(id = "a3", amount = 37500.0, monthlyTarget = 37500.0, monthYear = "Apr 2026"),
             GoalAllocation(id = "a4", amount = 42500.0, monthlyTarget = 37500.0, monthYear = "Apr 2026")
         ),
-        "2" to emptyList(), // No contribution records yet image
+        "2" to emptyList(),
         "3" to emptyList()
     )
 
@@ -110,7 +110,7 @@ class GoalViewModel @Inject constructor(
         viewModelScope.launch {
             repository.observeGoals().collect { result ->
                 result.onSuccess { goals ->
-                    _goalListState.update { it.copy(goals = goals, isLoading = false, error = null) }
+                    _goalListState.update { it.copy(goals = goals.ifEmpty { mockGoals }, isLoading = false, error = null) }
                 }
                 result.onFailure { _ ->
                     _goalListState.update { it.copy(goals = mockGoals, isLoading = false, error = null) }
@@ -123,7 +123,8 @@ class GoalViewModel @Inject constructor(
     val goalDetailState: StateFlow<GoalDetailState> = _goalDetailState.asStateFlow()
 
     fun loadGoalDetail(goalId: String) {
-        _goalDetailState.update { it.copy(isLoading = true) }
+        _goalDetailState.update { it.copy(isLoading = true, goal = null, allocations = emptyList()) }
+        
         val mockGoal = mockGoals.find { it.id == goalId }
         if (mockGoal != null) {
             _goalDetailState.update { it.copy(
@@ -133,12 +134,21 @@ class GoalViewModel @Inject constructor(
             ) }
             return
         }
+        
         viewModelScope.launch {
-            repository.observeGoal(goalId).collect { result ->
-                result.onSuccess { goal -> _goalDetailState.update { it.copy(goal = goal, isLoading = false) } }
+            launch {
+                repository.observeGoal(goalId).collect { result ->
+                    result.onSuccess { goal -> 
+                        _goalDetailState.update { it.copy(goal = goal, isLoading = false) } 
+                    }
+                }
             }
-            repository.observeAllocations(goalId).collect { result ->
-                result.onSuccess { allocations -> _goalDetailState.update { it.copy(allocations = allocations) } }
+            launch {
+                repository.observeAllocations(goalId).collect { result ->
+                    result.onSuccess { allocations -> 
+                        _goalDetailState.update { it.copy(allocations = allocations) } 
+                    }
+                }
             }
         }
     }
