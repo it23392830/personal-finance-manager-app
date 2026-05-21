@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.financeflow.ui.components.savings.CardWhite
+import com.example.financeflow.ui.theme.CardWhite
 
 @Composable
 fun SavingsInsightsCard() {
