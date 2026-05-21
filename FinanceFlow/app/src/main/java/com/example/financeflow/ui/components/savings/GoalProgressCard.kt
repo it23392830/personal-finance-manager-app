@@ -3,6 +3,7 @@ package com.example.financeflow.ui.components.savings
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -104,7 +105,8 @@ val dummyGoals: List<SavingGoal> = defaultGoals
 @Composable
 fun GoalProgressCard(
     data: GoalProgressData = goalProgressSample(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     // Animate progress bar on first composition
     var animationPlayed by remember { mutableStateOf(false) }
@@ -126,6 +128,7 @@ fun GoalProgressCard(
             )
             .clip(RoundedCornerShape(20.dp))
             .background(CardWhite)
+            .clickable { onClick() }
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
