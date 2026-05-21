@@ -21,7 +21,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.financeflow.ui.components.*
+import com.example.financeflow.ui.components.Home.BalanceCard
+import com.example.financeflow.ui.components.Home.BalanceCardData
+import com.example.financeflow.ui.components.Home.ExpenseBreakdownSection
+import com.example.financeflow.ui.components.Home.GoalProgressCard
+import com.example.financeflow.ui.components.Home.GoalProgressData
+import com.example.financeflow.ui.components.Home.MoneyFlowSection
+import com.example.financeflow.ui.components.Home.QuickActionRow
+import com.example.financeflow.ui.components.Home.expenseSampleData
+import com.example.financeflow.ui.components.Home.moneyFlowSampleData
 
 // ─────────────────────────────────────────────
 //  Design Tokens
@@ -36,21 +44,21 @@ private val ProgressTrackBg  = Color(0xFFFFE0E0)
 //  Hardcoded sample data
 // ─────────────────────────────────────────────
 private val sampleBalanceData = BalanceCardData(
-    userName         = "Kavindu",
+    userName = "Kavindu",
     availableBalance = 35_000L,
-    totalIncome      = 120_000L,
-    totalExpenses    = 37_500L,
-    totalSaved       = 53_200L,
-    streakDays       = 3
+    totalIncome = 120_000L,
+    totalExpenses = 37_500L,
+    totalSaved = 53_200L,
+    streakDays = 3
 )
 
 private val sampleGoalData = GoalProgressData(
-    goalTitle           = "MacBook Pro M4 Goal",
-    currentAmount       = 11_200L,
-    targetAmount        = 490_000L,
-    daysRemaining       = 267,
-    dailySavingsNeeded  = 1_794L,
-    currentDailyRate    = 1_774L
+    goalTitle = "MacBook Pro M4 Goal",
+    currentAmount = 11_200L,
+    targetAmount = 490_000L,
+    daysRemaining = 267,
+    dailySavingsNeeded = 1_794L,
+    currentDailyRate = 1_774L
 )
 
 private data class IncomeSourceItem(
@@ -112,7 +120,7 @@ fun HomeScreen(
 
             item {
                 QuickActionRow(
-                    onAddIncomeClick  = onAddIncomeClick,
+                    onAddIncomeClick = onAddIncomeClick,
                     onAddExpenseClick = onAddExpenseClick
                 )
             }
