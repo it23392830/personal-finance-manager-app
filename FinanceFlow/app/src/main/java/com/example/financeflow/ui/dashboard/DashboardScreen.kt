@@ -11,12 +11,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
-import com.example.financeflow.navigation.BottomNavItem
 import com.example.financeflow.navigation.Routes
-import com.example.financeflow.ui.components.BottomNavigationBar
+import com.example.financeflow.ui.components.Home.BottomNavigationBar
 import com.example.financeflow.ui.expenses.ExpensesScreen
 import com.example.financeflow.ui.goals.GoalsScreen
-import com.example.financeflow.ui.dashboard.HomeScreen
 import com.example.financeflow.ui.income.IncomeScreen
 import com.example.financeflow.ui.insights.DailyReportScreen
 import com.example.financeflow.ui.insights.InsightsScreen
