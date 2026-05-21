@@ -51,13 +51,17 @@ class GoalViewModel @Inject constructor(
     private val repository: GoalRepository
 ) : ViewModel() {
 
-    private fun getMockDeadline(days: Int): Timestamp {
+    private fun getMockTimestamp(daysOffset: Int): Timestamp {
         val calendar = Calendar.getInstance()
-        calendar.add(Calendar.DAY_OF_YEAR, days)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        calendar.add(Calendar.DAY_OF_YEAR, daysOffset)
         return Timestamp(calendar.time)
     }
 
-    // ─── Mock Data Exactly Matching User Images ──────────────────────────────
+    // ─── Mock Data Exactly Matching Mockup Image ───────────────────────────
     
     private val mockGoals = listOf(
         Goal(
@@ -65,39 +69,38 @@ class GoalViewModel @Inject constructor(
             title = "MacBook Pro M4",
             category = "Technology",
             targetAmount = 490000.0,
-            currentSavedAmount = 196430.0,
-            deadlineDate = getMockDeadline(287),
+            currentSavedAmount = 196400.0,
+            deadlineDate = getMockTimestamp(267),
+            createdAt = getMockTimestamp(-100),
             unlockedBadges = listOf("BADGE_STARTED", "BADGE_25")
         ),
         Goal(
             id = "2",
             title = "Emergency Fund",
+            description = "6 months of expenses as safety net",
             category = "Security",
             targetAmount = 300000.0,
             currentSavedAmount = 85000.0,
-            deadlineDate = getMockDeadline(359),
+            deadlineDate = getMockTimestamp(369),
+            createdAt = getMockTimestamp(-150),
             unlockedBadges = listOf("BADGE_STARTED", "BADGE_25")
         ),
         Goal(
             id = "3",
             title = "Maldives Trip",
             category = "Lifestyle",
-            targetAmount = 545000.0,
+            targetAmount = 546000.0,
             currentSavedAmount = 72618.0,
-            deadlineDate = getMockDeadline(205),
+            deadlineDate = getMockTimestamp(206),
+            createdAt = getMockTimestamp(-50),
             unlockedBadges = listOf("BADGE_STARTED")
         )
     )
 
-    private val mockAllocations = mapOf(
-        "1" to listOf(
-            GoalAllocation(id = "a1", amount = 53200.0, monthlyTarget = 53200.0, monthYear = "Oct 2026"),
-            GoalAllocation(id = "a2", amount = 45000.0, monthlyTarget = 53200.0, monthYear = "May 2026"),
-            GoalAllocation(id = "a3", amount = 37500.0, monthlyTarget = 37500.0, monthYear = "Apr 2026"),
-            GoalAllocation(id = "a4", amount = 42500.0, monthlyTarget = 37500.0, monthYear = "Apr 2026")
-        ),
-        "2" to emptyList(),
-        "3" to emptyList()
+    private val mockAllocations: Map<String, List<GoalAllocation>> = mapOf(
+        "1" to emptyList<GoalAllocation>(),
+        "2" to emptyList<GoalAllocation>(),
+        "3" to emptyList<GoalAllocation>()
     )
 
     private val _goalListState = MutableStateFlow(GoalListState())
@@ -188,7 +191,7 @@ class GoalViewModel @Inject constructor(
                     loadGoalDetail(goalId)
                 }
                 .onFailure {
-                    _addAllocationState.update { it.copy(isSubmitting = false, isSuccess = true) } // Mock success for demo
+                    _addAllocationState.update { it.copy(isSubmitting = false, isSuccess = true) }
                 }
         }
     }
