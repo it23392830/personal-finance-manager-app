@@ -16,7 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.financeflow.ui.auth.LoginScreen
 import com.example.financeflow.ui.auth.RegisterScreen
-import com.example.financeflow.ui.components.BottomNavigationBar
+import com.example.financeflow.ui.components.Home.BottomNavigationBar
 import com.example.financeflow.ui.dashboard.DashboardScreen
 import com.example.financeflow.ui.dashboard.HomeScreen
 import com.example.financeflow.ui.expenses.ExpensesScreen

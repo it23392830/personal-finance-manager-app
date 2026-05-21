@@ -15,7 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.financeflow.navigation.Routes
-import com.example.financeflow.ui.components.BottomNavigationBar
+import com.example.financeflow.ui.components.Home.BottomNavigationBar
 import com.example.financeflow.ui.expenses.ExpensesScreen
 import com.example.financeflow.ui.goals.GoalsScreen
 import com.example.financeflow.ui.income.IncomeScreen
