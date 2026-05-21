@@ -19,6 +19,8 @@ import com.example.financeflow.ui.auth.RegisterScreen
 import com.example.financeflow.ui.components.BottomNavigationBar
 import com.example.financeflow.ui.dashboard.DashboardScreen
 import com.example.financeflow.ui.dashboard.HomeScreen
+import com.example.financeflow.ui.expenses.AddExpenseScreen
+import com.example.financeflow.ui.expenses.ExpensesScreen
 import com.example.financeflow.ui.income.*
 import com.example.financeflow.ui.insights.DailyReportScreen
 import com.example.financeflow.ui.insights.InsightsScreen
@@ -72,7 +74,7 @@ fun AppNavGraph() {
             composable(Routes.HOME) { 
                 HomeScreen(
                     onAddIncomeClick = { navController.navigate(Routes.INCOME) },
-                    onAddExpenseClick = { navController.navigate(Routes.EXPENSES) },
+                    onAddExpenseClick = { navController.navigate(Routes.ADD_EXPENSE) },
                     onIncomeClick = { navController.navigate(Routes.INCOME) },
                     onGoalsClick = { navController.navigate(Routes.GOALS) },
                     onExpensesClick = { navController.navigate(Routes.EXPENSES) },
@@ -99,26 +101,23 @@ fun AppNavGraph() {
                 EditIncomeScreen(
                     onCancel = { navController.popBackStack() },
                     onSaveChanges = { _, _, _, _, _, _ ->
-                        // In a real app, you would call ViewModel to save changes
                         navController.popBackStack()
                     }
                 )
             }
 
-            composable(
-                route = Routes.DELETE_INCOME,
-                arguments = listOf(navArgument("incomeId") { type = NavType.StringType })
-            ) { _ ->
-                DeleteIncomeScreen(
-                    onCancel = { navController.popBackStack() },
-                    onConfirmDelete = {
-                        // In a real app, you would call ViewModel to delete
-                        navController.popBackStack()
-                    }
+            composable(Routes.EXPENSES)  { 
+                ExpensesScreen(
+                    onAddExpenseClick = { navController.navigate(Routes.ADD_EXPENSE) }
+                ) 
+            }
+            
+            composable(Routes.ADD_EXPENSE) {
+                AddExpenseScreen(
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 
-            composable(Routes.EXPENSES)  { ExpensesScreen() }
             composable(Routes.SAVINGS)   { SavingsScreen() }
             composable(Routes.GOALS)     { GoalsScreen() }
             composable(Routes.INSIGHTS)  { 
@@ -182,17 +181,10 @@ fun AppNavGraph() {
     }
 }
 
-// ─────────────────────────────────────────────
-//  Stub screens
-// ─────────────────────────────────────────────
 @Composable
 fun GoalsScreen() {
 }
 
 @Composable
 fun SavingsScreen() {
-}
-
-@Composable
-fun ExpensesScreen() {
 }
