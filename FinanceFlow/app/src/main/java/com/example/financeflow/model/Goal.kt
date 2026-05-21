@@ -19,7 +19,9 @@ data class Goal(
     val updatedAt: Timestamp = Timestamp.now(),
     val isCompleted: Boolean = false,
     val unlockedBadges: List<String> = emptyList(),
-    val notificationsEnabled: Boolean = true
+    val notificationsEnabled: Boolean = true,
+    val icon: String = "💻",
+    val color: String = "Purple"
 ) {
     val progressPercentage: Double
         get() = if (targetAmount > 0) (currentSavedAmount / targetAmount * 100).coerceIn(0.0, 100.0) else 0.0
@@ -84,7 +86,9 @@ fun Goal.toMap(): Map<String, Any> = mapOf(
     "updatedAt" to updatedAt,
     "isCompleted" to isCompleted,
     "unlockedBadges" to unlockedBadges,
-    "notificationsEnabled" to notificationsEnabled
+    "notificationsEnabled" to notificationsEnabled,
+    "icon" to icon,
+    "color" to color
 )
 
 fun Map<String, Any>.toGoal(id: String): Goal = Goal(
@@ -101,5 +105,7 @@ fun Map<String, Any>.toGoal(id: String): Goal = Goal(
     updatedAt = this["updatedAt"] as? Timestamp ?: Timestamp.now(),
     isCompleted = this["isCompleted"] as? Boolean ?: false,
     unlockedBadges = (this["unlockedBadges"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-    notificationsEnabled = this["notificationsEnabled"] as? Boolean ?: true
+    notificationsEnabled = this["notificationsEnabled"] as? Boolean ?: true,
+    icon = this["icon"] as? String ?: "💻",
+    color = this["color"] as? String ?: "Purple"
 )

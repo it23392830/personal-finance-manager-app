@@ -116,6 +116,7 @@ fun GoalsScreen(
     var showAddContribution by remember { mutableStateOf(false) }
     var showCreateGoal by remember { mutableStateOf(false) }
     var selectedBadge by remember { mutableStateOf<GoalBadge?>(null) }
+    var goalToDelete by remember { mutableStateOf<Goal?>(null) }
 
     LaunchedEffect(uiState.goals) {
         if (detailState.goal == null && uiState.goals.isNotEmpty()) {
@@ -134,7 +135,10 @@ fun GoalsScreen(
             item {
                 GoalsHeader(
                     selectedGoal = detailState.goal,
-                    onCreateGoal = { showCreateGoal = true }
+                    onCreateGoal = { 
+                        viewModel.resetCreateGoalState()
+                        showCreateGoal = true 
+                    }
                 )
             }
 
@@ -147,7 +151,10 @@ fun GoalsScreen(
                     }
                 }
                 uiState.goals.isEmpty() -> {
-                    item { EmptyGoalsState(onCreateGoal = { showCreateGoal = true }) }
+                    item { EmptyGoalsState(onCreateGoal = { 
+                        viewModel.resetCreateGoalState()
+                        showCreateGoal = true 
+                    }) }
                 }
                 else -> {
                     item {
@@ -165,6 +172,13 @@ fun GoalsScreen(
                             goal = goal,
                             isSelected = detailState.goal?.id == goal.id,
                             onClick = { viewModel.loadGoalDetail(goal.id) },
+                            onEdit = {
+                                viewModel.setEditGoal(goal)
+                                showCreateGoal = true
+                            },
+                            onDelete = {
+                                goalToDelete = goal
+                            },
                             modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                         )
                     }
@@ -246,7 +260,10 @@ fun GoalsScreen(
 
                     item {
                         Button(
-                            onClick = { showCreateGoal = true },
+                            onClick = { 
+                                viewModel.resetCreateGoalState()
+                                showCreateGoal = true 
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 24.dp, vertical = 24.dp)
@@ -279,6 +296,18 @@ fun GoalsScreen(
         )
     }
 
+    if (goalToDelete != null) {
+        DeleteGoalConfirmationDialog(
+            goalTitle = goalToDelete!!.title,
+            onConfirm = {
+                viewModel.deleteGoal(goalToDelete!!.id) {
+                    goalToDelete = null
+                }
+            },
+            onDismiss = { goalToDelete = null }
+        )
+    }
+
     if (selectedBadge != null && detailState.goal != null) {
         MilestoneDetailDialog(
             badge = selectedBadge!!,
@@ -297,10 +326,13 @@ private fun GoalCard(
     goal: Goal,
     isSelected: Boolean,
     onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val categoryColor = getCategoryColor(goal.category)
     val formatter = NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 0 }
+    var showMenu by remember { mutableStateOf(false) }
     
     Card(
         onClick = onClick,
@@ -326,7 +358,49 @@ private fun GoalCard(
                     Text(goal.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = Color.Black)
                     Text("${goal.category}  ${goal.daysRemaining}d left", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                 }
-                StatusChip(goal.isOnTrack)
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    StatusChip(goal.isOnTrack)
+                    if (isSelected) {
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Black)
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false },
+                                modifier = Modifier.background(Color.White)
+                            ) {
+                                DropdownMenuItem(
+                                    text = { 
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFF2196F3), modifier = Modifier.size(20.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Edit Goal", fontWeight = FontWeight.Bold)
+                                        }
+                                    },
+                                    onClick = { 
+                                        showMenu = false
+                                        onEdit() 
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { 
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red, modifier = Modifier.size(20.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Delete Goal", fontWeight = FontWeight.Bold)
+                                        }
+                                    },
+                                    onClick = { 
+                                        showMenu = false
+                                        onDelete() 
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -625,7 +699,7 @@ private fun AddContributionField(label: String, value: String, onValueChange: (S
     }
 }
 
-// ─── Create Goal Dialog (Replicating Mockup) ───────────────────────────────────
+// ─── Create/Edit Goal Dialog (Replicating Mockup) ───────────────────────────────────
 
 @Composable
 fun CreateGoalDialog(
@@ -633,6 +707,7 @@ fun CreateGoalDialog(
     viewModel: GoalViewModel
 ) {
     val uiState by viewModel.createGoalState.collectAsState()
+    val isEdit = uiState.id != null
     val icons = listOf("💻", "🛡️", "✈️", "🚐", "🏠", "🎓", "❤️", "⭐", "🎯", "📱", "🌴", "💰")
     val categories = listOf("Technology", "Security", "Lifestyle", "Vehicle", "Home", "Education", "Health", "Other")
     val colors = listOf("Purple", "Blue", "Green", "Yellow", "Orange", "Red", "Pink", "Black")
@@ -676,7 +751,7 @@ fun CreateGoalDialog(
                             Icon(Icons.Default.Add, null, tint = Color(0xFF9C27B0), modifier = Modifier.padding(4.dp))
                         }
                         Spacer(Modifier.width(12.dp))
-                        Text("Create Goal", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+                        Text(if (isEdit) "Edit Goal" else "Create Goal", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
                     }
                     IconButton(onClick = onDismiss) {
                         Icon(Icons.Default.Close, null, tint = Color.Black)
@@ -712,7 +787,7 @@ fun CreateGoalDialog(
                 }
 
                 // Deadline
-                CreateGoalField("Deadline", uiState.deadline, viewModel::onCreateDeadlineChanged, "01/07/2027")
+                CreateGoalField("Deadline", uiState.deadline, viewModel::onCreateDeadlineChanged, "01/03/2027")
 
                 // Monthly Target
                 CreateGoalField("Monthly Contribution Target (LKR)", uiState.monthlyTarget, viewModel::onCreateMonthlyTargetChanged, "Auto-calculated if empty")
@@ -742,9 +817,9 @@ fun CreateGoalDialog(
                         onClick = { viewModel.submitCreateGoal() },
                         modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2962FF))
                     ) {
-                        Text("Create Goal", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(if (isEdit) "Save Goal" else "Create Goal", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -886,6 +961,71 @@ private fun CreateGoalDropdown(
                         onClick = { onSelected(option); expanded = false },
                         contentPadding = PaddingValues(0.dp)
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DeleteGoalConfirmationDialog(
+    goalTitle: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Delete Goal ?",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                }
+                
+                Text(
+                    text = "This will permanently delete the goal and all its contribution history. This action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black,
+                    textAlign = TextAlign.Start
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF5F5F5)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Cancel", color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF5350)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Delete Goal", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
