@@ -1,0 +1,56 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="300dp"
+    android:viewportWidth="300"
+    android:viewportHeight="300">
+    <!-- Curving Road with Piggy Bank Illustration -->
+    <!-- Road -->
+    <path
+        android:strokeColor="#1A1A1A"
+        android:strokeWidth="4"
+        android:pathData="M20,250 Q150,250 150,150 Q150,50 280,50" />
+
+    <!-- Road Markings -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M80,250 L100,250 M150,120 L150,140 M200,50 L220,50" />
+
+    <!-- Piggy Bank on the road -->
+    <path
+        android:fillColor="#FFD1DC"
+        android:pathData="M120,150 A20,18 0 1,1 160,150 A20,18 0 1,1 120,150" />
+    <path
+        android:fillColor="#FFB6C1"
+        android:pathData="M155,145 Q165,145 165,155 L155,155 Z" /> <!-- Snout -->
+    <path
+        android:fillColor="#FFB6C1"
+        android:pathData="M125,135 L135,125 L140,135 Z" /> <!-- Ear -->
+
+    <!-- Flying Cash -->
+    <group android:translateX="180" android:translateY="30">
+        <path
+            android:fillColor="#C8E6C9"
+            android:pathData="M0,0 L20,5 L25,20 L5,15 Z" />
+        <path
+            android:strokeColor="#4CAF50"
+            android:strokeWidth="1"
+            android:pathData="M10,10 L15,12" />
+    </group>
+    <group android:translateX="220" android:translateY="60">
+        <path
+            android:fillColor="#C8E6C9"
+            android:pathData="M0,0 L15,-5 L20,10 L5,15 Z" />
+    </group>
+    <group android:translateX="250" android:translateY="20">
+        <path
+            android:fillColor="#C8E6C9"
+            android:pathData="M0,0 L10,10 L0,20 L-10,10 Z" />
+    </group>
+
+    <!-- Red Goal Dot -->
+    <path
+        android:fillColor="#FF5252"
+        android:pathData="M50,250 A5,5 0 1,1 60,250 A5,5 0 1,1 50,250" />
+</vector>
