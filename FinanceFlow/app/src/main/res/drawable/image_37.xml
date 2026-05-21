@@ -1,0 +1,42 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- Person and Piggy Bank Illustration -->
+    <!-- Background Circle -->
+    <path
+        android:fillColor="#E0F7FA"
+        android:pathData="M100,100 m-90,0 a90,90 0 1,1 180,0 a90,90 0 1,1 -180,0" />
+
+    <!-- Piggy Bank -->
+    <path
+        android:fillColor="#FFC1E3"
+        android:pathData="M80,120 A40,35 0 1,1 160,120 A40,35 0 1,1 80,120" />
+    <path
+        android:fillColor="#FF80AB"
+        android:pathData="M155,115 Q170,115 170,125 L155,125 Z" /> <!-- Snout -->
+
+    <!-- Person -->
+    <path
+        android:fillColor="#FF5252"
+        android:pathData="M40,160 L60,160 L60,110 Q50,110 40,120 Z" /> <!-- Body/Shirt -->
+    <path
+        android:fillColor="#1A237E"
+        android:pathData="M40,160 L60,160 L60,190 L40,190 Z" /> <!-- Pants -->
+    <path
+        android:fillColor="#FFE0B2"
+        android:pathData="M45,95 A8,10 0 1,1 55,95 A8,10 0 1,1 45,95" /> <!-- Head -->
+    <path
+        android:fillColor="#212121"
+        android:pathData="M45,88 Q50,85 55,88 L55,95 L45,95 Z" /> <!-- Hair -->
+
+    <!-- Money Bill in Person's Hand -->
+    <path
+        android:fillColor="#A5D6A7"
+        android:pathData="M55,100 L85,80 L95,95 L65,115 Z" />
+    <path
+        android:strokeColor="#2E7D32"
+        android:strokeWidth="1"
+        android:pathData="M70,95 L80,90" />
+</vector>
