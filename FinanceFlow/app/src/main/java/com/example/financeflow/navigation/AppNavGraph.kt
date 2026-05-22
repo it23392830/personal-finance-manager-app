@@ -156,13 +156,13 @@ fun AppNavGraph() {
 
             composable(Routes.HOME) {
                 HomeScreen(
-                    onAddIncomeClick  = { navController.navigate(Routes.INCOME) },
+                    onAddIncomeClick = { navController.navigate(Routes.INCOME) },
                     onAddExpenseClick = { navController.navigate(Routes.EXPENSES) },
-                    onIncomeClick     = { navController.navigate(Routes.INCOME) },
-                    onGoalsClick      = { navController.navigate(Routes.GOALS) },
-                    onExpensesClick   = { navController.navigate(Routes.EXPENSES) },
-                    onSavingsClick    = { navController.navigate(Routes.SAVINGS) },
-                    onGoalCardClick   = { navController.navigate(Routes.GOALS) }
+                    onIncomeClick = { navController.navigate(Routes.INCOME) },
+                    onGoalsClick = { navController.navigate(Routes.GOALS) },
+                    onExpensesClick = { navController.navigate(Routes.EXPENSES) },
+                    onSavingsClick = { navController.navigate(Routes.SAVINGS) },
+                    onGoalCardClick = { navController.navigate(Routes.GOALS) }
                 )
             }
 
@@ -195,9 +195,9 @@ fun AppNavGraph() {
                 )
             }
 
-            composable(Routes.EXPENSES)  { ExpensesScreen() }
-            composable(Routes.SAVINGS)   { SavingsScreen(navController) }
-            composable(Routes.GOALS)     { GoalsScreen() }
+            composable(Routes.EXPENSES) { ExpensesScreen() }
+            composable(Routes.SAVINGS) { SavingsScreen(navController) }
+            composable(Routes.GOALS) { GoalsScreen() }
             composable(Routes.PROFILE) {
                 ProfileScreen(onNavigateBack = { navController.popBackStack() })
             }
@@ -226,9 +226,10 @@ fun AppNavGraph() {
                     onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
                     onTabSelected = { tab ->
                         when (tab) {
-                            "Weekly"  -> navController.navigate(Routes.WEEKLY_REPORT) {
+                            "Weekly" -> navController.navigate(Routes.WEEKLY_REPORT) {
                                 popUpTo(Routes.DAILY_REPORT) { inclusive = true }
                             }
+
                             "Monthly" -> navController.navigate(Routes.MONTHLY_REPORT) {
                                 popUpTo(Routes.DAILY_REPORT) { inclusive = true }
                             }
@@ -243,9 +244,10 @@ fun AppNavGraph() {
                     onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
                     onTabSelected = { tab ->
                         when (tab) {
-                            "Daily"   -> navController.navigate(Routes.DAILY_REPORT) {
+                            "Daily" -> navController.navigate(Routes.DAILY_REPORT) {
                                 popUpTo(Routes.WEEKLY_REPORT) { inclusive = true }
                             }
+
                             "Monthly" -> navController.navigate(Routes.MONTHLY_REPORT) {
                                 popUpTo(Routes.WEEKLY_REPORT) { inclusive = true }
                             }
@@ -260,9 +262,10 @@ fun AppNavGraph() {
                     onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
                     onTabSelected = { tab ->
                         when (tab) {
-                            "Daily"  -> navController.navigate(Routes.DAILY_REPORT) {
+                            "Daily" -> navController.navigate(Routes.DAILY_REPORT) {
                                 popUpTo(Routes.MONTHLY_REPORT) { inclusive = true }
                             }
+
                             "Weekly" -> navController.navigate(Routes.WEEKLY_REPORT) {
                                 popUpTo(Routes.MONTHLY_REPORT) { inclusive = true }
                             }
@@ -272,3 +275,4 @@ fun AppNavGraph() {
             }
         }
     }
+}
