@@ -1,42 +1,48 @@
 package com.example.financeflow.ui.auth
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.financeflow.R
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import kotlinx.coroutines.delay
 
-// ─── Colors ───────────────────────────────────────────────────────────────────
-private val TextDark = Color(0xFF1A1A1A)
-
-/**
- * WelcomeScreen
- *
- * Displays the "Welcome to Home" heading and the cats-on-WELCOME illustration
- * (group_35). Automatically navigates to HomeScreen after 1 second.
- *
- * Drawable required:
- *   res/drawable/group_35.png  ← two black cats sitting on the WELCOME wordmark
- *
- * @param onNavigateToHome  Called after the 1-second delay.
- */
 @Composable
 fun WelcomeScreen(onNavigateToHome: () -> Unit = {}) {
+    val composition = rememberLottieComposition(
+        LottieCompositionSpec.Asset("welcome.json")
+    )
+    val pawsComposition = rememberLottieComposition(
+        LottieCompositionSpec.Asset("paws-pet.json")
+    )
+    val progress = animateLottieCompositionAsState(
+        composition = composition.value,
+        iterations = LottieConstants.IterateForever,
+        speed = 2f
+    )
+    val pawsProgress = animateLottieCompositionAsState(
+        composition = pawsComposition.value,
+        iterations = LottieConstants.IterateForever,
+        speed = 1.2f
+    )
 
-    // ── Auto-navigate after 1 second ──────────────────────────────────────────
     LaunchedEffect(Unit) {
         delay(1_000L)
         onNavigateToHome()
@@ -48,41 +54,32 @@ fun WelcomeScreen(onNavigateToHome: () -> Unit = {}) {
             .background(Color.White)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.Start
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 96.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
         ) {
-
-            Spacer(Modifier.height(40.dp))
-
-            // ── Top-left title ────────────────────────────────────────────────
-            Text(
-                text = "Welcome to Home",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = TextDark,
-                modifier = Modifier.padding(horizontal = 24.dp)
+            LottieAnimation(
+                composition = composition.value,
+                progress = { progress.value },
+                modifier = Modifier
+                    .fillMaxWidth(0.82f)
+                    .size(260.dp)
             )
 
-            Spacer(Modifier.height(40.dp))
+            Box(modifier = Modifier.height(8.dp))
 
-            // ── Cats-on-WELCOME illustration ──────────────────────────────────
-            // Asset: res/drawable/group_35.png
-            // The image is wide (landscape), so we fill the width and let it
-            // scale proportionally, centred horizontally.
-            Image(
-                painter = painterResource(id = R.drawable.group_35),
-                contentDescription = "Two cats on the WELCOME wordmark",
+            LottieAnimation(
+                composition = pawsComposition.value,
+                progress = { pawsProgress.value },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .wrapContentHeight(),
-                contentScale = ContentScale.FillWidth
+                    .fillMaxWidth(0.42f)
+                    .size(92.dp)
             )
         }
     }
 }
-
-// ─── Preview ──────────────────────────────────────────────────────────────────
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
