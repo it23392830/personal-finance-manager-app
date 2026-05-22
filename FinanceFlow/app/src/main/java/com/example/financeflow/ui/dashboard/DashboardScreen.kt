@@ -29,7 +29,11 @@ import com.example.financeflow.ui.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.SavingsScreen
 
 @Composable
-fun DashboardScreen(rootNavController: NavHostController) {
+fun DashboardScreen(
+    rootNavController: NavHostController,
+    isDarkTheme: Boolean,
+    onThemeToggle: () -> Unit
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -66,7 +70,9 @@ fun DashboardScreen(rootNavController: NavHostController) {
                     onGoalsClick = { navController.navigate(Routes.GOALS) },
                     onExpensesClick = { navController.navigate(Routes.EXPENSES) },
                     onSavingsClick = { navController.navigate(Routes.SAVINGS) },
-                    onGoalCardClick = { navController.navigate(Routes.GOALS) }
+                    onGoalCardClick = { navController.navigate(Routes.GOALS) },
+                    onThemeClick = { },
+                    onProfileClick = { navController.navigate(Routes.PROFILE) }
                 )
             }
             composable(Routes.INCOME) { IncomeScreen(rootNavController) }
@@ -79,7 +85,11 @@ fun DashboardScreen(rootNavController: NavHostController) {
                 )
             }
             composable(Routes.PROFILE) {
-                ProfileScreen(onNavigateBack = { navController.popBackStack() })
+                ProfileScreen(
+                    isDarkTheme = isDarkTheme,
+                    onThemeToggle = onThemeToggle,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable(Routes.GOAL_DETAILS) {
                 GoalDetailsScreen(

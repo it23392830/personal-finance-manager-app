@@ -91,7 +91,9 @@ fun HomeScreen(
     onGoalsClick: () -> Unit = {},
     onExpensesClick: () -> Unit = {},
     onSavingsClick: () -> Unit = {},
-    onGoalCardClick: () -> Unit = {}
+    onGoalCardClick: () -> Unit = {},
+    onThemeClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -109,7 +111,11 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                BalanceCard(data = sampleBalanceData)
+                BalanceCard(
+                    data = sampleBalanceData,
+                    onThemeClick = onThemeClick,
+                    onProfileClick = onProfileClick
+                )
             }
 
             item {
