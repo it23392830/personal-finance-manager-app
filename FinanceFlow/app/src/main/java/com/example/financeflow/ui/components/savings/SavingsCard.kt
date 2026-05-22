@@ -9,8 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,8 +30,7 @@ val BackgroundPurple = Color(0xFFEDE2FF)
 @Composable
 fun HeaderCard(
     selectedMonth: String = "May 2026",
-    onMonthSelected: (String) -> Unit = {},
-    onProfileClick: () -> Unit = {}
+    onMonthSelected: (String) -> Unit = {}
 ) {
     val months = listOf(
         "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026",
@@ -55,7 +52,7 @@ fun HeaderCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column {
                     Text(
                         text = "Savings Overview",
                         fontSize = 22.sp,
@@ -68,24 +65,6 @@ fun HeaderCard(
                         color = Color.Gray
                     )
                 }
-
-                Icon(
-                    imageVector = Icons.Default.DarkMode,
-                    contentDescription = "Dark Mode",
-                    tint = Color.Gray,
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clickable { }
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile",
-                    tint = Color.Gray,
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clickable { onProfileClick() }
-                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
