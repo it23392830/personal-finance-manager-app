@@ -1,11 +1,13 @@
 package com.example.financeflow.ui.expenses
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,133 +16,623 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.financeflow.model.Expense
-import com.example.financeflow.viewmodel.ExpenseViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import androidx.compose.ui.unit.sp
+import com.example.financeflow.ui.expenses.components.*
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ExpensesScreen(
-    onAddExpenseClick: () -> Unit,
-    viewModel: ExpenseViewModel = hiltViewModel()
-) {
-    val expenses by viewModel.expenses.collectAsState()
+// ── Enums ─────────────────────────────────────────────────────────────────────
 
-    Scaffold(
-        topBar = {
-            LargeTopAppBar(
-                title = { Text("Expenses") },
-                actions = {
-                    IconButton(onClick = { /* Search logic */ }) {
-                        Icon(Icons.Default.Search, contentDescription = "Search")
-                    }
-                    IconButton(onClick = { /* Filter logic */ }) {
-                        Icon(Icons.Default.FilterList, contentDescription = "Filter")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddExpenseClick,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Expense")
-            }
-        }
-    ) { padding ->
-        if (expenses.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("No expenses recorded yet.", style = MaterialTheme.typography.bodyLarge)
-                    Button(onClick = onAddExpenseClick, modifier = Modifier.padding(top = 16.dp)) {
-                        Text("Add Your First Expense")
-                    }
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                val groupedExpenses = expenses.groupBy {
-                    SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(it.date))
-                }
+enum class ExpenseType { ESSENTIAL, DISCRETIONARY }
 
-                groupedExpenses.forEach { (date, items) ->
-                    item {
-                        Text(
-                            text = date,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-                    items(items) { expense ->
-                        ExpenseItem(expense)
-                    }
-                }
-            }
+enum class PaymentMethod(val label: String) {
+    CARD("Card"),
+    CASH("Cash"),
+    BANK_TRANSFER("Bank Transfer"),
+    DIGITAL_WALLET("Digital Wallet")
+}
+
+// ── UI Data Classes ────────────────────────────────────────────────────────────
+
+data class ExpenseUiItem(
+    val id: Int,
+    val categoryId: String,
+    val description: String,
+    val amount: Int,
+    val paymentMethod: PaymentMethod,
+    val date: String,
+    val type: ExpenseType,
+    val isRecurring: Boolean,
+    val notes: String = ""
+)
+
+data class RecurringUiItem(
+    val id: Int,
+    val name: String,
+    val amount: Int,
+    val categoryId: String,
+    val frequency: String,
+    val nextDue: String,
+    val lastPaid: String,
+    val isActive: Boolean,
+    val missed: Boolean
+)
+
+data class CategoryDef(
+    val id: String,
+    val label: String,
+    val emoji: String,
+    val bgColor: Color,
+    val parentId: String? = null,
+    val parentLabel: String? = null
+)
+
+data class SuggestionUiItem(
+    val description: String,
+    val categoryId: String,
+    val amount: Int,
+    val paymentMethod: PaymentMethod,
+    val count: Int,
+    val badge: String
+)
+
+data class InsightUiItem(
+    val emoji: String,
+    val text: String
+)
+
+data class PatternStatUiItem(
+    val emoji: String,
+    val label: String,
+    val value: String,
+    val sub: String
+)
+
+data class CategoryBreakdownItem(
+    val label: String,
+    val amount: Int,
+    val color: Color
+)
+
+data class WeeklyTrendItem(
+    val label: String,
+    val amount: Int
+)
+
+// ── Color Tokens ─────────────────────────────────────────────────────────────
+
+object ExpenseColors {
+    val AppBg          = Color(0xFFF8FAFC)
+    val CardBg         = Color(0xFFFFFFFF)
+    val HeaderRed      = Color(0xFFDC2626)
+    val Primary        = Color(0xFF8B5CF6)
+    val PrimaryLight   = Color(0xFFEEF2FF)
+    val PrimaryBorder  = Color(0xFFC7D2FE)
+    val PrimaryText    = Color(0xFF4F46E5)
+    val Border         = Color(0xFFE5E7EB)
+    val SurfaceGrey    = Color(0xFFF3F4F6)
+    val TextPrimary    = Color(0xFF1F2937)
+    val TextMuted      = Color(0xFF6B7280)
+    val MustAmber      = Color(0xFFF59E0B)
+    val MustBg         = Color(0xFFFFFBEB)
+    val MustBorder     = Color(0xFFFDE68A)
+    val MustText       = Color(0xFF92400E)
+    val ExpenseRed     = Color(0xFFEF4444)
+    val ExpenseBg      = Color(0xFFFEF2F2)
+    val SuccessGreen   = Color(0xFF22C55E)
+    val BlueCard       = Color(0xFFEFF6FF)
+    val TealBg         = Color(0xFFF0FDFA)
+    val PurpleBg       = Color(0xFFF5F3FF)
+    val AmberWarning   = Color(0xFFFFFBEB)
+}
+
+// ── Category Tree & Helpers ──────────────────────────────────────────────────
+
+val CAT_TREE: List<Pair<CategoryDef, List<CategoryDef>>> = listOf(
+    CategoryDef("food",          "Food",          "🍕", Color(0xFFF97316)) to listOf(
+        CategoryDef("food_coffee",    "Coffee",     "☕", Color(0xFFF59E0B), "food", "Food"),
+        CategoryDef("food_dining",    "Dining Out", "🍽️", Color(0xFFF97316), "food", "Food"),
+        CategoryDef("food_groceries", "Groceries",  "🛒", Color(0xFF22C55E), "food", "Food"),
+    ),
+    CategoryDef("shopping",      "Shopping",      "🛍️", Color(0xFFEC4899)) to emptyList(),
+    CategoryDef("transport",     "Transport",     "🚗", Color(0xFF3B82F6)) to listOf(
+        CategoryDef("transport_ride", "Ride Share", "🚖", Color(0xFF60A5FA), "transport", "Transport"),
+    ),
+    CategoryDef("rent",          "Housing",       "🏠", Color(0xFF8B5CF6)) to emptyList(),
+    CategoryDef("bills",         "Bills",         "📱", Color(0xFF06B6D4)) to emptyList(),
+    CategoryDef("health",        "Health",        "❤️", Color(0xFFEF4444)) to listOf(
+        CategoryDef("health_gym",     "Gym",        "💪", Color(0xFFF87171), "health", "Health"),
+    ),
+    CategoryDef("entertainment", "Entertainment", "🎬", Color(0xFF6366F1)) to listOf(
+        CategoryDef("entertainment_streaming", "Streaming", "📺",
+            Color(0xFF8B5CF6), "entertainment", "Entertainment"),
+    ),
+    CategoryDef("other",         "Other",         "📦", Color(0xFF6B7280)) to emptyList(),
+)
+
+val ALL_CATS: List<CategoryDef> =
+    CAT_TREE.flatMap { (parent, children) -> listOf(parent) + children }
+
+val PARENT_CATS: List<CategoryDef> = CAT_TREE.map { it.first }
+
+fun getCat(id: String): CategoryDef =
+    ALL_CATS.find { it.id == id } ?: ALL_CATS.last()
+
+fun getCatDisplayLabel(id: String): String {
+    val cat = getCat(id)
+    return if (cat.parentLabel != null) "${cat.parentLabel} › ${cat.label}"
+           else cat.label
+}
+
+fun fmtLKR(amount: Int): String = "LKR ${"%,d".format(amount)}"
+
+fun relativeDate(dateStr: String, today: String): String {
+    return when (dateStr) {
+        today -> "Today"
+        else  -> {
+            val months = listOf("Jan","Feb","Mar","Apr","May","Jun",
+                                "Jul","Aug","Sep","Oct","Nov","Dec")
+            val parts = dateStr.split("-")
+            val month = months.getOrNull((parts.getOrNull(1)?.toIntOrNull() ?: 1) - 1) ?: ""
+            val day   = parts.getOrNull(2)?.toIntOrNull() ?: 0
+            "$month $day"
         }
     }
 }
 
+const val TODAY               = "2026-05-21"
+const val DISCRETIONARY_BUDGET = 82300
+const val DAILY_SAVINGS_RATE  = 1637
+
+// ── Hardcoded Lists ──────────────────────────────────────────────────────────
+
+val HARDCODED_EXPENSES = listOf(
+    ExpenseUiItem(1,  "rent",                    "Monthly Rent",         34000, PaymentMethod.BANK_TRANSFER,  "2026-05-01", ExpenseType.ESSENTIAL,     true),
+    ExpenseUiItem(2,  "bills",                   "Electricity Bill",     4500,  PaymentMethod.CARD,           "2026-05-02", ExpenseType.ESSENTIAL,     true),
+    ExpenseUiItem(3,  "bills",                   "Internet - Dialog",    3200,  PaymentMethod.CARD,           "2026-05-02", ExpenseType.ESSENTIAL,     true),
+    ExpenseUiItem(4,  "entertainment_streaming", "Netflix Subscription", 1490,  PaymentMethod.CARD,           "2026-05-03", ExpenseType.DISCRETIONARY, true),
+    ExpenseUiItem(5,  "health_gym",              "Gym Membership",       3500,  PaymentMethod.CARD,           "2026-05-04", ExpenseType.DISCRETIONARY, true),
+    ExpenseUiItem(6,  "food_coffee",             "Coffee - Barista",     550,   PaymentMethod.CASH,           "2026-05-05", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(7,  "food_dining",             "Lunch at Office Cafe", 850,   PaymentMethod.CARD,           "2026-05-07", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(8,  "transport_ride",          "PickMe to Office",     420,   PaymentMethod.CASH,           "2026-05-07", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(9,  "food_groceries",          "Groceries - Keells",   3200,  PaymentMethod.CARD,           "2026-05-08", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(10, "food_coffee",             "Coffee - Starbucks",   680,   PaymentMethod.CARD,           "2026-05-09", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(11, "food_coffee",             "Morning Coffee",       620,   PaymentMethod.CASH,           "2026-05-10", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(12, "transport_ride",          "Uber - Late Night",    880,   PaymentMethod.CARD,           "2026-05-11", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(13, "health",                  "Pharmacy - Vitamins",  2100,  PaymentMethod.CARD,           "2026-05-12", ExpenseType.ESSENTIAL,     false),
+    ExpenseUiItem(14, "shopping",                "Clothing - H&M",       8500,  PaymentMethod.CARD,           "2026-05-13", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(15, "food_dining",             "Dinner - The Flame",   2800,  PaymentMethod.CARD,           "2026-05-14", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(16, "bills",                   "Mobile Top-Up",        500,   PaymentMethod.DIGITAL_WALLET, "2026-05-15", ExpenseType.ESSENTIAL,     false),
+    ExpenseUiItem(17, "food_dining",             "Friday Team Lunch",    1200,  PaymentMethod.CASH,           "2026-05-16", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(18, "entertainment",           "Movie Tickets",        1800,  PaymentMethod.CARD,           "2026-05-17", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(19, "food_coffee",             "Coffee - Barista",     550,   PaymentMethod.CASH,           "2026-05-20", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(20, "transport_ride",          "PickMe to Office",     420,   PaymentMethod.CASH,           "2026-05-21", ExpenseType.DISCRETIONARY, false),
+    ExpenseUiItem(21, "food_dining",             "Lunch at Office Cafe", 850,   PaymentMethod.CARD,           "2026-05-21", ExpenseType.DISCRETIONARY, false),
+)
+
+val HARDCODED_RECURRING = listOf(
+    RecurringUiItem(1, "Monthly Rent",      34000, "rent",                    "Monthly", "2026-06-01", "2026-05-01", true, false),
+    RecurringUiItem(2, "Netflix",           1490,  "entertainment_streaming", "Monthly", "2026-06-03", "2026-05-03", true, false),
+    RecurringUiItem(3, "Gym Membership",    3500,  "health_gym",              "Monthly", "2026-06-04", "2026-05-04", true, false),
+    RecurringUiItem(4, "Electricity Bill",  4500,  "bills",                   "Monthly", "2026-05-25", "2026-04-25", true, false),
+    RecurringUiItem(5, "Internet - Dialog", 3200,  "bills",                   "Monthly", "2026-05-25", "2026-04-25", true, false),
+    RecurringUiItem(6, "Spotify Premium",   990,   "entertainment_streaming", "Monthly", "2026-05-10", "2026-04-10", true, true),
+)
+
+val HARDCODED_SUGGESTIONS = listOf(
+    SuggestionUiItem("Morning Coffee",       "food_coffee",    620, PaymentMethod.CASH, 3, "Frequent"),
+    SuggestionUiItem("Lunch at Office Cafe", "food_dining",    850, PaymentMethod.CARD, 2, "Frequent"),
+    SuggestionUiItem("PickMe to Office",     "transport_ride", 420, PaymentMethod.CASH, 2, "Daily"),
+)
+
+val HARDCODED_INSIGHTS = listOf(
+    InsightUiItem("☕", "Coffee purchases (4×) are above your monthly average — LKR 2,400 spent"),
+    InsightUiItem("🍽️", "Dining out spending (LKR 4,850) is higher than last month's average"),
+    InsightUiItem("🛍️", "Shopping increased this month — LKR 8,500 spent on clothing & goods"),
+)
+
+val HARDCODED_CATEGORY_BREAKDOWN = listOf(
+    CategoryBreakdownItem("Housing",       34000, Color(0xFF8B5CF6)),
+    CategoryBreakdownItem("Bills",         8200,  Color(0xFF06B6D4)),
+    CategoryBreakdownItem("Shopping",      8500,  Color(0xFFEC4899)),
+    CategoryBreakdownItem("Food",          6250,  Color(0xFFF97316)),
+    CategoryBreakdownItem("Health",        5600,  Color(0xFFEF4444)),
+    CategoryBreakdownItem("Entertainment", 3290,  Color(0xFF6366F1)),
+)
+
+val HARDCODED_WEEKLY_TREND = listOf(
+    WeeklyTrendItem("Wk 1", 47890),
+    WeeklyTrendItem("Wk 2", 18730),
+    WeeklyTrendItem("Wk 3", 5570),
+    WeeklyTrendItem("Wk 4", 0),
+)
+
+val HARDCODED_PATTERN_STATS = listOf(
+    PatternStatUiItem("📈", "Most spent category",    "Housing",     "LKR 34,000"),
+    PatternStatUiItem("💳", "Top payment method",     "Card",        "Most used this month"),
+    PatternStatUiItem("⬆️", "Largest single expense", "LKR 34,000",  "Monthly Rent"),
+    PatternStatUiItem("📅", "Highest spending day",   "May 1",       "Peak activity"),
+)
+
+// ── ExpensesScreen Composable ────────────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExpenseItem(expense: Expense) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
+fun ExpensesScreen(
+    onAddExpenseClick: () -> Unit = {}
+) {
+    // ── Tab ───────────────────────────────────────────────────
+    var selectedTab by remember { mutableIntStateOf(0) }
+
+    // ── Month ─────────────────────────────────────────────────
+    var selectedMonth by remember { mutableStateOf("2026-05") }
+
+    // ── Expense lists ─────────────────────────────────────────
+    var expenses     by remember { mutableStateOf(HARDCODED_EXPENSES) }
+    var recurringList by remember { mutableStateOf(HARDCODED_RECURRING) }
+
+    // ── History filters ───────────────────────────────────────
+    var searchQuery     by remember { mutableStateOf("") }
+    var showFilters     by remember { mutableStateOf(false) }
+    var filterType      by remember { mutableStateOf("all") }
+    var filterCategory  by remember { mutableStateOf("all") }
+    var filterPayment   by remember { mutableStateOf("all") }
+    var sortBy          by remember { mutableStateOf("newest") }
+
+    // ── Form dialog ───────────────────────────────────────────
+    var showFormDialog  by remember { mutableStateOf(false) }
+    var isEditMode      by remember { mutableStateOf(false) }
+    var editingId       by remember { mutableStateOf<Int?>(null) }
+    var formAmount      by remember { mutableStateOf("") }
+    var formDescription by remember { mutableStateOf("") }
+    var formCategory    by remember { mutableStateOf("food_dining") }
+    var formType        by remember { mutableStateOf(ExpenseType.DISCRETIONARY) }
+    var formPayment     by remember { mutableStateOf(PaymentMethod.CARD) }
+    var formDate        by remember { mutableStateOf(TODAY) }
+    var formNotes       by remember { mutableStateOf("") }
+    var formIsRecurring by remember { mutableStateOf(false) }
+
+    // ── Delete dialog ─────────────────────────────────────────
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var deletingId       by remember { mutableStateOf<Int?>(null) }
+
+    // ── Row context menu ──────────────────────────────────────
+    var openMenuId by remember { mutableStateOf<Int?>(null) }
+
+    // ── Derived values ────────────────────────────────────────
+    val monthExpenses       = expenses.filter { it.date.startsWith(selectedMonth) }
+    val essentialTotal      = monthExpenses.filter { it.type == ExpenseType.ESSENTIAL }.sumOf { it.amount }
+    val discretionaryTotal  = monthExpenses.filter { it.type == ExpenseType.DISCRETIONARY }.sumOf { it.amount }
+    val totalSpent          = essentialTotal + discretionaryTotal
+    val todayTotal          = expenses.filter { it.date == TODAY }.sumOf { it.amount }
+    val remaining           = maxOf(0, DISCRETIONARY_BUDGET - discretionaryTotal)
+    val budgetUsedPct       = minOf(100f, discretionaryTotal.toFloat() / DISCRETIONARY_BUDGET * 100f)
+    val goalImpactDays      = formAmount.toFloatOrNull()
+        ?.takeIf { it > 0 && formType == ExpenseType.DISCRETIONARY }
+        ?.let { it / DAILY_SAVINGS_RATE }
+    val todayExpenses       = expenses.filter { it.date == TODAY }
+    val missedRecurring     = recurringList.filter { it.missed && it.isActive }
+    val recentCategoryIds   = expenses.map { it.categoryId }.distinct().take(3)
+
+    // Filtering + sorting
+    val filteredExpenses = monthExpenses
+        .filter { e ->
+            (searchQuery.isBlank() ||
+                e.description.contains(searchQuery, ignoreCase = true) ||
+                getCatDisplayLabel(e.categoryId).contains(searchQuery, ignoreCase = true))
+            && (filterType == "all" || (filterType == "essential" && e.type == ExpenseType.ESSENTIAL)
+                                    || (filterType == "discretionary" && e.type == ExpenseType.DISCRETIONARY))
+            && (filterCategory == "all" || e.categoryId == filterCategory
+                                        || getCat(e.categoryId).parentId == filterCategory)
+            && (filterPayment == "all" || e.paymentMethod.name.lowercase() == filterPayment)
+        }
+        .let { list ->
+            when (sortBy) {
+                "oldest"  -> list.sortedBy   { it.date }
+                "highest" -> list.sortedByDescending { it.amount }
+                "lowest"  -> list.sortedBy   { it.amount }
+                else      -> list.sortedByDescending { it.date }
+            }
+        }
+
+    val groupedHistory = filteredExpenses
+        .groupBy { it.date }
+        .entries
+        .sortedByDescending { it.key }
+
+    // ── Helper lambdas (defined here, passed to components) ───
+
+    fun openAddForm(prefillCategoryId: String = "food_dining") {
+        formAmount = ""; formDescription = ""; formCategory = prefillCategoryId
+        formType = ExpenseType.DISCRETIONARY; formPayment = PaymentMethod.CARD
+        formDate = TODAY; formNotes = ""; formIsRecurring = false
+        isEditMode = false; editingId = null
+        showFormDialog = true
+    }
+
+    fun openEditForm(exp: ExpenseUiItem) {
+        formAmount = exp.amount.toString(); formDescription = exp.description
+        formCategory = exp.categoryId; formType = exp.type
+        formPayment = exp.paymentMethod; formDate = exp.date
+        formNotes = exp.notes; formIsRecurring = exp.isRecurring
+        isEditMode = true; editingId = exp.id
+        showFormDialog = true
+    }
+
+    fun confirmSave() {
+        val amt = formAmount.toIntOrNull() ?: return
+        if (isEditMode) {
+            expenses = expenses.map { e ->
+                if (e.id == editingId) e.copy(
+                    categoryId = formCategory, description = formDescription.ifBlank { getCat(formCategory).label },
+                    amount = amt, paymentMethod = formPayment, date = formDate,
+                    type = formType, isRecurring = formIsRecurring, notes = formNotes
+                ) else e
+            }
+        } else {
+            val newId = (expenses.maxOfOrNull { it.id } ?: 0) + 1
+            expenses = listOf(
+                ExpenseUiItem(newId, formCategory,
+                    formDescription.ifBlank { getCat(formCategory).label },
+                    amt, formPayment, formDate, formType, formIsRecurring, formNotes)
+            ) + expenses
+        }
+        showFormDialog = false
+    }
+
+    fun confirmDelete() {
+        expenses = expenses.filter { it.id != deletingId }
+        showDeleteDialog = false; deletingId = null
+    }
+
+    // ── Scaffold ──────────────────────────────────────────────
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { openAddForm() },
+                containerColor = ExpenseColors.HeaderRed,
+                shape = CircleShape
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Expense", tint = Color.White)
+            }
+        }
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(ExpenseColors.AppBg)
+                .verticalScroll(rememberScrollState())
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = expense.category,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+            // ── Header ─────────────────────────────────────────
+            ExpenseHeader(
+                selectedMonth = selectedMonth,
+                onMonthChange = { selectedMonth = it },
+                onAddClick    = { openAddForm() }
+            )
+
+            // ── Warning banner ──────────────────────────────────
+            if (budgetUsedPct >= 85f) {
+                ExpenseWarningBanner(
+                    budgetUsedPct = budgetUsedPct,
+                    remaining     = remaining
                 )
-                Text(
-                    text = expense.subCategory,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-                if (expense.note.isNotEmpty()) {
-                    Text(
-                        text = expense.note,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(top = 4.dp)
+            }
+
+            // ── Tabs ────────────────────────────────────────────
+            ExpenseTabRow(
+                selectedTab    = selectedTab,
+                onTabSelected  = { selectedTab = it }
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            // ── Tab Content ─────────────────────────────────────
+            when (selectedTab) {
+
+                // ── Overview ──────────────────────────────────────
+                0 -> Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    ExpenseBudgetCard(
+                        remaining       = remaining,
+                        budgetTotal     = DISCRETIONARY_BUDGET,
+                        budgetUsedPct   = budgetUsedPct,
+                        todayTotal      = todayTotal,
+                        essentialTotal  = essentialTotal,
+                        totalSpent      = totalSpent
                     )
+                    ExpenseQuickAdd(
+                        recentCategoryIds = recentCategoryIds,
+                        onCategoryClick   = { catId -> openAddForm(catId) },
+                        onCustomClick     = { openAddForm() }
+                    )
+                    ExpenseSmartSuggestions(
+                        suggestions       = HARDCODED_SUGGESTIONS,
+                        onSuggestionClick = { s ->
+                            formDescription = s.description; formAmount = s.amount.toString()
+                            formCategory = s.categoryId; formPayment = s.paymentMethod
+                            formType = ExpenseType.DISCRETIONARY; isEditMode = false
+                            showFormDialog = true
+                        }
+                    )
+                    ExpenseTodayList(
+                        todayExpenses = todayExpenses,
+                        openMenuId    = openMenuId,
+                        onMenuToggle  = { id -> openMenuId = if (openMenuId == id) null else id },
+                        onEdit        = { exp -> openEditForm(exp) },
+                        onDelete      = { id  -> deletingId = id; showDeleteDialog = true }
+                    )
+                    ExpenseReminderCard()
+                    Spacer(Modifier.height(80.dp))
+                }
+
+                // ── Analytics ─────────────────────────────────────
+                1 -> Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    ExpenseDonutChart(
+                        essentialTotal     = essentialTotal,
+                        discretionaryTotal = discretionaryTotal,
+                        totalSpent         = totalSpent
+                    )
+                    ExpenseCategoryChart(breakdown = HARDCODED_CATEGORY_BREAKDOWN)
+                    ExpenseWeeklyChart(weeklyData  = HARDCODED_WEEKLY_TREND)
+                    ExpenseInsightsCard(insights   = HARDCODED_INSIGHTS)
+                    ExpensePatternGrid(stats       = HARDCODED_PATTERN_STATS)
+                    Spacer(Modifier.height(80.dp))
+                }
+
+                // ── History ───────────────────────────────────────
+                2 -> Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Search bar
+                    OutlinedTextField(
+                        value         = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder   = { Text("Search expenses…", fontSize = 13.sp) },
+                        leadingIcon   = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                        modifier      = Modifier.fillMaxWidth(),
+                        shape         = RoundedCornerShape(12.dp),
+                        singleLine    = true
+                    )
+
+                    // Sort + filter toggle row
+                    Row(
+                        modifier             = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Filter toggle button
+                        val isFilterActive = filterType != "all" || filterCategory != "all" || filterPayment != "all"
+                        FilterToggleButton(
+                            active   = showFilters || isFilterActive,
+                            hasDot   = isFilterActive,
+                            onClick  = { showFilters = !showFilters }
+                        )
+                        // Sort pills
+                        listOf("newest","oldest","highest","lowest").forEach { s ->
+                            SortPill(
+                                label    = s.replaceFirstChar { it.uppercase() },
+                                selected = sortBy == s,
+                                onClick  = { sortBy = s }
+                            )
+                        }
+                    }
+
+                    // Filter panel
+                    if (showFilters) {
+                        ExpenseFilterPanel(
+                            filterType            = filterType,
+                            onFilterTypeChange    = { filterType = it },
+                            filterCategory        = filterCategory,
+                            onFilterCategoryChange = { filterCategory = it },
+                            filterPayment         = filterPayment,
+                            onFilterPaymentChange = { filterPayment = it }
+                        )
+                    }
+
+                    // Results summary
+                    Row(
+                        modifier             = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("${filteredExpenses.size} transactions",
+                            fontSize = 12.sp, color = ExpenseColors.TextMuted)
+                        Text("Total: ${fmtLKR(filteredExpenses.sumOf { it.amount })}",
+                            fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                            color = ExpenseColors.TextPrimary)
+                    }
+
+                    // Grouped expense list
+                    if (groupedHistory.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("No matching expenses found",
+                                fontSize = 14.sp, color = ExpenseColors.TextMuted)
+                        }
+                    } else {
+                        groupedHistory.forEach { (date, exps) ->
+                            ExpenseDateHeader(
+                                dateLabel = "${relativeDate(date, TODAY).uppercase()} — $date",
+                                dayTotal  = exps.sumOf { it.amount }
+                            )
+                            Card(
+                                shape    = RoundedCornerShape(16.dp),
+                                colors   = CardDefaults.cardColors(containerColor = ExpenseColors.CardBg),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Column {
+                                    exps.forEach { exp ->
+                                        ExpenseItemRow(
+                                            item         = exp,
+                                            isMenuOpen   = openMenuId == exp.id,
+                                            onMenuToggle = { openMenuId = if (openMenuId == exp.id) null else exp.id },
+                                            onEdit       = { openEditForm(exp) },
+                                            onDelete     = { deletingId = exp.id; showDeleteDialog = true }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(80.dp))
+                }
+
+                // ── Recurring ─────────────────────────────────────
+                3 -> Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    ExpenseMissedAlert(
+                        missedItems = missedRecurring,
+                        onMarkPaid  = { id ->
+                            recurringList = recurringList.map {
+                                if (it.id == id) it.copy(missed = false, lastPaid = TODAY)
+                                else it
+                            }
+                        }
+                    )
+                    ExpenseRecurringList(
+                        recurringList  = recurringList,
+                        onToggleActive = { id ->
+                            recurringList = recurringList.map {
+                                if (it.id == id) it.copy(isActive = !it.isActive) else it
+                            }
+                        }
+                    )
+                    Spacer(Modifier.height(80.dp))
                 }
             }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "LKR ${String.format("%.2f", expense.amount)}",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = if (expense.expenseType == "ESSENTIAL") 
-                        Color(0xFFF59E0B) else Color(0xFF3B82F6),
-                    fontWeight = FontWeight.ExtraBold
-                )
-                Text(
-                    text = expense.paymentMethod,
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
+        }
+
+        // ── Dialogs ───────────────────────────────────────────
+        if (showFormDialog) {
+            ExpenseFormDialog(
+                isEditMode        = isEditMode,
+                amount            = formAmount,      onAmountChange      = { formAmount = it },
+                description       = formDescription, onDescriptionChange = { formDescription = it },
+                category          = formCategory,    onCategoryChange    = { formCategory = it },
+                expenseType       = formType,        onTypeChange        = { formType = it },
+                paymentMethod     = formPayment,     onPaymentChange     = { formPayment = it },
+                date              = formDate,        onDateChange        = { formDate = it },
+                notes             = formNotes,       onNotesChange       = { formNotes = it },
+                isRecurring       = formIsRecurring, onRecurringChange   = { formIsRecurring = it },
+                goalImpactDays    = goalImpactDays,
+                catTree           = CAT_TREE,
+                onConfirm         = { confirmSave() },
+                onDismiss         = { showFormDialog = false }
+            )
+        }
+
+        if (showDeleteDialog) {
+            ExpenseDeleteDialog(
+                onConfirm = { confirmDelete() },
+                onDismiss = { showDeleteDialog = false; deletingId = null }
+            )
         }
     }
 }
