@@ -1,13 +1,9 @@
 package com.example.financeflow.ui.savings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -91,10 +87,7 @@ fun GoalDetailsScreen(
 
 // GoalDetailsHeaderCard
 //
-// Top card matching the shared Savings Overview header design:
-//   - Title: "Savings Overview"
-//   - Subtitle: "Track your saving habits & allocations"
-//   - Right: DarkMode + Person icons
+// Top card matching the shared Savings Overview header design.
 @Composable
 private fun GoalDetailsHeaderCard() {
     Card(
@@ -108,11 +101,9 @@ private fun GoalDetailsHeaderCard() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // ── Left: title + subtitle
-            Column(modifier = Modifier.weight(1f)) {
+            Column {
                 Text(
                     text = "Savings Overview",
                     fontSize = 22.sp,
@@ -125,25 +116,6 @@ private fun GoalDetailsHeaderCard() {
                     color = Color.Gray
                 )
             }
-
-            // ── Right: icon buttons
-            Icon(
-                imageVector = Icons.Default.DarkMode,
-                contentDescription = "Dark Mode",
-                tint = Color.Gray,
-                modifier = Modifier
-                    .size(26.dp)
-                    .clickable { }
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Profile",
-                tint = Color.Gray,
-                modifier = Modifier
-                    .size(26.dp)
-                    .clickable { }
-            )
         }
     }
 }

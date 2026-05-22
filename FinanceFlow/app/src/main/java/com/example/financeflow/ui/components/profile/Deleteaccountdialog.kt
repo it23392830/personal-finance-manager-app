@@ -19,16 +19,16 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
- 
+
 // Color tokens
- 
+
 private val CardWhite  = Color(0xFFFFFFFF)
 private val RedBtn     = Color(0xFFE53935)
 private val PurpleBtn  = Color(0xFF9B72CF)
 private val DarkText   = Color(0xFF1A1A1A)
 private val BodyGray   = Color(0xFF555555)
 
- 
+
 // DeleteAccountDialog
 //
 // Confirmation popup that appears when the user taps "Yes, Delete Account"
@@ -45,7 +45,7 @@ private val BodyGray   = Color(0xFF555555)
 //
 // Parameters:
 //   onDismiss – collapses the dialog (Cancel or after deletion)
- 
+
 @Composable
 fun DeleteAccountDialog(onDismiss: () -> Unit = {}) {
 
@@ -154,7 +154,7 @@ fun DeleteAccountDialog(onDismiss: () -> Unit = {}) {
     }
 }
 
- 
+
 // Previews
  
 @Preview(showBackground = true, showSystemUi = true, name = "DeleteAccountDialog")

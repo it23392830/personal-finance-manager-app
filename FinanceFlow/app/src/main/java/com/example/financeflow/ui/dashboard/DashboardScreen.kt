@@ -25,10 +25,17 @@ import com.example.financeflow.ui.insights.DailyReportScreen
 import com.example.financeflow.ui.insights.InsightsScreen
 import com.example.financeflow.ui.insights.MonthlyReportScreen
 import com.example.financeflow.ui.insights.WeeklyReportScreen
+import com.example.financeflow.ui.profile.ProfileScreen
+import com.example.financeflow.ui.savings.AddSavingScreen
+import com.example.financeflow.ui.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.SavingsScreen
 
 @Composable
-fun DashboardScreen(rootNavController: NavHostController) {
+fun DashboardScreen(
+    rootNavController: NavHostController,
+    isDarkTheme: Boolean,
+    onThemeToggle: () -> Unit
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -65,26 +72,28 @@ fun DashboardScreen(rootNavController: NavHostController) {
                     onGoalsClick = { navController.navigate(Routes.GOALS) },
                     onExpensesClick = { navController.navigate(Routes.EXPENSES) },
                     onSavingsClick = { navController.navigate(Routes.SAVINGS) },
-                    onGoalCardClick = { navController.navigate(Routes.GOALS) }
+                    onGoalCardClick = { navController.navigate(Routes.GOALS) },
+                    onThemeClick = onThemeToggle,
+                    onProfileClick = { navController.navigate(Routes.PROFILE) }
                 )
             }
 
-            composable(Routes.INCOME) { 
-                IncomeScreen(navController = rootNavController) 
+            composable(Routes.INCOME) {
+                IncomeScreen(navController = rootNavController)
             }
 
-            composable(Routes.EXPENSES) { 
-                ExpensesScreen() 
+            composable(Routes.EXPENSES) {
+                ExpensesScreen()
             }
 
-            composable(Routes.SAVINGS) { 
-                SavingsScreen(navController = rootNavController) 
+            composable(Routes.SAVINGS) {
+                SavingsScreen(navController = rootNavController)
             }
 
-            composable(Routes.GOALS) { 
+            composable(Routes.GOALS) {
                 GoalsScreen(
-                    onNavigateToDetail = { goalId -> 
-                        rootNavController.navigate("goal_detail/$goalId") 
+                    onNavigateToDetail = { goalId ->
+                        rootNavController.navigate("goal_detail/$goalId")
                     }
                 )
             }
@@ -95,7 +104,23 @@ fun DashboardScreen(rootNavController: NavHostController) {
                 )
             }
 
-            // ── Reports (Internal navigation to keep BottomBar) ──────────
+            composable(Routes.PROFILE) {
+                ProfileScreen(
+                    isDarkTheme = isDarkTheme,
+                    onThemeToggle = onThemeToggle,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Routes.GOAL_DETAILS) {
+                GoalDetailsScreen(
+                    onAddContribution = { navController.navigate(Routes.ADD_SAVING) }
+                )
+            }
+
+            composable(Routes.ADD_SAVING) {
+                AddSavingScreen(onNavigateBack = { navController.popBackStack() })
+            }
 
             composable(Routes.DAILY_REPORT) {
                 DailyReportScreen(

@@ -17,16 +17,19 @@ import com.example.financeflow.ui.auth.RegisterScreen
 import com.example.financeflow.ui.auth.SplashScreen
 import com.example.financeflow.ui.auth.WelcomeScreen
 import com.example.financeflow.ui.dashboard.DashboardScreen
+import com.example.financeflow.ui.goals.GoalDetailScreen
 import com.example.financeflow.ui.income.AddIncomeScreen
 import com.example.financeflow.ui.income.DeleteIncomeScreen
 import com.example.financeflow.ui.income.EditIncomeScreen
-import com.example.financeflow.ui.goals.GoalDetailScreen
 import com.example.financeflow.ui.profile.ProfileScreen
 import com.example.financeflow.ui.savings.AddSavingScreen
 import com.example.financeflow.ui.savings.GoalDetailsScreen
 
 @Composable
-fun AppNavGraph() {
+fun AppNavGraph(
+    isDarkTheme: Boolean,
+    onThemeToggle: () -> Unit
+) {
     val navController = rememberNavController()
     val topPadding = WindowInsets.systemBars.asPaddingValues().calculateTopPadding()
 
@@ -35,9 +38,6 @@ fun AppNavGraph() {
         startDestination = Routes.SPLASH,
         modifier = Modifier.padding(top = topPadding)
     ) {
-
-        // ── Auth flow ─────────────────────────────────────────────────────
-
         composable(Routes.SPLASH) {
             SplashScreen(
                 onNavigateToLogin = {
@@ -108,13 +108,13 @@ fun AppNavGraph() {
             )
         }
 
-        // ── Main app container (Dashboard with Bottom Bar) ───────────────
-
-        composable(Routes.DASHBOARD) { 
-            DashboardScreen(rootNavController = navController)
+        composable(Routes.DASHBOARD) {
+            DashboardScreen(
+                rootNavController = navController,
+                isDarkTheme = isDarkTheme,
+                onThemeToggle = onThemeToggle
+            )
         }
-
-        // ── Full-screen leaf destinations (Bottom bar hidden) ──────────
 
         composable(Routes.ADD_INCOME) {
             AddIncomeScreen(
@@ -156,6 +156,8 @@ fun AppNavGraph() {
 
         composable(Routes.PROFILE) {
             ProfileScreen(
+                isDarkTheme = isDarkTheme,
+                onThemeToggle = onThemeToggle,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToLogout = {
                     navController.navigate(Routes.LOGIN) {
