@@ -1,4 +1,4 @@
-ackage com.example.financeflow.navigation
+package com.example.financeflow.navigation
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
