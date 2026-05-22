@@ -44,7 +44,10 @@ private val bottomNavRoutes = setOf(
 )
 
 @Composable
-fun AppNavGraph() {
+fun AppNavGraph(
+    isDarkTheme: Boolean,
+    onThemeToggle: () -> Unit
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -123,7 +126,11 @@ fun AppNavGraph() {
             composable(Routes.SAVINGS) { SavingsScreen(navController) }
             composable(Routes.GOALS) { GoalsScreen() }
             composable(Routes.PROFILE) {
-                ProfileScreen(onNavigateBack = { navController.popBackStack() })
+                ProfileScreen(
+                    isDarkTheme = isDarkTheme,
+                    onThemeToggle = onThemeToggle,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable(Routes.GOAL_DETAILS) {
                 GoalDetailsScreen(
@@ -138,7 +145,13 @@ fun AppNavGraph() {
                     onViewReports = { navController.navigate(Routes.DAILY_REPORT) }
                 )
             }
-            composable(Routes.DASHBOARD) { DashboardScreen(navController) }
+            composable(Routes.DASHBOARD) {
+                DashboardScreen(
+                    rootNavController = navController,
+                    isDarkTheme = isDarkTheme,
+                    onThemeToggle = onThemeToggle
+                )
+            }
 
             composable(Routes.DAILY_REPORT) {
                 DailyReportScreen(
