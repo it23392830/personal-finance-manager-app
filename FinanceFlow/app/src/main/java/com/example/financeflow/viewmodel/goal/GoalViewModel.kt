@@ -75,6 +75,7 @@ class GoalViewModel @Inject constructor(
         Goal(
             id = "1",
             title = "MacBook Pro M4",
+            description = "Latest MacBook Pro for development work",
             category = "Technology",
             targetAmount = 490000.0,
             currentSavedAmount = 196400.0,
@@ -111,6 +112,47 @@ class GoalViewModel @Inject constructor(
         )
     )
 
+    private val mockAllocations = mapOf(
+        "1" to listOf(
+            GoalAllocation(
+                id = "a1",
+                goalId = "1",
+                amount = 53200.0,
+                monthlyTarget = 50000.0,
+                monthYear = "oct 2023",
+                note = "Tag:Freelance",
+                allocatedAt = getMockTimestamp(-30)
+            ),
+            GoalAllocation(
+                id = "a2",
+                goalId = "1",
+                amount = 48160.0,
+                monthlyTarget = 50000.0,
+                monthYear = "sep 2023",
+                note = "Tag:Salary",
+                allocatedAt = getMockTimestamp(-60)
+            ),
+            GoalAllocation(
+                id = "a3",
+                goalId = "1",
+                amount = 51500.0,
+                monthlyTarget = 50000.0,
+                monthYear = "apr 2025",
+                note = "Tag:Business",
+                allocatedAt = getMockTimestamp(-90)
+            ),
+            GoalAllocation(
+                id = "a4",
+                goalId = "1",
+                amount = 43200.0,
+                monthlyTarget = 50000.0,
+                monthYear = "apr 2025",
+                note = "Tag:Investment",
+                allocatedAt = getMockTimestamp(-120)
+            )
+        )
+    )
+
     private val _goalListState = MutableStateFlow(GoalListState())
     val goalListState: StateFlow<GoalListState> = _goalListState.asStateFlow()
 
@@ -120,12 +162,8 @@ class GoalViewModel @Inject constructor(
         _goalListState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             repository.observeGoals().collect { result ->
-                result.onSuccess { goals ->
-                    _goalListState.update { it.copy(goals = goals.ifEmpty { mockGoals }, isLoading = false, error = null) }
-                }
-                result.onFailure { _ ->
-                    _goalListState.update { it.copy(goals = mockGoals, isLoading = false, error = null) }
-                }
+                val goals = result.getOrNull() ?: emptyList()
+                _goalListState.update { it.copy(goals = goals.ifEmpty { mockGoals }, isLoading = false, error = null) }
             }
         }
     }
@@ -139,17 +177,15 @@ class GoalViewModel @Inject constructor(
         viewModelScope.launch {
             launch {
                 repository.observeGoal(goalId).collect { result ->
-                    result.onSuccess { goal -> 
-                        val finalGoal = goal ?: mockGoals.find { it.id == goalId }
-                        _goalDetailState.update { it.copy(goal = finalGoal, isLoading = false) } 
-                    }
+                    val finalGoal = result.getOrNull() ?: mockGoals.find { it.id == goalId }
+                    _goalDetailState.update { it.copy(goal = finalGoal, isLoading = false) } 
                 }
             }
             launch {
                 repository.observeAllocations(goalId).collect { result ->
-                    result.onSuccess { allocations -> 
-                        _goalDetailState.update { it.copy(allocations = allocations) } 
-                    }
+                    val allocations = result.getOrNull() ?: emptyList()
+                    val finalAllocations = allocations.ifEmpty { mockAllocations[goalId] ?: emptyList() }
+                    _goalDetailState.update { it.copy(allocations = finalAllocations) }
                 }
             }
         }

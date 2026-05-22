@@ -29,6 +29,7 @@ fun GoalDetailScreen(
     LaunchedEffect(goalId) {
         viewModel.loadGoalDetail(goalId)
     }
+    // We pass empty lambdas to navigation callbacks because we are already on the detail screen
     GoalsScreen(viewModel = viewModel)
 }
 
@@ -99,7 +100,12 @@ fun GoalsScreen(
                         GoalCard(
                             goal = goal,
                             isSelected = detailState.goal?.id == goal.id,
-                            onClick = { viewModel.loadGoalDetail(goal.id) },
+                            onClick = { 
+                                viewModel.loadGoalDetail(goal.id)
+                                // If navigation callback is provided (main screen), we navigate.
+                                // If not provided (detail screen), we just update state locally.
+                                onNavigateToDetail(goal.id)
+                            },
                             onEdit = {
                                 viewModel.setEditGoal(goal)
                                 showCreateGoal = true
