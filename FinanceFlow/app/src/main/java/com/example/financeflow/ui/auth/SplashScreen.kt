@@ -1,8 +1,14 @@
 package com.example.financeflow.ui.auth
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -10,36 +16,32 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.financeflow.R
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import kotlinx.coroutines.delay
 
-// ─── Theme colors ─────────────────────────────────────────────────────────────
 private val PrimaryPurple = Color(0xFF7C4DFF)
 
-/**
- * SplashScreen
- *
- * Displays the Penny-Pilot brand with the piggy-bank illustration (image_37).
- * Automatically navigates to LoginScreen after 1 second.
- *
- * Drawable required:
- *   res/drawable/image_37.png  ← the person + piggy bank flat illustration
- *
- * @param onNavigateToLogin  Called after the 1-second splash delay.
- */
 @Composable
 fun SplashScreen(onNavigateToLogin: () -> Unit = {}) {
+    val composition = rememberLottieComposition(
+        LottieCompositionSpec.Asset("saving.json")
+    )
+    val progress = animateLottieCompositionAsState(
+        composition = composition.value,
+        iterations = LottieConstants.IterateForever
+    )
 
-    // ── Auto-navigate after 1 second ──────────────────────────────────────────
     LaunchedEffect(Unit) {
-        delay(1_000L)
+        delay(2_200L)
         onNavigateToLogin()
     }
 
@@ -53,21 +55,16 @@ fun SplashScreen(onNavigateToLogin: () -> Unit = {}) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-
-            // ── Piggy bank illustration ───────────────────────────────────────
-            // Asset: res/drawable/image_37.png
-            Image(
-                painter = painterResource(id = R.drawable.image_37),
-                contentDescription = "Penny-Pilot piggy bank illustration",
+            LottieAnimation(
+                composition = composition.value,
+                progress = { progress.value },
                 modifier = Modifier
-                    .fillMaxWidth(0.75f)
-                    .aspectRatio(1.3f),
-                contentScale = ContentScale.Fit
+                    .fillMaxWidth(0.88f)
+                    .size(320.dp)
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // ── App name ──────────────────────────────────────────────────────
             Text(
                 text = "Penny-Pilot",
                 fontSize = 36.sp,
@@ -77,7 +74,6 @@ fun SplashScreen(onNavigateToLogin: () -> Unit = {}) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ── Tagline ───────────────────────────────────────────────────────
             Text(
                 text = "where your income meets goals....",
                 fontSize = 14.sp,
@@ -87,8 +83,6 @@ fun SplashScreen(onNavigateToLogin: () -> Unit = {}) {
         }
     }
 }
-
-// ─── Preview ──────────────────────────────────────────────────────────────────
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
