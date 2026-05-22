@@ -26,4 +26,5 @@ object Routes {
     const val DAILY_REPORT = "daily_report"
     const val WEEKLY_REPORT = "weekly_report"
     const val MONTHLY_REPORT = "monthly_report"
+
 }
