@@ -193,7 +193,7 @@ fun AddSavingScreen(
 
 
 // AddSavingHeaderCard
-// Top white card: title, subtitle, DarkMode + Person icons
+// Top white card: title and subtitle only.
 
 @Composable
 private fun AddSavingHeaderCard() {
@@ -208,11 +208,9 @@ private fun AddSavingHeaderCard() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: title + subtitle
-            Column(modifier = Modifier.weight(1f)) {
+            Column {
                 Text(
                     text       = "Add Savings",
                     fontSize   = 22.sp,
@@ -225,20 +223,6 @@ private fun AddSavingHeaderCard() {
                     color    = LabelGray
                 )
             }
-            // Right: icon buttons
-            Icon(
-                imageVector     = Icons.Default.DarkMode,
-                contentDescription = "Dark Mode",
-                tint            = LabelGray,
-                modifier        = Modifier.size(26.dp).clickable { }
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Icon(
-                imageVector     = Icons.Default.Person,
-                contentDescription = "Profile",
-                tint            = LabelGray,
-                modifier        = Modifier.size(26.dp).clickable { }
-            )
         }
     }
 }
