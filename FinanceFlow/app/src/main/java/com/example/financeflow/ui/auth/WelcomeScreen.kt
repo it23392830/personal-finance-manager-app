@@ -44,7 +44,7 @@ fun WelcomeScreen(onNavigateToHome: () -> Unit = {}) {
     )
 
     LaunchedEffect(Unit) {
-        delay(1_000L)
+        delay(2_200L)
         onNavigateToHome()
     }
 
