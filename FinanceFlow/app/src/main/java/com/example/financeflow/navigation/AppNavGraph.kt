@@ -1,5 +1,4 @@
 package com.example.financeflow.navigation
-
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.padding
@@ -22,22 +21,16 @@ import com.example.financeflow.ui.auth.WelcomeScreen
 import com.example.financeflow.ui.components.Home.BottomNavigationBar
 import com.example.financeflow.ui.dashboard.DashboardScreen
 import com.example.financeflow.ui.dashboard.HomeScreen
+import com.example.financeflow.ui.expenses.AddExpenseScreen
 import com.example.financeflow.ui.expenses.ExpensesScreen
-import com.example.financeflow.ui.goals.GoalsScreen
-import com.example.financeflow.ui.income.AddIncomeScreen
-import com.example.financeflow.ui.income.DeleteIncomeScreen
-import com.example.financeflow.ui.income.EditIncomeScreen
-import com.example.financeflow.ui.income.IncomeScreen
+import com.example.financeflow.ui.income.*
 import com.example.financeflow.ui.insights.DailyReportScreen
 import com.example.financeflow.ui.insights.InsightsScreen
 import com.example.financeflow.ui.insights.MonthlyReportScreen
 import com.example.financeflow.ui.insights.WeeklyReportScreen
-import com.example.financeflow.ui.profile.ProfileScreen
-import com.example.financeflow.ui.savings.AddSavingScreen
-import com.example.financeflow.ui.savings.GoalDetailsScreen
-import com.example.financeflow.ui.savings.SavingsScreen
-
+ 
 // ─── Routes that should show the bottom navigation bar ───────────────────────
+// Auth screens are intentionally excluded so the nav bar is hidden during login.
 private val bottomNavRoutes = setOf(
     Routes.HOME,
     Routes.INCOME,
@@ -46,16 +39,17 @@ private val bottomNavRoutes = setOf(
     Routes.GOALS,
     Routes.INSIGHTS
 )
-
+ 
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-
+ 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
+            // Only show the bottom bar on main-app destinations
             if (currentDestination?.route in bottomNavRoutes) {
                 BottomNavigationBar(
                     currentDestination = currentDestination,
@@ -71,17 +65,18 @@ fun AppNavGraph() {
                 )
             }
         }
-    ) {
+    ) { innerPadding ->
         val topPadding = WindowInsets.systemBars.asPaddingValues().calculateTopPadding()
-
+ 
         NavHost(
             navController = navController,
             startDestination = Routes.SPLASH,
             modifier = Modifier.padding(top = topPadding)
         ) {
-
+ 
             // ── Auth flow ─────────────────────────────────────────────────────
-
+ 
+            // Splash → auto 1s → Login (pops itself so Back cannot return here)
             composable(Routes.SPLASH) {
                 SplashScreen(
                     onNavigateToLogin = {
@@ -92,7 +87,8 @@ fun AppNavGraph() {
                     }
                 )
             }
-
+ 
+            // Login → Welcome | ForgotPassword | Register
             composable(Routes.LOGIN) {
                 LoginScreen(
                     onNext = {
@@ -112,7 +108,8 @@ fun AppNavGraph() {
                     }
                 )
             }
-
+ 
+            // Register → Login (pops Register from stack)
             composable(Routes.REGISTER) {
                 RegisterScreen(
                     onNext = {
@@ -129,7 +126,8 @@ fun AppNavGraph() {
                     }
                 )
             }
-
+ 
+            // Forgot Password → Login (pops ForgotPassword from stack)
             composable(Routes.FORGOT_PASSWORD) {
                 ForgotPasswordScreen(
                     onVerify = {
@@ -140,7 +138,8 @@ fun AppNavGraph() {
                     }
                 )
             }
-
+ 
+            // Welcome → Home (clears the entire auth back-stack so Back exits the app)
             composable(Routes.WELCOME) {
                 WelcomeScreen(
                     onNavigateToHome = {
@@ -151,13 +150,14 @@ fun AppNavGraph() {
                     }
                 )
             }
-
+ 
             // ── Main app ──────────────────────────────────────────────────────
-
+ 
             composable(Routes.HOME) {
                 HomeScreen(
                     onAddIncomeClick  = { navController.navigate(Routes.INCOME) },
-                    onAddExpenseClick = { navController.navigate(Routes.EXPENSES) },
+                    // ADD_EXPENSE opens the full add-expense form, not just the list
+                    onAddExpenseClick = { navController.navigate(Routes.ADD_EXPENSE) },
                     onIncomeClick     = { navController.navigate(Routes.INCOME) },
                     onGoalsClick      = { navController.navigate(Routes.GOALS) },
                     onExpensesClick   = { navController.navigate(Routes.EXPENSES) },
@@ -165,65 +165,69 @@ fun AppNavGraph() {
                     onGoalCardClick   = { navController.navigate(Routes.GOALS) }
                 )
             }
-
-            composable(Routes.INCOME) { IncomeScreen(navController) }
-
+ 
+            composable(Routes.INCOME) {
+                IncomeScreen(navController)
+            }
+ 
             composable(Routes.ADD_INCOME) {
                 AddIncomeScreen(
-                    onAddIncome = { _, _, _, _, _, _ -> navController.popBackStack() },
+                    onAddIncome  = { _, _, _, _, _, _ -> navController.popBackStack() },
                     onNavigateUp = { navController.popBackStack() }
                 )
             }
-
+ 
             composable(
                 route = Routes.EDIT_INCOME,
                 arguments = listOf(navArgument("incomeId") { type = NavType.StringType })
             ) {
                 EditIncomeScreen(
-                    onCancel = { navController.popBackStack() },
+                    onCancel      = { navController.popBackStack() },
                     onSaveChanges = { _, _, _, _, _, _ -> navController.popBackStack() }
                 )
             }
-
+ 
             composable(
                 route = Routes.DELETE_INCOME,
                 arguments = listOf(navArgument("incomeId") { type = NavType.StringType })
             ) {
                 DeleteIncomeScreen(
-                    onCancel = { navController.popBackStack() },
+                    onCancel        = { navController.popBackStack() },
                     onConfirmDelete = { navController.popBackStack() }
                 )
             }
-
-            composable(Routes.EXPENSES)  { ExpensesScreen() }
-            composable(Routes.SAVINGS)   { SavingsScreen(navController) }
-            composable(Routes.GOALS)     { GoalsScreen() }
-            composable(Routes.PROFILE) {
-                ProfileScreen(onNavigateBack = { navController.popBackStack() })
-            }
-            composable(Routes.GOAL_DETAILS) {
-                GoalDetailsScreen(
-                    onAddContribution = { navController.navigate(Routes.ADD_SAVING) }
+ 
+            composable(Routes.EXPENSES) {
+                ExpensesScreen(
+                    onAddExpenseClick = { navController.navigate(Routes.ADD_EXPENSE) }
                 )
             }
-            composable(Routes.ADD_SAVING) {
-                AddSavingScreen(onNavigateBack = { navController.popBackStack() })
+ 
+            composable(Routes.ADD_EXPENSE) {
+                AddExpenseScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
-
+ 
+            composable(Routes.SAVINGS) { SavingsScreen() }
+            composable(Routes.GOALS)   { GoalsScreen() }
+ 
             composable(Routes.INSIGHTS) {
                 InsightsScreen(
                     onViewReports = { navController.navigate(Routes.DAILY_REPORT) }
                 )
             }
-
-            composable(Routes.DASHBOARD) { DashboardScreen(navController) }
-
+ 
+            composable(Routes.DASHBOARD) {
+                DashboardScreen(navController)
+            }
+ 
             // ── Report screens ────────────────────────────────────────────────
-
+ 
             composable(Routes.DAILY_REPORT) {
                 DailyReportScreen(
-                    onNavigateUp = { navController.popBackStack() },
-                    onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
+                    onNavigateUp  = { navController.popBackStack() },
+                    onClose       = { navController.popBackStack(Routes.INSIGHTS, false) },
                     onTabSelected = { tab ->
                         when (tab) {
                             "Weekly"  -> navController.navigate(Routes.WEEKLY_REPORT) {
@@ -236,11 +240,11 @@ fun AppNavGraph() {
                     }
                 )
             }
-
+ 
             composable(Routes.WEEKLY_REPORT) {
                 WeeklyReportScreen(
-                    onNavigateUp = { navController.popBackStack() },
-                    onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
+                    onNavigateUp  = { navController.popBackStack() },
+                    onClose       = { navController.popBackStack(Routes.INSIGHTS, false) },
                     onTabSelected = { tab ->
                         when (tab) {
                             "Daily"   -> navController.navigate(Routes.DAILY_REPORT) {
@@ -253,11 +257,11 @@ fun AppNavGraph() {
                     }
                 )
             }
-
+ 
             composable(Routes.MONTHLY_REPORT) {
                 MonthlyReportScreen(
-                    onNavigateUp = { navController.popBackStack() },
-                    onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
+                    onNavigateUp  = { navController.popBackStack() },
+                    onClose       = { navController.popBackStack(Routes.INSIGHTS, false) },
                     onTabSelected = { tab ->
                         when (tab) {
                             "Daily"  -> navController.navigate(Routes.DAILY_REPORT) {
@@ -273,3 +277,11 @@ fun AppNavGraph() {
         }
     }
 }
+ 
+// ─── Stub screens ─────────────────────────────────────────────────────────────
+ 
+@Composable
+fun GoalsScreen() {}
+ 
+@Composable
+fun SavingsScreen() {}
