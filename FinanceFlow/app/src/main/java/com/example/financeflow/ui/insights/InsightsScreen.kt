@@ -263,6 +263,7 @@ private fun DayEntryChip(label: String, count: Int, color: Color) {
 
 // ─── Preview ──────────────────────────────────────────────────────────────────
 
+@Preview(showBackground = true, backgroundColor = 0xFFF3ECFF, showSystemUi = true)
 @Composable
 fun InsightsScreenPreview() {
     MaterialTheme {
