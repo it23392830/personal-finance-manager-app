@@ -1,5 +1,7 @@
 package com.example.financeflow.ui.savings
 
+import com.example.financeflow.ui.components.savings.getSavingsColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,15 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-// Color tokens (local to this file — mirrors the app-wide palette)
-private val FormYellow   = Color(0xFFF7E4A7)
-private val OrangeBar    = Color(0xFFF5A623)
-private val GreenBtn     = Color(0xFF3DBD7D)
-private val PurpleBtn    = Color(0xFF9B72CF)
-private val FieldBorder  = Color(0xFFD0C4E8)
-private val LabelGray    = Color(0xFF888888)
-private val DarkText     = Color(0xFF1A1A1A)
-private val CardWhite    = Color(0xFFFFFFFF)
+// Colors are provided by getSavingsColors(isDarkTheme)
 
 // EditGoalAllocationScreen
 //
@@ -63,6 +57,8 @@ fun EditGoalAllocationScreen(
     var target    by remember { mutableStateOf(targetAmount) }
 
     // ── Dialog wraps the popup and provides the dark scrim ─────────────────
+    val colors = getSavingsColors(isDarkTheme)
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -79,7 +75,7 @@ fun EditGoalAllocationScreen(
                 modifier = Modifier
                     .fillMaxWidth(0.92f)           // 92 % of screen width
                     .shadow(elevation = 12.dp, shape = RoundedCornerShape(25.dp))
-                    .background(FormYellow, RoundedCornerShape(25.dp))
+                    .background(colors.formBg, RoundedCornerShape(25.dp))
                     .padding(24.dp)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -94,7 +90,7 @@ fun EditGoalAllocationScreen(
                             text       = "Edit Goal Allocation",
                             fontSize   = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color      = DarkText
+                            color      = colors.textPrimary
                         )
                         IconButton(
                             onClick  = onDismiss,
@@ -103,33 +99,36 @@ fun EditGoalAllocationScreen(
                             Icon(
                                 imageVector        = Icons.Default.Close,
                                 contentDescription = "Close",
-                                tint               = DarkText
+                                tint               = colors.textPrimary
                             )
                         }
                     }
 
                     // ── Field 1: Goal Name ─────────────────────────────────
                     EditFormField(
-                        label       = "Goal Name",
-                        value       = name,
-                        onChange    = { name = it },
-                        keyboardType = KeyboardType.Text
+                        label = "Goal Name",
+                        value = name,
+                        onChange = { name = it },
+                        keyboardType = KeyboardType.Text,
+                        isDarkTheme = isDarkTheme
                     )
 
                     // ── Field 2: Amount Allocated ──────────────────────────
                     EditFormField(
-                        label        = "Amount Allocated (LKR)",
-                        value        = allocated,
-                        onChange     = { allocated = it },
-                        keyboardType = KeyboardType.Number
+                        label = "Amount Allocated (LKR)",
+                        value = allocated,
+                        onChange = { allocated = it },
+                        keyboardType = KeyboardType.Number,
+                        isDarkTheme = isDarkTheme
                     )
 
                     // ── Field 3: Target Amount ─────────────────────────────
                     EditFormField(
-                        label        = "Target Amount (LKR)",
-                        value        = target,
-                        onChange     = { target = it },
-                        keyboardType = KeyboardType.Number
+                        label = "Target Amount (LKR)",
+                        value = target,
+                        onChange = { target = it },
+                        keyboardType = KeyboardType.Number,
+                        isDarkTheme = isDarkTheme
                     )
 
                     // ── Progress indicator ─────────────────────────────────
@@ -139,14 +138,14 @@ fun EditGoalAllocationScreen(
                             modifier   = Modifier
                                 .fillMaxWidth()
                                 .height(10.dp),
-                            color      = OrangeBar,
-                            trackColor = Color(0xFFE0D4A0),
+                            color      = colors.accent,
+                            trackColor = colors.progressTrack,
                             strokeCap  = StrokeCap.Round
                         )
                         Text(
                             text     = progressLabel,
                             fontSize = 12.sp,
-                            color    = LabelGray
+                            color    = colors.muted
                         )
                     }
 
@@ -158,14 +157,14 @@ fun EditGoalAllocationScreen(
                         // Save Changes — green, closes dialog
                         EditActionButton(
                             text            = "Save Changes",
-                            backgroundColor = GreenBtn,
+                            backgroundColor = colors.success,
                             modifier        = Modifier.weight(1f),
                             onClick         = onDismiss
                         )
                         // Cancel — purple, closes dialog
                         EditActionButton(
                             text            = "Cancel",
-                            backgroundColor = PurpleBtn,
+                            backgroundColor = colors.accent.copy(alpha = 0.6f),
                             modifier        = Modifier.weight(1f),
                             onClick         = onDismiss
                         )
@@ -179,33 +178,36 @@ fun EditGoalAllocationScreen(
 // EditFormField — labelled OutlinedTextField used inside the popup
 @Composable
 private fun EditFormField(
-    label:        String,
-    value:        String,
-    onChange:     (String) -> Unit,
-    keyboardType: KeyboardType = KeyboardType.Text
+    label: String,
+    value: String,
+    onChange: (String) -> Unit,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    isDarkTheme: Boolean = false
 ) {
+    val colors = getSavingsColors(isDarkTheme)
+
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
-            text       = label,
-            fontSize   = 12.sp,
+            text = label,
+            fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color      = DarkText
+            color = colors.textPrimary
         )
         OutlinedTextField(
-            value         = value,
+            value = value,
             onValueChange = onChange,
-            singleLine    = true,
-            shape         = RoundedCornerShape(12.dp),
-            modifier      = Modifier.fillMaxWidth(),
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor   = CardWhite,
-                unfocusedContainerColor = CardWhite,
-                focusedBorderColor      = OrangeBar,
-                unfocusedBorderColor    = FieldBorder,
-                cursorColor             = OrangeBar,
-                focusedTextColor        = DarkText,
-                unfocusedTextColor      = DarkText
+                focusedContainerColor = colors.cardBg,
+                unfocusedContainerColor = colors.cardBg,
+                focusedBorderColor = colors.accent,
+                unfocusedBorderColor = colors.fieldBorder,
+                cursorColor = colors.accent,
+                focusedTextColor = colors.textPrimary,
+                unfocusedTextColor = colors.textPrimary
             )
         )
     }

@@ -84,7 +84,9 @@ fun DashboardScreen(
             }
 
             composable(Routes.EXPENSES) {
-                ExpensesScreen(isDarkTheme = isDarkTheme)
+                ExpensesScreen(
+                    onAddExpenseClick = { navController.navigate(Routes.EXPENSES) }
+                )
             }
 
             composable(Routes.SAVINGS) {

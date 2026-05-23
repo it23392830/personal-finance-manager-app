@@ -1,4 +1,7 @@
+
 package com.example.financeflow.ui.savings
+
+import com.example.financeflow.ui.components.savings.getSavingsColors
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -39,8 +42,10 @@ private val DeleteDialogBody = Color(0xFF4F4F4F)
 @Composable
 fun DeleteConfirmationDialog(
     onDelete: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    isDarkTheme: Boolean = false
 ) {
+    val colors = getSavingsColors(isDarkTheme)
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -57,7 +62,7 @@ fun DeleteConfirmationDialog(
                     .fillMaxWidth(0.9f)
                     .shadow(elevation = 10.dp, shape = RoundedCornerShape(25.dp)),
                 shape = RoundedCornerShape(25.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = colors.cardBg)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -67,14 +72,14 @@ fun DeleteConfirmationDialog(
                         text = "Delete Saving Entry?",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = DeleteDialogText
+                        color = colors.textPrimary
                     )
 
                     Text(
                         text = "This action cannot be undone. The saving record will be permanently removed.",
                         fontSize = 14.sp,
                         lineHeight = 22.sp,
-                        color = DeleteDialogBody
+                        color = colors.textSecondary
                     )
 
                     Row(

@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
-import com.example.financeflow.ui.components.savings.CardWhite
+import com.example.financeflow.ui.theme.CardWhite
 
 //  Design Tokens - Light Mode
 private val LightTextPrimary     = Color(0xFF1A1A2E)

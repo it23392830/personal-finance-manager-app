@@ -19,7 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.financeflow.ui.components.savings.CardWhite
+import com.example.financeflow.ui.theme.CardWhite
 
 //  Design Tokens
 // CardWhite is provided by SavingsCard.kt in the same package

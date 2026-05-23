@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.financeflow.ui.theme.CardWhite
+import com.example.financeflow.ui.theme.OrangeAccent
 
 // Design Tokens - Light Mode
 private val LightTextPrimary      = Color(0xFF1A1A2E)

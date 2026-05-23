@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.financeflow.navigation.Routes
-import com.example.financeflow.ui.components.savings.BackgroundPurple
+// use getSavingsColors below (no BackgroundPurple import)
 import com.example.financeflow.ui.components.savings.HeaderCard
 import com.example.financeflow.ui.components.savings.LifetimeStatisticsCard
 import com.example.financeflow.ui.components.savings.SavingGoal
@@ -51,10 +51,12 @@ fun SavingsScreen(
     var selectedGoal by remember { mutableStateOf<SavingGoal?>(null) }
     var selectedHistory by remember { mutableStateOf<SavingHistoryEntry?>(null) }
 
+    val colors = com.example.financeflow.ui.components.savings.getSavingsColors(isDarkTheme)
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundPurple),
+            .background(colors.background),
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
@@ -65,6 +67,7 @@ fun SavingsScreen(
     ) {
         item {
             HeaderCard(
+                isDarkTheme = isDarkTheme,
                 selectedMonth = "May 2026",
                 onMonthSelected = { /* UI only */ }
             )
@@ -72,6 +75,7 @@ fun SavingsScreen(
 
         item {
             SavingsThisMonthCard(
+                isDarkTheme = isDarkTheme,
                 amount = "LKR 53,200",
                 totalIncome = "LKR 187,500",
                 savingRate = "28%",
@@ -83,6 +87,7 @@ fun SavingsScreen(
 
         item {
             LifetimeStatisticsCard(
+                isDarkTheme = isDarkTheme,
                 totalSaved = "LKR 301,600",
                 avgSavingsRate = "26.8%",
                 periodLabel = "Total Saved (6 mon)"
@@ -91,6 +96,7 @@ fun SavingsScreen(
 
         item {
             SavingsByGoalCard(
+                isDarkTheme = isDarkTheme,
                 goals = goals,
                 onEditClick = { goal -> editingGoal = goal },
                 onDeleteClick = { goal ->
@@ -103,6 +109,7 @@ fun SavingsScreen(
 
         item {
             SavingsHistoryCard(
+                isDarkTheme = isDarkTheme,
                 entries = history,
                 onEditClick = { showEditSavingsPopup = true },
                 onDeleteClick = { historyEntry ->
