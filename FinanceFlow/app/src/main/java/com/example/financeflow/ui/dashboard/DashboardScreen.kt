@@ -114,7 +114,12 @@ fun DashboardScreen(
                 ProfileScreen(
                     isDarkTheme = isDarkTheme,
                     onThemeToggle = onThemeToggle,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToLogout = {
+                        rootNavController.navigate(Routes.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 )
             }
 
