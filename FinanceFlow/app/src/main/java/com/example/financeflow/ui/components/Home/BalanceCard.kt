@@ -130,7 +130,7 @@ fun BalanceCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.Center
             ) {
                 StreakChip(days = data.streakDays)
             }
@@ -148,12 +148,13 @@ private fun GreetingRow(
     onThemeClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
-    Row(
-        modifier            = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment   = Alignment.CenterVertically
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
                 text       = "Hello, $userName!!",
                 style      = MaterialTheme.typography.titleLarge.copy(
@@ -169,26 +170,6 @@ private fun GreetingRow(
                     fontSize = 13.sp
                 )
             )
-        }
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onThemeClick) {
-                Icon(
-                    imageVector = Icons.Outlined.LightMode,
-                    contentDescription = "Theme",
-                    tint = TextPrimary
-                )
-            }
-            IconButton(onClick = onProfileClick) {
-                Icon(
-                    imageVector = Icons.Outlined.Person,
-                    contentDescription = "Profile",
-                    tint = TextPrimary
-                )
-            }
         }
     }
 }
