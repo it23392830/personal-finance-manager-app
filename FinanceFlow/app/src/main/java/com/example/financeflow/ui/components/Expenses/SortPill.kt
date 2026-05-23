@@ -20,18 +20,19 @@ fun SortPill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(false)
     Surface(
         onClick = onClick,
-        color = if (selected) ExpenseColors.PrimaryText else Color.White,
+        color = if (selected) colors.PrimaryText else Color.White,
         shape = RoundedCornerShape(99.dp),
-        border = if (selected) null else androidx.compose.foundation.BorderStroke(1.dp, ExpenseColors.Border),
+        border = if (selected) null else androidx.compose.foundation.BorderStroke(1.dp, colors.Border),
         modifier = modifier
     ) {
         Text(
             text = label,
             fontSize = 12.sp,
             fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal,
-            color = if (selected) Color.White else ExpenseColors.TextMuted,
+            color = if (selected) Color.White else colors.TextMuted,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )
     }

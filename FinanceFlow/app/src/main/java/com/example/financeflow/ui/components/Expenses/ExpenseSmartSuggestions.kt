@@ -20,21 +20,24 @@ import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseSmartSuggestions(
+    isDarkTheme: Boolean = false,
     suggestions: List<SuggestionUiItem>,
     onSuggestionClick: (SuggestionUiItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(isDarkTheme)
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF1F2)) // Light pink
+        colors = CardDefaults.cardColors(containerColor = colors.ExpenseBg)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 "Smart Suggestions",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = colors.TextPrimary
             )
 
             Spacer(Modifier.height(16.dp))
@@ -47,7 +50,7 @@ fun ExpenseSmartSuggestions(
                         .padding(vertical = 4.dp)
                         .shadow(1.dp, RoundedCornerShape(16.dp))
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White)
+                    .background(colors.CardBg)
                         .clickable { onSuggestionClick(suggestion) }
                         .padding(12.dp)
                 ) {
@@ -70,19 +73,19 @@ fun ExpenseSmartSuggestions(
                                 suggestion.description,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.Black
+                                color = colors.TextPrimary
                             )
                         }
 
                         Surface(
-                            color = Color.White,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E7EB)),
+                            color = colors.CardBg,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, colors.Border),
                             shape = RoundedCornerShape(99.dp)
                         ) {
                             Text(
                                 suggestion.badge,
                                 fontSize = 10.sp,
-                                color = Color.Gray,
+                                color = colors.TextMuted,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                             )
                         }

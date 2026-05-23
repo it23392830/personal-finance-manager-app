@@ -24,18 +24,19 @@ fun ExpenseInsightsCard(
     insights: List<InsightUiItem>,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(false)
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = ExpenseColors.TealBg),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCCFBF1))
+        colors = CardDefaults.cardColors(containerColor = colors.TealBg),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.TealBg)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 "💡 Smart Insights",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF0F766E)
+                color = colors.SuccessGreen
             )
 
             Spacer(Modifier.height(12.dp))
@@ -45,7 +46,7 @@ fun ExpenseInsightsCard(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color.White, RoundedCornerShape(12.dp))
+                            .background(colors.CardBg, RoundedCornerShape(12.dp))
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -54,7 +55,7 @@ fun ExpenseInsightsCard(
                         Text(
                             text = insight.text,
                             fontSize = 13.sp,
-                            color = ExpenseColors.TextPrimary,
+                            color = colors.TextPrimary,
                             lineHeight = 18.sp
                         )
                     }

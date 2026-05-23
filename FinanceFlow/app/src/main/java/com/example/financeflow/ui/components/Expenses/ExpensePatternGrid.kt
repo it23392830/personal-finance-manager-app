@@ -22,10 +22,11 @@ fun ExpensePatternGrid(
     stats: List<PatternStatUiItem>,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(false)
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = ExpenseColors.CardBg),
+        colors = CardDefaults.cardColors(containerColor = colors.CardBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -33,7 +34,7 @@ fun ExpensePatternGrid(
                 "📊 Spending Patterns",
                 fontSize = 15.sp,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                color = ExpenseColors.TextPrimary
+                color = colors.TextPrimary
             )
 
             Spacer(Modifier.height(16.dp))
@@ -59,23 +60,24 @@ fun ExpensePatternGrid(
 
 @Composable
 private fun PatternCell(stat: PatternStatUiItem, modifier: Modifier = Modifier) {
+    val colors = getExpensesColors(false)
     Box(
         modifier = modifier
-            .background(ExpenseColors.SurfaceGrey, RoundedCornerShape(12.dp))
+            .background(colors.SurfaceGrey, RoundedCornerShape(12.dp))
             .padding(12.dp)
     ) {
         Column {
             Text(stat.emoji, fontSize = 20.sp)
             Spacer(Modifier.height(8.dp))
-            Text(stat.label, fontSize = 10.sp, color = ExpenseColors.TextMuted)
+            Text(stat.label, fontSize = 10.sp, color = colors.TextMuted)
             Text(
                 stat.value,
                 fontSize = 13.sp,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                color = ExpenseColors.TextPrimary,
+                color = colors.TextPrimary,
                 maxLines = 1
             )
-            Text(stat.sub, fontSize = 10.sp, color = ExpenseColors.TextMuted, maxLines = 1)
+            Text(stat.sub, fontSize = 10.sp, color = colors.TextMuted, maxLines = 1)
         }
     }
 }

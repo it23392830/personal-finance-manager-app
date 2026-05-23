@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.components.Expenses.*
+import com.example.financeflow.ui.components.Expenses.getExpensesColors
 import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -255,6 +256,7 @@ val HARDCODED_PATTERN_STATS = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpensesScreen(
+    isDarkTheme: Boolean = false,
     onAddExpenseClick: () -> Unit = {}
 ) {
     // ── Month ─────────────────────────────────────────────────
@@ -345,26 +347,30 @@ fun ExpensesScreen(
     }
 
     // ── Scaffold ──────────────────────────────────────────────
+    val colors = getExpensesColors(isDarkTheme)
+
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(ExpenseColors.AppBg)
+                .background(colors.AppBg)
                 .verticalScroll(rememberScrollState())
         ) {
             // ── Header ─────────────────────────────────────────
             ExpenseHeader(
                 selectedMonth = selectedMonth,
                 onMonthChange = { selectedMonth = it },
-                onAddClick    = { openAddForm() }
+                onAddClick    = { openAddForm() },
+                colors = colors
             )
 
             // ── Warning banner ──────────────────────────────────
             if (budgetUsedPct >= 85f) {
                 ExpenseWarningBanner(
                     budgetUsedPct = budgetUsedPct,
-                    remaining     = remaining
+                    remaining     = remaining,
+                    isDarkTheme = isDarkTheme
                 )
             }
 
@@ -376,14 +382,17 @@ fun ExpensesScreen(
                 ExpenseBudgetCard(
                     remaining       = remaining,
                     todayTotal      = todayTotal,
-                    essentialTotal  = essentialTotal
+                    essentialTotal  = essentialTotal,
+                    colors = colors
                 )
                 ExpenseQuickAdd(
+                    isDarkTheme = isDarkTheme,
                     recentCategoryIds = recentCategoryIds,
                     onCategoryClick   = { catId -> openAddForm(catId) },
                     onCustomClick     = { openAddForm() }
                 )
                 ExpenseSmartSuggestions(
+                    isDarkTheme = isDarkTheme,
                     suggestions       = HARDCODED_SUGGESTIONS,
                     onSuggestionClick = { s ->
                         formDescription = s.description; formAmount = s.amount.toString()
@@ -393,13 +402,14 @@ fun ExpensesScreen(
                     }
                 )
                 ExpenseTodayList(
+                    isDarkTheme = isDarkTheme,
                     todayExpenses = todayExpenses,
                     openMenuId    = openMenuId,
                     onMenuToggle  = { id -> openMenuId = if (openMenuId == id) null else id },
                     onEdit        = { exp -> openEditForm(exp) },
                     onDelete      = { id -> deletingId = id; showDeleteDialog = true }
                 )
-                ExpenseReminderCard()
+                ExpenseReminderCard(isDarkTheme = isDarkTheme)
             }
 
             Spacer(Modifier.height(24.dp))
@@ -413,11 +423,12 @@ fun ExpensesScreen(
                     text = "Recurring Expenses",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
-                        color = ExpenseColors.TextPrimary
+                        color = colors.TextPrimary
                     )
                 )
 
                 ExpenseMissedAlert(
+                    isDarkTheme = isDarkTheme,
                     missedItems = missedRecurring,
                     onMarkPaid  = { id ->
                         recurringList = recurringList.map {
@@ -427,6 +438,7 @@ fun ExpensesScreen(
                     }
                 )
                 ExpenseRecurringList(
+                    isDarkTheme = isDarkTheme,
                     recurringList  = recurringList,
                     onToggleActive = { id ->
                         recurringList = recurringList.map {
@@ -441,6 +453,7 @@ fun ExpensesScreen(
         // ── Dialogs ───────────────────────────────────────────
         if (showFormDialog) {
             ExpenseFormDialog(
+                isDarkTheme       = isDarkTheme,
                 isEditMode        = isEditMode,
                 amount            = formAmount,      onAmountChange      = { formAmount = it },
                 description       = formDescription, onDescriptionChange = { formDescription = it },
@@ -459,6 +472,7 @@ fun ExpensesScreen(
 
         if (showDeleteDialog) {
             ExpenseDeleteDialog(
+                isDarkTheme = isDarkTheme,
                 onConfirm = { confirmDelete() },
                 onDismiss = { showDeleteDialog = false; deletingId = null }
             )

@@ -64,7 +64,7 @@ fun LifetimeStatisticsCard(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            SaveFirstBanner()
+            SaveFirstBanner(isDarkTheme = isDarkTheme)
         }
     }
 }
@@ -98,8 +98,8 @@ fun GradientStatChip(
     }
 }
 @Composable
-fun SaveFirstBanner() {
-    val colors = com.example.financeflow.ui.components.savings.getSavingsColors(false)
+fun SaveFirstBanner(isDarkTheme: Boolean = false) {
+    val colors = com.example.financeflow.ui.components.savings.getSavingsColors(isDarkTheme)
 
     Box(
         modifier = Modifier
