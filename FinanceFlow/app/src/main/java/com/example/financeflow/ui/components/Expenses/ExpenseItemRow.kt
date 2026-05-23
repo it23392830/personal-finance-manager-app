@@ -24,7 +24,8 @@ fun ExpenseItemRow(
     onMenuToggle: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    colors: ExpensesColors = getExpensesColors(false)
 ) {
     val category = getCat(item.categoryId)
 
@@ -51,25 +52,25 @@ fun ExpenseItemRow(
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = item.description,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = ExpenseColors.TextPrimary
-                    )
+                            text = item.description,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = colors.TextPrimary
+                        )
                     if (item.isRecurring) {
                         Spacer(Modifier.width(4.dp))
-                        Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(14.dp), tint = ExpenseColors.TextMuted)
+                            Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(14.dp), tint = colors.TextMuted)
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
                     Surface(
-                        color = if (item.type == ExpenseType.ESSENTIAL) ExpenseColors.MustBg else ExpenseColors.PrimaryLight,
+                            color = if (item.type == ExpenseType.ESSENTIAL) colors.MustBg else colors.PrimaryLight,
                         shape = RoundedCornerShape(99.dp)
                     ) {
                         Text(
                             text = item.type.name.lowercase().replaceFirstChar { it.uppercase() },
                             fontSize = 10.sp,
-                            color = if (item.type == ExpenseType.ESSENTIAL) ExpenseColors.MustText else ExpenseColors.PrimaryText,
+                                color = if (item.type == ExpenseType.ESSENTIAL) colors.MustText else colors.PrimaryText,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
@@ -77,7 +78,7 @@ fun ExpenseItemRow(
                     Text(
                         text = "${getCatDisplayLabel(item.categoryId)} • ${item.paymentMethod.label}",
                         fontSize = 11.sp,
-                        color = ExpenseColors.TextMuted
+                            color = colors.TextMuted
                     )
                 }
             }
@@ -87,13 +88,13 @@ fun ExpenseItemRow(
                 text = "-${fmtLKR(item.amount)}",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = ExpenseColors.ExpenseRed
+                color = colors.ExpenseRed
             )
 
             // Menu
             Box {
-                IconButton(onClick = onMenuToggle) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Menu", tint = ExpenseColors.TextMuted)
+                    IconButton(onClick = onMenuToggle) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Menu", tint = colors.TextMuted)
                 }
                 DropdownMenu(
                     expanded = isMenuOpen,
@@ -103,15 +104,15 @@ fun ExpenseItemRow(
                         text = { Text("✏️ Edit") },
                         onClick = { onEdit(); onMenuToggle() }
                     )
-                    HorizontalDivider(thickness = 0.5.dp, color = ExpenseColors.Border)
+                    HorizontalDivider(thickness = 0.5.dp, color = colors.Border)
                     DropdownMenuItem(
-                        text = { Text("🗑️ Delete", color = ExpenseColors.ExpenseRed) },
+                        text = { Text("🗑️ Delete", color = colors.ExpenseRed) },
                         onClick = { onDelete(); onMenuToggle() }
                     )
                 }
             }
         }
-        HorizontalDivider(thickness = 0.5.dp, color = ExpenseColors.Border, modifier = Modifier.padding(horizontal = 12.dp))
+        HorizontalDivider(thickness = 0.5.dp, color = colors.Border, modifier = Modifier.padding(horizontal = 12.dp))
     }
 }
 

@@ -22,10 +22,11 @@ fun ExpenseCategoryChart(
     breakdown: List<CategoryBreakdownItem>,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(false)
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = ExpenseColors.CardBg),
+        colors = CardDefaults.cardColors(containerColor = colors.CardBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -33,7 +34,7 @@ fun ExpenseCategoryChart(
                 "Spending by Category",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = ExpenseColors.TextPrimary
+                color = colors.TextPrimary
             )
 
             Spacer(Modifier.height(16.dp))
@@ -49,7 +50,7 @@ fun ExpenseCategoryChart(
                         Text(
                             text = item.label,
                             fontSize = 12.sp,
-                            color = ExpenseColors.TextPrimary,
+                            color = colors.TextPrimary,
                             modifier = Modifier.width(80.dp)
                         )
                         
@@ -57,7 +58,7 @@ fun ExpenseCategoryChart(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(8.dp)
-                                .background(ExpenseColors.SurfaceGrey, RoundedCornerShape(99.dp))
+                                .background(colors.SurfaceGrey, RoundedCornerShape(99.dp))
                         ) {
                             Box(
                                 modifier = Modifier
@@ -73,7 +74,7 @@ fun ExpenseCategoryChart(
                             text = fmtLKR(item.amount),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = ExpenseColors.TextPrimary,
+                            color = colors.TextPrimary,
                             modifier = Modifier.width(80.dp),
                             textAlign = androidx.compose.ui.text.style.TextAlign.End
                         )
