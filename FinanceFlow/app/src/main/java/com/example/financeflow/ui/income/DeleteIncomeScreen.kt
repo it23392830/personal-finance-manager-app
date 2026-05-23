@@ -54,6 +54,7 @@ private val DividerColor    = Color(0xFFE9E2FF)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeleteIncomeScreen(
+    isDarkTheme: Boolean = false,
     incomeSource: String    = "Salary",
     incomeAmount: String    = "LKR 135,000.00",
     incomeDate: String      = "05/05/2026",

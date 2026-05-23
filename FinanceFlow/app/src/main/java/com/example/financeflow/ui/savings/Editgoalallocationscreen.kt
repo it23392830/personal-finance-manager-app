@@ -49,6 +49,7 @@ private val CardWhite    = Color(0xFFFFFFFF)
 //   onDismiss       – called when the dialog should close (Save or Cancel)
 @Composable
 fun EditGoalAllocationScreen(
+    isDarkTheme: Boolean = false,
     goalName:        String  = "MacBook Pro M4",
     allocatedAmount: String  = "LKR 196400",
     targetAmount:    String  = "LKR 490000",

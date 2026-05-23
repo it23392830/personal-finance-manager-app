@@ -71,6 +71,7 @@ private val currencyOptions = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddIncomeScreen(
+    isDarkTheme: Boolean = false,
     onAddIncome: (source: String, amount: String, currency: String,
                   description: String, date: String, notes: String) -> Unit = { _, _, _, _, _, _ -> },
     onNavigateUp: () -> Unit = {}

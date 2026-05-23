@@ -32,7 +32,10 @@ import com.example.financeflow.ui.components.savings.defaultGoals
 import com.example.financeflow.ui.components.savings.dummyHistory
 
 @Composable
-fun SavingsScreen(navController: NavController) {
+fun SavingsScreen(
+    isDarkTheme: Boolean = false,
+    navController: NavController
+) {
 
     val goals: SnapshotStateList<SavingGoal> = remember {
         mutableStateListOf(*defaultGoals.toTypedArray())

@@ -51,6 +51,7 @@ private val EditRecordCardWhite = Color(0xFFFFFFFF)
 
 @Composable
 fun EditSavingsRecordScreen(
+    isDarkTheme: Boolean = false,
     onDismiss: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()

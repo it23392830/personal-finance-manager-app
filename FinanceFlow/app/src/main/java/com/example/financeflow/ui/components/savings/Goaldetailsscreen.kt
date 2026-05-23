@@ -39,6 +39,7 @@ private val CardWhite  = Color(0xFFFFFFFF)
 
 @Composable
 fun GoalDetailsScreen(
+    isDarkTheme: Boolean = false,
     onAddContribution: () -> Unit = {}
 ) {
     LazyColumn(

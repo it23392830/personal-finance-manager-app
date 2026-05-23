@@ -66,6 +66,7 @@ private val goalOptions = listOf(
 
 @Composable
 fun AddSavingScreen(
+    isDarkTheme: Boolean = false,
     onNavigateBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
