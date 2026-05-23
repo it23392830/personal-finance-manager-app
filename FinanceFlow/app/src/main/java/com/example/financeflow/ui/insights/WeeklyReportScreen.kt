@@ -46,6 +46,7 @@ private val RedBg         = Color(0xFFFFEEEE)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeeklyReportScreen(
+    isDarkTheme: Boolean = false,
     onNavigateUp: () -> Unit = {},
     onTabSelected: (String) -> Unit = {},
     onClose: () -> Unit = {}

@@ -24,17 +24,57 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 // ─────────────────────────────────────────────
-//  Design Tokens  (swap out when theming lands)
+//  Design Tokens - Light Mode
 // ─────────────────────────────────────────────
-private val GradientStart   = Color(0xFFEDE7FF)   // soft lavender
-private val GradientMid     = Color(0xFFE8F4FF)   // sky-tint
-private val GradientEnd     = Color(0xFFF3EDFF)   // back to lavender
+private val LightGradientStart   = Color(0xFFEDE7FF)   // soft lavender
+private val LightGradientMid     = Color(0xFFE8F4FF)   // sky-tint
+private val LightGradientEnd     = Color(0xFFF3EDFF)   // back to lavender
+private val LightTextPrimary     = Color(0xFF1A1A2E)
+private val LightTextSecondary   = Color(0xFF6B7280)
+
+// ─────────────────────────────────────────────
+//  Design Tokens - Dark Mode
+// ─────────────────────────────────────────────
+private val DarkGradientStart    = Color(0xFF2A2A3E)
+private val DarkGradientMid      = Color(0xFF1F2A3E)
+private val DarkGradientEnd      = Color(0xFF2A2A3E)
+private val DarkTextPrimary      = Color(0xFFE8E8E8)
+private val DarkTextSecondary    = Color(0xFFB0B0B0)
+
+// ─────────────────────────────────────────────
+//  Common Design Tokens
+// ─────────────────────────────────────────────
 private val PrimaryPurple   = Color(0xFF7C4DFF)
 private val PositiveGreen   = Color(0xFF2DBD6E)
 private val NegativeRed     = Color(0xFFFF5252)
-private val TextPrimary     = Color(0xFF1A1A2E)
-private val TextSecondary   = Color(0xFF6B7280)
 private val StreakAmber     = Color(0xFFFFB800)
+
+data class BalanceCardColors(
+    val gradientStart: Color,
+    val gradientMid: Color,
+    val gradientEnd: Color,
+    val textPrimary: Color,
+    val textSecondary: Color
+)
+
+private fun getBalanceCardColors(isDarkTheme: Boolean): BalanceCardColors =
+    if (isDarkTheme) {
+        BalanceCardColors(
+            gradientStart = DarkGradientStart,
+            gradientMid = DarkGradientMid,
+            gradientEnd = DarkGradientEnd,
+            textPrimary = DarkTextPrimary,
+            textSecondary = DarkTextSecondary
+        )
+    } else {
+        BalanceCardColors(
+            gradientStart = LightGradientStart,
+            gradientMid = LightGradientMid,
+            gradientEnd = LightGradientEnd,
+            textPrimary = LightTextPrimary,
+            textSecondary = LightTextSecondary
+        )
+    }
 
 // ─────────────────────────────────────────────
 //  Data model  (replace with domain model later)
@@ -65,6 +105,7 @@ data class BalanceCardData(
  */
 @Composable
 fun BalanceCard(
+    isDarkTheme: Boolean = false,
     data: BalanceCardData = BalanceCardData(),
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 24.dp,
@@ -72,6 +113,7 @@ fun BalanceCard(
     onThemeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
+    val colors = getBalanceCardColors(isDarkTheme)
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -84,7 +126,7 @@ fun BalanceCard(
             .clip(RoundedCornerShape(cornerRadius))
             .background(
                 brush = Brush.linearGradient(
-                    colors = listOf(GradientStart, GradientMid, GradientEnd)
+                    colors = listOf(colors.gradientStart, colors.gradientMid, colors.gradientEnd)
                 )
             )
             .padding(horizontal = 20.dp, vertical = 22.dp)
@@ -93,6 +135,7 @@ fun BalanceCard(
 
             // ── Greeting row ────────────────────────────────
             GreetingRow(
+                isDarkTheme = isDarkTheme,
                 userName = data.userName,
                 onThemeClick = onThemeClick,
                 onProfileClick = onProfileClick
@@ -100,6 +143,7 @@ fun BalanceCard(
 
             // ── Balance block ───────────────────────────────
             BalanceBlock(
+                isDarkTheme    = isDarkTheme,
                 balance        = data.availableBalance,
                 currencySymbol = data.currencySymbol
             )
@@ -107,12 +151,14 @@ fun BalanceCard(
             // ── Summary rows ────────────────────────────────
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 BalanceSummaryRow(
+                    isDarkTheme    = isDarkTheme,
                     label          = "Total Income",
                     amount         = data.totalIncome,
                     currencySymbol = data.currencySymbol,
                     isPositive     = true
                 )
                 BalanceSummaryRow(
+                    isDarkTheme    = isDarkTheme,
                     label          = "Total Expenses",
                     amount         = data.totalExpenses,
                     currencySymbol = data.currencySymbol,
@@ -120,6 +166,7 @@ fun BalanceCard(
                     prefix         = "-( -)"
                 )
                 BalanceSummaryRow(
+                    isDarkTheme    = isDarkTheme,
                     label          = "Saved",
                     amount         = data.totalSaved,
                     currencySymbol = data.currencySymbol,
@@ -132,7 +179,7 @@ fun BalanceCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                StreakChip(days = data.streakDays)
+                StreakChip(isDarkTheme = isDarkTheme, days = data.streakDays)
             }
         }
     }
@@ -144,10 +191,12 @@ fun BalanceCard(
 
 @Composable
 private fun GreetingRow(
+    isDarkTheme: Boolean = false,
     userName: String,
     onThemeClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
+    val colors = getBalanceCardColors(isDarkTheme)
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -166,7 +215,7 @@ private fun GreetingRow(
             Text(
                 text  = "Welcome Back",
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color    = TextSecondary,
+                    color    = colors.textSecondary,
                     fontSize = 13.sp
                 )
             )
@@ -175,10 +224,10 @@ private fun GreetingRow(
 }
 
 @Composable
-private fun StreakChip(days: Int) {
+private fun StreakChip(isDarkTheme: Boolean = false, days: Int) {
     Surface(
         shape = RoundedCornerShape(50),
-        color = Color(0xFFFFFDE7),
+        color = if (isDarkTheme) Color(0xFF3E3E2A) else Color(0xFFFFFDE7),
         tonalElevation = 0.dp,
         shadowElevation = 2.dp
     ) {
@@ -202,9 +251,11 @@ private fun StreakChip(days: Int) {
 
 @Composable
 private fun BalanceBlock(
+    isDarkTheme: Boolean = false,
     balance: Long,
     currencySymbol: String
 ) {
+    val colors = getBalanceCardColors(isDarkTheme)
     Column(
         modifier              = Modifier.fillMaxWidth(),
         horizontalAlignment   = Alignment.CenterHorizontally,
@@ -214,7 +265,7 @@ private fun BalanceBlock(
             text      = "$currencySymbol ${"%,.2f".format(balance.toDouble())}",
             style     = MaterialTheme.typography.displaySmall.copy(
                 fontWeight = FontWeight.ExtraBold,
-                color      = TextPrimary,
+                color      = colors.textPrimary,
                 fontSize   = 36.sp,
                 letterSpacing = (-0.5).sp
             ),
@@ -223,7 +274,7 @@ private fun BalanceBlock(
         Text(
             text  = "Available Balance",
             style = MaterialTheme.typography.bodySmall.copy(
-                color    = TextSecondary,
+                color    = colors.textSecondary,
                 fontSize = 13.sp
             ),
             textAlign = TextAlign.Center
@@ -233,6 +284,7 @@ private fun BalanceBlock(
 
 @Composable
 private fun BalanceSummaryRow(
+    isDarkTheme: Boolean = false,
     label: String,
     amount: Long,
     currencySymbol: String,
@@ -240,6 +292,7 @@ private fun BalanceSummaryRow(
     prefix: String = "+",
     useStreakIcon: Boolean = false
 ) {
+    val colors = getBalanceCardColors(isDarkTheme)
     val tint       = if (isPositive) PositiveGreen else NegativeRed
     val amountText = if (isPositive)
         "$prefix$currencySymbol ${"%,d".format(amount)}"
@@ -273,7 +326,7 @@ private fun BalanceSummaryRow(
             Text(
                 text  = label,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color      = TextSecondary,
+                    color      = colors.textSecondary,
                     fontWeight = FontWeight.Medium,
                     fontSize   = 13.sp
                 )

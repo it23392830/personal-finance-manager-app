@@ -35,6 +35,7 @@ fun GoalDetailScreen(
 
 @Composable
 fun GoalsScreen(
+    isDarkTheme: Boolean = false,
     onNavigateToDetail: (String) -> Unit = {},
     onNavigateToCreate: () -> Unit = {},
     viewModel: GoalViewModel = hiltViewModel()

@@ -58,6 +58,7 @@ private val fakeDailyTransactions = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyReportScreen(
+    isDarkTheme: Boolean = false,
     onNavigateUp: () -> Unit = {},
     onTabSelected: (String) -> Unit = {},
     onClose: () -> Unit = {}
