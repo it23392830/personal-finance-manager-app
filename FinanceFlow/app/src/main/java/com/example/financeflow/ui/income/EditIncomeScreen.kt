@@ -80,6 +80,7 @@ fun EditIncomeScreen(
                     description: String, date: String, notes: String) -> Unit = { _, _, _, _, _, _ -> },
     onCancel: () -> Unit = {}
 ) {
+    val colors = getIncomeFormColors(isDarkTheme)
     // ── Local mutable state (prefilled with initial values) ───────────────────
     var amount           by remember { mutableStateOf(initialAmount) }
     var selectedCurrency by remember { mutableStateOf(initialCurrency) }
@@ -95,9 +96,9 @@ fun EditIncomeScreen(
 
     // ── Root scaffold ─────────────────────────────────────────────────────────
     Scaffold(
-        containerColor = BgPurple,
+        containerColor = colors.background,
         topBar = {
-            IncomeTopBar(title = "Edit Income", onNavigateUp = onCancel)
+            IncomeTopBar(title = "Edit Income", onNavigateUp = onCancel, isDarkTheme = isDarkTheme)
         }
     ) { innerPadding ->
 
@@ -117,15 +118,15 @@ fun EditIncomeScreen(
             ) {
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = CardWhite,
+                    color = colors.cardBg,
                     tonalElevation = 0.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .shadow(
                             elevation = 8.dp,
                             shape = RoundedCornerShape(20.dp),
-                            ambientColor = PrimaryPurple.copy(alpha = 0.12f),
-                            spotColor   = PrimaryPurple.copy(alpha = 0.18f)
+                            ambientColor = colors.primary.copy(alpha = 0.12f),
+                            spotColor   = colors.primary.copy(alpha = 0.18f)
                         )
                 ) {
                     Column(
@@ -134,62 +135,66 @@ fun EditIncomeScreen(
                     ) {
 
                         // Amount
-                        IncomeFieldLabel("Amount")
-                        IncomeAmountField(value = amount, onValueChange = { amount = it })
+                        IncomeFieldLabel("Amount", isDarkTheme = isDarkTheme)
+                        IncomeAmountField(value = amount, onValueChange = { amount = it }, isDarkTheme = isDarkTheme)
 
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                        HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
                         // Currency
-                        IncomeFieldLabel("Currency")
+                        IncomeFieldLabel("Currency", isDarkTheme = isDarkTheme)
                         IncomeDropdownField(
                             selectedValue    = selectedCurrency,
                             options          = sampleCurrencies,
                             expanded         = currencyExpanded,
                             onExpandChange   = { currencyExpanded = it },
                             onOptionSelected = { selectedCurrency = it; currencyExpanded = false },
-                            leadingIcon      = Icons.Default.CurrencyExchange
+                            leadingIcon      = Icons.Default.CurrencyExchange,
+                            isDarkTheme = isDarkTheme
                         )
 
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                        HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
                         // Income Source
-                        IncomeFieldLabel("Income Source")
+                        IncomeFieldLabel("Income Source", isDarkTheme = isDarkTheme)
                         IncomeSourceDropdown(
                             selectedSource   = selectedSource,
                             sourceOptions    = sampleIncomeSources,
                             expanded         = sourceExpanded,
                             onExpandChange   = { sourceExpanded = it },
-                            onOptionSelected = { selectedSource = it; sourceExpanded = false }
+                            onOptionSelected = { selectedSource = it; sourceExpanded = false },
+                            isDarkTheme = isDarkTheme
                         )
 
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                        HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
                         // Description
-                        IncomeFieldLabel("Description (Optional)")
+                        IncomeFieldLabel("Description (Optional)", isDarkTheme = isDarkTheme)
                         IncomeTextField(
                             value         = description,
                             onValueChange = { description = it },
                             placeholder   = "e.g., React Project for ABC Co.",
-                            leadingIcon   = Icons.Default.Description
+                            leadingIcon   = Icons.Default.Description,
+                            isDarkTheme = isDarkTheme
                         )
 
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                        HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
                         // Date
-                        IncomeFieldLabel("Date")
-                        IncomeDateField(value = date, onValueChange = { date = it })
+                        IncomeFieldLabel("Date", isDarkTheme = isDarkTheme)
+                        IncomeDateField(value = date, onValueChange = { date = it }, isDarkTheme = isDarkTheme)
 
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                        HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
                         // Notes
-                        IncomeFieldLabel("Notes (Optional)")
+                        IncomeFieldLabel("Notes (Optional)", isDarkTheme = isDarkTheme)
                         IncomeTextField(
                             value         = notes,
                             onValueChange = { notes = it },
                             placeholder   = "Any additional notes…",
                             leadingIcon   = Icons.Default.Notes,
                             singleLine    = false,
-                            minLines      = 3
+                            minLines      = 3,
+                            isDarkTheme = isDarkTheme
                         )
                     }
                 }
@@ -214,7 +219,7 @@ fun EditIncomeScreen(
                         .height(52.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = IncomeGreen,
+                        containerColor = colors.success,
                         contentColor   = Color.White
                     ),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
@@ -240,9 +245,9 @@ fun EditIncomeScreen(
                         .height(52.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = CancelPurple
+                        contentColor = colors.primary
                     ),
-                    border = androidx.compose.foundation.BorderStroke(2.dp, CancelPurple)
+                    border = androidx.compose.foundation.BorderStroke(2.dp, colors.primary)
                 ) {
                     Text(
                         text = "Cancel",
