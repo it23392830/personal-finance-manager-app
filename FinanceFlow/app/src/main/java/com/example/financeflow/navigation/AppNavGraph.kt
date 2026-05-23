@@ -21,6 +21,7 @@ import com.example.financeflow.ui.goals.GoalDetailScreen
 import com.example.financeflow.ui.income.AddIncomeScreen
 import com.example.financeflow.ui.income.DeleteIncomeScreen
 import com.example.financeflow.ui.income.EditIncomeScreen
+import com.example.financeflow.ui.profile.LogoutScreen
 import com.example.financeflow.ui.profile.ProfileScreen
 import com.example.financeflow.ui.savings.AddSavingScreen
 import com.example.financeflow.ui.savings.GoalDetailsScreen
@@ -162,11 +163,15 @@ fun AppNavGraph(
                 isDarkTheme = isDarkTheme,
                 onThemeToggle = onThemeToggle,
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToLogout = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
+                onNavigateToLogout = { navController.navigate(Routes.LOGOUT) }
+            )
+        }
+
+        composable(Routes.LOGOUT) {
+            LogoutScreen(
+                isDarkTheme = isDarkTheme,
+                onThemeToggle = onThemeToggle,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 

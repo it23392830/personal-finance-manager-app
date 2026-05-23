@@ -18,6 +18,7 @@ object Routes {
     const val ADD_SAVING = "add_saving"
     const val GOAL_DETAILS = "goal_details"
     const val PROFILE = "profile"
+    const val LOGOUT = "logout"
 
     const val ADD_INCOME = "add_income"
     const val EDIT_INCOME = "edit_income/{incomeId}"
