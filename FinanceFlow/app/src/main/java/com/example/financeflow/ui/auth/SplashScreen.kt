@@ -21,17 +21,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.financeflow.viewmodel.auth.AuthViewModel
 import kotlinx.coroutines.delay
 
 private val PrimaryPurple = Color(0xFF7C4DFF)
 
+/**
+ * Splash Screen displayed upon app launch.
+ * Stays for 1 second, then inspects user session status and Remember Me choice
+ * to branch navigation flow to either HomeScreen or LoginScreen.
+ */
 @Composable
-fun SplashScreen(onNavigateToLogin: () -> Unit = {}) {
+fun SplashScreen(
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {},
+    viewModel: AuthViewModel = hiltViewModel()
+) {
     val composition = rememberLottieComposition(
         LottieCompositionSpec.Asset("saving.json")
     )
@@ -41,8 +52,22 @@ fun SplashScreen(onNavigateToLogin: () -> Unit = {}) {
     )
 
     LaunchedEffect(Unit) {
-        delay(2_200L)
-        onNavigateToLogin()
+        // Wait exactly 1 second
+        delay(1000L)
+        
+        // Inspect session and local settings
+        val isAuth = viewModel.isUserAuthenticated()
+        val isRemembered = viewModel.rememberMe.value
+
+        if (isAuth && isRemembered) {
+            onNavigateToHome()
+        } else {
+            // Stale or unremembered sessions are cleared
+            if (isAuth) {
+                viewModel.logout()
+            }
+            onNavigateToLogin()
+        }
     }
 
     Box(

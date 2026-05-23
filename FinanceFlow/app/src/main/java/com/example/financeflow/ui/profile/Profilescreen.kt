@@ -60,8 +60,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.financeflow.ui.components.profile.ChangePasswordDialog
 import com.example.financeflow.ui.components.profile.EditProfileDialog
+import com.example.financeflow.viewmodel.auth.AuthViewModel
 
 private val BgPurple = Color(0xFFEDE2FF)
 private val CardWhite = Color(0xFFFFFFFF)
@@ -85,7 +87,8 @@ fun ProfileScreen(
     isDarkTheme: Boolean = false,
     onThemeToggle: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
-    onNavigateToLogout: () -> Unit = {}
+    onNavigateToLogout: () -> Unit = {},
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
     var selectedCurrency by remember { mutableStateOf(currencyOptions[0]) }
     var selectedTracker by remember { mutableStateOf(trackerOptions[0]) }
@@ -163,7 +166,10 @@ fun ProfileScreen(
         item {
             AccountActionsCard(
                 onChangePassword = { showChangePasswordDialog = true },
-                onLogOut = onNavigateToLogout,
+                onLogOut = {
+                    viewModel.logout()
+                    onNavigateToLogout()
+                },
                 palette = palette
             )
         }
