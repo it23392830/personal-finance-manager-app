@@ -1,20 +1,44 @@
 package com.example.financeflow.ui.savings
 
-import com.example.financeflow.ui.components.savings.getSavingsColors
-
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,13 +51,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.financeflow.ui.components.savings.SavingsColors
+import com.example.financeflow.ui.components.savings.getSavingsColors
 
-// Lightweight local color tokens kept for previews and fallbacks
 private val BgPurple = Color(0xFFEDE2FF)
 private val GreenBtn = Color(0xFF3DBD7D)
 private val PurpleBtn = Color(0xFF9B72CF)
 
-// Hardcoded dropdown options
 private val currencyOptions = listOf(
     "LKR (Sri Lankan Rupee)",
     "USD (US Dollar)",
@@ -161,10 +185,18 @@ fun AddSavingScreen(
                 )
 
                 FormFieldLabel(text = "Description (Optional)", isDarkTheme = isDarkTheme)
-                DescriptionField(value = description, onChange = { description = it }, isDarkTheme = isDarkTheme)
+                DescriptionField(
+                    value = description,
+                    onChange = { description = it },
+                    isDarkTheme = isDarkTheme
+                )
 
                 FormFieldLabel(text = "Date", isDarkTheme = isDarkTheme)
-                DateField(value = selectedDate, onChange = { selectedDate = it }, isDarkTheme = isDarkTheme)
+                DateField(
+                    value = selectedDate,
+                    onChange = { selectedDate = it },
+                    isDarkTheme = isDarkTheme
+                )
             }
         }
 
@@ -207,8 +239,17 @@ private fun AddSavingHeaderCard(isDarkTheme: Boolean = false) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text(text = "Add Savings", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = colors.accent)
-                Text(text = "Track your saving habits & allocations", fontSize = 12.sp, color = colors.muted)
+                Text(
+                    text = "Add Savings",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.accent
+                )
+                Text(
+                    text = "Track your saving habits & allocations",
+                    fontSize = 12.sp,
+                    color = colors.muted
+                )
             }
         }
     }
@@ -217,21 +258,34 @@ private fun AddSavingHeaderCard(isDarkTheme: Boolean = false) {
 @Composable
 private fun FormFieldLabel(text: String, isDarkTheme: Boolean = false) {
     val colors = getSavingsColors(isDarkTheme)
-    Text(text = text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = colors.textPrimary, modifier = Modifier.padding(bottom = 4.dp))
+    Text(
+        text = text,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = colors.textPrimary,
+        modifier = Modifier.padding(bottom = 4.dp)
+    )
 }
 
 @Composable
 private fun AmountField(value: String, onChange: (String) -> Unit, isDarkTheme: Boolean = false) {
+    val colors = getSavingsColors(isDarkTheme)
     OutlinedTextField(
         value = value,
         onValueChange = onChange,
-        placeholder = { Text(text = "0.00", color = getSavingsColors(isDarkTheme).muted) },
-        trailingIcon = { Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Expand", tint = getSavingsColors(isDarkTheme).muted) },
+        placeholder = { Text(text = "0.00", color = colors.muted) },
+        trailingIcon = {
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = "Expand",
+                tint = colors.muted
+            )
+        },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         singleLine = true,
         shape = RoundedCornerShape(14.dp),
         modifier = Modifier.fillMaxWidth(),
-        colors = fieldColors(getSavingsColors(isDarkTheme))
+        colors = fieldColors(colors)
     )
 }
 
@@ -259,21 +313,45 @@ private fun DropdownField(
                 .clickable { onExpand() }
                 .padding(horizontal = 16.dp, vertical = 15.dp)
         ) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (leadingIcon != null) {
-                        Icon(imageVector = leadingIcon, contentDescription = null, tint = colors.muted, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Icon(
+                            imageVector = leadingIcon,
+                            contentDescription = null,
+                            tint = colors.muted,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.size(10.dp))
                     }
-                    Text(text = value, fontSize = 14.sp, color = if (isPlaceholder) colors.muted else colors.textPrimary)
+                    Text(
+                        text = value,
+                        fontSize = 14.sp,
+                        color = if (isPlaceholder) colors.muted else colors.textPrimary
+                    )
                 }
-                Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Expand", tint = colors.muted)
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "Expand",
+                    tint = colors.muted
+                )
             }
         }
 
-        DropdownMenu(expanded = expanded, onDismissRequest = onDismiss, modifier = Modifier.fillMaxWidth(0.9f)) {
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = onDismiss,
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) {
             options.forEach { option ->
-                DropdownMenuItem(text = { Text(text = option, fontSize = 14.sp, color = colors.textPrimary) }, onClick = { onSelect(option) })
+                DropdownMenuItem(
+                    text = { Text(text = option, fontSize = 14.sp, color = colors.textPrimary) },
+                    onClick = { onSelect(option) }
+                )
             }
         }
     }
@@ -281,32 +359,46 @@ private fun DropdownField(
 
 @Composable
 private fun DescriptionField(value: String, onChange: (String) -> Unit, isDarkTheme: Boolean = false) {
+    val colors = getSavingsColors(isDarkTheme)
     OutlinedTextField(
         value = value,
         onValueChange = onChange,
-        placeholder = { Text(text = "e.g., React Project for ABC Co.", color = getSavingsColors(isDarkTheme).muted, fontSize = 13.sp) },
+        placeholder = {
+            Text(
+                text = "e.g., React Project for ABC Co.",
+                color = colors.muted,
+                fontSize = 13.sp
+            )
+        },
         minLines = 3,
         shape = RoundedCornerShape(14.dp),
         modifier = Modifier.fillMaxWidth(),
-        colors = fieldColors(getSavingsColors(isDarkTheme))
+        colors = fieldColors(colors)
     )
 }
 
 @Composable
 private fun DateField(value: String, onChange: (String) -> Unit, isDarkTheme: Boolean = false) {
+    val colors = getSavingsColors(isDarkTheme)
     OutlinedTextField(
         value = value,
         onValueChange = onChange,
-        trailingIcon = { Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = "Pick date", tint = getSavingsColors(isDarkTheme).muted) },
+        trailingIcon = {
+            Icon(
+                imageVector = Icons.Default.CalendarMonth,
+                contentDescription = "Pick date",
+                tint = colors.muted
+            )
+        },
         singleLine = true,
         shape = RoundedCornerShape(14.dp),
         modifier = Modifier.fillMaxWidth(),
-        colors = fieldColors(getSavingsColors(isDarkTheme))
+        colors = fieldColors(colors)
     )
 }
 
 @Composable
-private fun fieldColors(colors: com.example.financeflow.ui.components.savings.SavingsColors) = OutlinedTextFieldDefaults.colors(
+private fun fieldColors(colors: SavingsColors) = OutlinedTextFieldDefaults.colors(
     focusedContainerColor = colors.cardBg,
     unfocusedContainerColor = colors.cardBg,
     focusedBorderColor = colors.accent,
@@ -317,20 +409,28 @@ private fun fieldColors(colors: com.example.financeflow.ui.components.savings.Sa
 )
 
 @Composable
-private fun ActionButton(text: String, backgroundColor: Color, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ActionButton(
+    text: String,
+    backgroundColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Button(
         onClick = onClick,
-        modifier = modifier.height(50.dp).shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp)),
+        modifier = modifier
+            .height(50.dp)
+            .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor, contentColor = Color.White)
+        colors = ButtonDefaults.buttonColors(
+            containerColor = backgroundColor,
+            contentColor = Color.White
+        )
     ) {
         Text(text = text, fontSize = 14.sp, fontWeight = FontWeight.Bold)
     }
 }
 
-// Previews
-
-@Preview(showBackground = true, showSystemUi = true, name = "AddSavingScreen – Full")
+@Preview(showBackground = true, showSystemUi = true, name = "AddSavingScreen Full")
 @Composable
 fun PreviewAddSavingScreen() {
     MaterialTheme {
@@ -350,9 +450,24 @@ fun PreviewAddSavingHeaderCard() {
 @Composable
 fun PreviewActionButtons() {
     MaterialTheme {
-        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            ActionButton(text = "Save Changes", backgroundColor = GreenBtn, onClick = {}, modifier = Modifier.weight(1f))
-            ActionButton(text = "Cancel", backgroundColor = PurpleBtn, onClick = {}, modifier = Modifier.weight(1f))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ActionButton(
+                text = "Save Changes",
+                backgroundColor = GreenBtn,
+                onClick = {},
+                modifier = Modifier.weight(1f)
+            )
+            ActionButton(
+                text = "Cancel",
+                backgroundColor = PurpleBtn,
+                onClick = {},
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
