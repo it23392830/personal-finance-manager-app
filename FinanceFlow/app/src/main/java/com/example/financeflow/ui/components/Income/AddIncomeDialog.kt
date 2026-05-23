@@ -29,11 +29,47 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-private val DialogBg    = Color(0xFFA8E6B0)  // Pastel green dialog surface
-private val GreenButton = Color(0xFF22C55E)
-private val FieldBg     = Color.White
-private val TextDark    = Color(0xFF1F2937)
-private val TextMuted   = Color(0xFF6B7280)
+private val LightDialogBg   = Color(0xFFA8E6B0)
+private val LightGreenButton = Color(0xFF22C55E)
+private val LightFieldBg    = Color.White
+private val LightTextDark   = Color(0xFF1F2937)
+private val LightTextMuted  = Color(0xFF6B7280)
+
+private val DarkDialogBg    = Color(0xFF214233)
+private val DarkGreenButton = Color(0xFF2DBD6E)
+private val DarkFieldBg     = Color(0xFF2A2A3E)
+private val DarkTextDark    = Color(0xFFE8E8E8)
+private val DarkTextMuted   = Color(0xFFB0B0B0)
+
+private data class AddIncomeDialogColors(
+    val dialogBg: Color,
+    val greenButton: Color,
+    val fieldBg: Color,
+    val textDark: Color,
+    val textMuted: Color,
+    val border: Color
+)
+
+private fun getAddIncomeDialogColors(isDarkTheme: Boolean): AddIncomeDialogColors =
+    if (isDarkTheme) {
+        AddIncomeDialogColors(
+            dialogBg = DarkDialogBg,
+            greenButton = DarkGreenButton,
+            fieldBg = DarkFieldBg,
+            textDark = DarkTextDark,
+            textMuted = DarkTextMuted,
+            border = Color(0xFF3A3A4E)
+        )
+    } else {
+        AddIncomeDialogColors(
+            dialogBg = LightDialogBg,
+            greenButton = LightGreenButton,
+            fieldBg = LightFieldBg,
+            textDark = LightTextDark,
+            textMuted = LightTextMuted,
+            border = Color(0xFFD1D5DB)
+        )
+    }
 
 /**
  * Full-screen-ish dialog for adding a new income entry.
@@ -44,9 +80,11 @@ private val TextMuted   = Color(0xFF6B7280)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddIncomeDialog(
+    isDarkTheme: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: (Income) -> Unit
 ) {
+    val colors = getAddIncomeDialogColors(isDarkTheme)
     // ── Local form state ──────────────────────────────────────────────────────
     var amountText       by remember { mutableStateOf("") }
     var selectedCurrency by remember { mutableStateOf(Currency.LKR) }
@@ -67,7 +105,7 @@ fun AddIncomeDialog(
                 .fillMaxWidth(0.92f)
                 .wrapContentHeight(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = DialogBg)
+            colors = CardDefaults.cardColors(containerColor = colors.dialogBg)
         ) {
             Column(
                 modifier = Modifier
@@ -87,35 +125,35 @@ fun AddIncomeDialog(
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = TextDark
+                        color = colors.textDark
                     )
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextDark)
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = colors.textDark)
                     }
                 }
 
                 // ── Amount ────────────────────────────────────────────────────
-                IncomeDialogLabel("Amount")
+                AddIncomeDialogLabel("Amount", colors)
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { amountText = it; amountError = false },
-                    placeholder = { Text("0.00", color = TextMuted) },
+                    placeholder = { Text("0.00", color = colors.textMuted) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     isError = amountError,
                     supportingText = if (amountError) {{ Text("Please enter a valid amount") }} else null,
                     trailingIcon = {
                         Column {
-                            Text("▲", fontSize = 8.sp, color = TextMuted)
-                            Text("▼", fontSize = 8.sp, color = TextMuted)
+                            Text("▲", fontSize = 8.sp, color = colors.textMuted)
+                            Text("▼", fontSize = 8.sp, color = colors.textMuted)
                         }
                     },
-                    colors = incomeFieldColors(),
+                    colors = addIncomeFieldColors(colors),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 // ── Currency ──────────────────────────────────────────────────
-                IncomeDialogLabel("Currency")
+                AddIncomeDialogLabel("Currency", colors)
                 ExposedDropdownMenuBox(
                     expanded = currencyExpanded,
                     onExpandedChange = { currencyExpanded = !currencyExpanded }
@@ -125,9 +163,9 @@ fun AddIncomeDialog(
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = {
-                            Icon(Icons.Default.KeyboardArrowDown, null, tint = TextMuted)
+                            Icon(Icons.Default.KeyboardArrowDown, null, tint = colors.textMuted)
                         },
-                        colors = incomeFieldColors(),
+                        colors = addIncomeFieldColors(colors),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth().menuAnchor()
                     )
@@ -145,7 +183,7 @@ fun AddIncomeDialog(
                 }
 
                 // ── Income Source ─────────────────────────────────────────────
-                IncomeDialogLabel("Income Source")
+                AddIncomeDialogLabel("Income Source", colors)
                 ExposedDropdownMenuBox(
                     expanded = sourceExpanded,
                     onExpandedChange = { sourceExpanded = !sourceExpanded }
@@ -156,9 +194,9 @@ fun AddIncomeDialog(
                         readOnly = true,
                         leadingIcon = { Text(sourceEmoji(selectedSource), fontSize = 18.sp) },
                         trailingIcon = {
-                            Icon(Icons.Default.KeyboardArrowDown, null, tint = TextMuted)
+                            Icon(Icons.Default.KeyboardArrowDown, null, tint = colors.textMuted)
                         },
-                        colors = incomeFieldColors(),
+                        colors = addIncomeFieldColors(colors),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth().menuAnchor()
                     )
@@ -176,18 +214,18 @@ fun AddIncomeDialog(
                 }
 
                 // ── Description ───────────────────────────────────────────────
-                IncomeDialogLabel("Description (Optional)")
+                AddIncomeDialogLabel("Description (Optional)", colors)
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    placeholder = { Text("e.g., React Project for ABC Co.", color = TextMuted) },
-                    colors = incomeFieldColors(),
+                    placeholder = { Text("e.g., React Project for ABC Co.", color = colors.textMuted) },
+                    colors = addIncomeFieldColors(colors),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 // ── Date ──────────────────────────────────────────────────────
-                IncomeDialogLabel("Date")
+                AddIncomeDialogLabel("Date", colors)
                 OutlinedTextField(
                     value = SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH).format(selectedDate),
                     onValueChange = {},
@@ -196,10 +234,10 @@ fun AddIncomeDialog(
                         Icon(
                             Icons.Default.CalendarToday,
                             contentDescription = "Pick date",
-                            tint = TextMuted
+                            tint = colors.textMuted
                         )
                     },
-                    colors = incomeFieldColors(),
+                    colors = addIncomeFieldColors(colors),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -226,7 +264,7 @@ fun AddIncomeDialog(
                     },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = GreenButton)
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.greenButton)
                 ) {
                     Text(
                         "+ Add Income",
@@ -243,23 +281,23 @@ fun AddIncomeDialog(
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
 @Composable
-internal fun IncomeDialogLabel(label: String) {
+private fun AddIncomeDialogLabel(label: String, colors: AddIncomeDialogColors) {
     Text(
         text = label,
         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-        color = TextDark
+        color = colors.textDark
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun incomeFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor   = Color(0xFF22C55E),
-    unfocusedBorderColor = Color(0xFFD1D5DB),
-    focusedTextColor     = TextDark,
-    unfocusedTextColor   = TextDark,
-    focusedContainerColor    = FieldBg,
-    unfocusedContainerColor  = FieldBg
+private fun addIncomeFieldColors(colors: AddIncomeDialogColors) = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor   = colors.greenButton,
+    unfocusedBorderColor = colors.border,
+    focusedTextColor     = colors.textDark,
+    unfocusedTextColor   = colors.textDark,
+    focusedContainerColor    = colors.fieldBg,
+    unfocusedContainerColor  = colors.fieldBg
 )
 
 internal fun sourceEmoji(source: IncomeSource) = when (source) {
@@ -277,5 +315,5 @@ internal fun sourceEmoji(source: IncomeSource) = when (source) {
 @Preview(showBackground = true)
 @Composable
 private fun AddIncomeDialogPreview() {
-    AddIncomeDialog(onDismiss = {}, onConfirm = {})
+    AddIncomeDialog(isDarkTheme = false, onDismiss = {}, onConfirm = {})
 }

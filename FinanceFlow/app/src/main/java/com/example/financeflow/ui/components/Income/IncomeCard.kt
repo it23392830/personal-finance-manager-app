@@ -18,9 +18,35 @@ import com.example.financeflow.model.IncomeBySource
 import com.example.financeflow.model.IncomeSource
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-private val TextDark   = Color(0xFF1F2937)
-private val TextMuted  = Color(0xFF6B7280)
-private val GreenText  = Color(0xFF22C55E)
+private val LightTextDark   = Color(0xFF1F2937)
+private val LightTextMuted  = Color(0xFF6B7280)
+
+private val DarkTextDark    = Color(0xFFE8E8E8)
+private val DarkTextMuted   = Color(0xFFB0B0B0)
+
+private data class IncomeCardColors(
+    val cardBg: Color,
+    val textDark: Color,
+    val textMuted: Color,
+    val badgeColor: Color
+)
+
+private fun getIncomeCardColors(isDarkTheme: Boolean): IncomeCardColors =
+    if (isDarkTheme) {
+        IncomeCardColors(
+            cardBg = Color(0xFF2A2A3E),
+            textDark = DarkTextDark,
+            textMuted = DarkTextMuted,
+            badgeColor = Color(0xFF3A3A4E)
+        )
+    } else {
+        IncomeCardColors(
+            cardBg = Color.White,
+            textDark = LightTextDark,
+            textMuted = LightTextMuted,
+            badgeColor = Color(0xFFF3F4F6)
+        )
+    }
 
 /**
  * A single row inside the "Income by Source" section.
@@ -32,13 +58,15 @@ private val GreenText  = Color(0xFF22C55E)
  */
 @Composable
 fun IncomeCard(
+    isDarkTheme: Boolean = false,
     data: IncomeBySource,
     modifier: Modifier = Modifier
 ) {
+    val colors = getIncomeCardColors(isDarkTheme)
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = colors.cardBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
@@ -60,12 +88,12 @@ fun IncomeCard(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp
                     ),
-                    color = TextDark
+                    color = colors.textDark
                 )
                 Text(
                     text = "${data.transactionCount} Transaction${if (data.transactionCount != 1) "s" else ""}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextMuted
+                    color = colors.textMuted
                 )
             }
 
@@ -77,12 +105,12 @@ fun IncomeCard(
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
                     ),
-                    color = TextDark
+                    color = colors.textDark
                 )
                 Text(
                     text = "${"%.1f".format(data.percentage)}%",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextMuted
+                    color = colors.textMuted
                 )
             }
         }
@@ -139,6 +167,6 @@ private fun IncomeCardPreview() {
             IncomeBySource(IncomeSource.FREELANCE,  73_500.0, 2, 33.9),
             IncomeBySource(IncomeSource.ADSENSE,     5_200.0, 1,  2.4),
             IncomeBySource(IncomeSource.CRYPTO,      2_300.0, 1,  1.1),
-        ).forEach { IncomeCard(data = it) }
+        ).forEach { IncomeCard(isDarkTheme = false, data = it) }
     }
 }

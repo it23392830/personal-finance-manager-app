@@ -90,6 +90,7 @@ private val fakeDayDetails: Map<Int, DayDetail> = mapOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsightsScreen(
+    isDarkTheme: Boolean = false,
     onViewReports: () -> Unit = {},
     onNavigateUp: () -> Unit = {}
 ) {

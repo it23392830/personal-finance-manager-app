@@ -13,8 +13,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-private val GreenCard = Color(0xFFA8E6B0)
-private val TextDark  = Color(0xFF1F2937)
+private val LightGreenCard = Color(0xFFA8E6B0)
+private val LightTextDark  = Color(0xFF1F2937)
+private val DarkGreenCard   = Color(0xFF214233)
+private val DarkTextDark    = Color(0xFFE8E8E8)
+
+private data class SalaryReminderColors(
+    val cardBg: Color,
+    val textDark: Color
+)
+
+private fun getSalaryReminderColors(isDarkTheme: Boolean): SalaryReminderColors =
+    if (isDarkTheme) {
+        SalaryReminderColors(DarkGreenCard, DarkTextDark)
+    } else {
+        SalaryReminderColors(LightGreenCard, LightTextDark)
+    }
 
 /**
  * A pastel-green banner reminding the user that their salary is due soon.
@@ -25,14 +39,16 @@ private val TextDark  = Color(0xFF1F2937)
  */
 @Composable
 fun SalaryReminderCard(
+    isDarkTheme: Boolean = false,
     daysUntilSalary: Int,
     salaryDayOfMonth: Int = 25,
     modifier: Modifier = Modifier
 ) {
+    val colors = getSalaryReminderColors(isDarkTheme)
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = GreenCard),
+        colors = CardDefaults.cardColors(containerColor = colors.cardBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -55,17 +71,17 @@ fun SalaryReminderCard(
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     ),
-                    color = TextDark
+                    color = colors.textDark
                 )
                 Text(
                     text = "Your monthly salary is typically received on the ${salaryDayOfMonth}th.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextDark.copy(alpha = 0.75f)
+                    color = colors.textDark.copy(alpha = 0.75f)
                 )
                 Text(
                     text = "That's in $daysUntilSalary days",
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                    color = TextDark
+                    color = colors.textDark
                 )
             }
         }
@@ -78,6 +94,7 @@ fun SalaryReminderCard(
 @Composable
 private fun SalaryReminderCardPreview() {
     SalaryReminderCard(
+        isDarkTheme = false,
         daysUntilSalary = 20,
         modifier = Modifier.padding(16.dp)
     )

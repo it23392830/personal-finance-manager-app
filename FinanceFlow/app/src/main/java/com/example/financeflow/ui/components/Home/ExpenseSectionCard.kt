@@ -19,13 +19,38 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.financeflow.ui.components.savings.CardWhite
+import com.example.financeflow.ui.theme.CardWhite
 
 //  Design Tokens
 // CardWhite is provided by SavingsCard.kt in the same package
-private val TextPrimary     = Color(0xFF1A1A2E)
-private val TextSecondary   = Color(0xFF6B7280)
-private val DividerColor    = Color(0xFFF0EBF8)
+private val LightTextPrimary     = Color(0xFF1A1A2E)
+private val LightTextSecondary   = Color(0xFF6B7280)
+private val LightDividerColor    = Color(0xFFF0EBF8)
+
+private val DarkTextPrimary      = Color(0xFFE8E8E8)
+private val DarkTextSecondary    = Color(0xFFB0B0B0)
+private val DarkDividerColor     = Color(0xFF3A3A4E)
+
+data class ExpenseBreakdownColors(
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val dividerColor: Color
+)
+
+private fun getExpenseBreakdownColors(isDarkTheme: Boolean): ExpenseBreakdownColors =
+    if (isDarkTheme) {
+        ExpenseBreakdownColors(
+            textPrimary = DarkTextPrimary,
+            textSecondary = DarkTextSecondary,
+            dividerColor = DarkDividerColor
+        )
+    } else {
+        ExpenseBreakdownColors(
+            textPrimary = LightTextPrimary,
+            textSecondary = LightTextSecondary,
+            dividerColor = LightDividerColor
+        )
+    }
 
 // Must Expenses palette
 private val MustHeaderBg    = Color(0xFFFFEBEE)
@@ -123,9 +148,11 @@ fun expenseSampleData(): List<ExpenseSectionData> = listOf(
  */
 @Composable
 fun ExpenseSectionCard(
+    isDarkTheme: Boolean = false,
     data: ExpenseSectionData,
     modifier: Modifier = Modifier
 ) {
+    val cardBg = if (isDarkTheme) Color(0xFF2A2A3E) else CardWhite
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -136,7 +163,7 @@ fun ExpenseSectionCard(
                 spotColor    = Color(0xFF7C4DFF).copy(alpha = 0.10f)
             )
             .clip(RoundedCornerShape(16.dp))
-            .background(CardWhite)
+            .background(cardBg)
     ) {
         Column {
             ExpenseSectionHeader(data = data)
@@ -149,6 +176,7 @@ fun ExpenseSectionCard(
             ) {
                 data.items.forEachIndexed { index, item ->
                     ExpenseLineItem(
+                        isDarkTheme    = isDarkTheme,
                         item           = item,
                         showDivider    = index < data.items.lastIndex
                     )
@@ -165,20 +193,22 @@ fun ExpenseSectionCard(
  */
 @Composable
 fun ExpenseBreakdownSection(
+    isDarkTheme: Boolean = false,
     sections: List<ExpenseSectionData> = expenseSampleData(),
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpenseBreakdownColors(isDarkTheme)
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text  = "Expense Breakdown",
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
-                color      = TextPrimary,
+                color      = colors.textPrimary,
                 fontSize   = 18.sp
             )
         )
         sections.forEach { section ->
-            ExpenseSectionCard(data = section)
+            ExpenseSectionCard(isDarkTheme = isDarkTheme, data = section)
         }
     }
 }
@@ -227,9 +257,11 @@ private fun ExpenseSectionHeader(data: ExpenseSectionData) {
 
 @Composable
 private fun ExpenseLineItem(
+    isDarkTheme: Boolean = false,
     item: ExpenseItem,
     showDivider: Boolean
 ) {
+    val colors = getExpenseBreakdownColors(isDarkTheme)
     Column {
         Row(
             modifier              = Modifier
@@ -241,14 +273,14 @@ private fun ExpenseLineItem(
             Text(
                 text  = item.name,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color    = TextSecondary,
+                    color    = colors.textSecondary,
                     fontSize = 13.sp
                 )
             )
             Text(
                 text      = "${item.currencySymbol} ${"%,d".format(item.amount)}",
                 style     = MaterialTheme.typography.bodyMedium.copy(
-                    color      = TextPrimary,
+                    color      = colors.textPrimary,
                     fontWeight = FontWeight.SemiBold,
                     fontSize   = 13.sp
                 ),
@@ -259,7 +291,7 @@ private fun ExpenseLineItem(
         if (showDivider) {
             HorizontalDivider(
                 thickness = 0.5.dp,
-                color     = DividerColor
+                color     = colors.dividerColor
             )
         }
     }

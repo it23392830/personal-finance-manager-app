@@ -1,5 +1,8 @@
 package com.example.financeflow.ui.savings
 
+import com.example.financeflow.ui.components.savings.getSavingsColors
+import com.example.financeflow.ui.components.savings.SavingsColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,17 +43,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-private val EditRecordFormYellow = Color(0xFFF7E4A7)
-private val EditRecordGreenBtn = Color(0xFF3DBD7D)
-private val EditRecordPurpleBtn = Color(0xFF9B72CF)
-private val EditRecordPurpleInfo = Color(0xFFA97BF4)
-private val EditRecordFieldBorder = Color(0xFFD0C4E8)
-private val EditRecordLabelGray = Color(0xFF585858)
-private val EditRecordDarkText = Color(0xFF1A1A1A)
-private val EditRecordCardWhite = Color(0xFFFFFFFF)
+// Colors are provided by SavingsTheme.getSavingsColors(isDarkTheme)
 
 @Composable
 fun EditSavingsRecordScreen(
+    isDarkTheme: Boolean = false,
     onDismiss: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -65,12 +62,14 @@ fun EditSavingsRecordScreen(
                 .padding(horizontal = 18.dp, vertical = 36.dp),
             contentAlignment = Alignment.Center
         ) {
+            val colors = getSavingsColors(isDarkTheme)
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .shadow(elevation = 12.dp, shape = RoundedCornerShape(25.dp)),
                 shape = RoundedCornerShape(25.dp),
-                colors = CardDefaults.cardColors(containerColor = EditRecordFormYellow)
+                colors = CardDefaults.cardColors(containerColor = colors.formBg)
             ) {
                 Column(
                     modifier = Modifier
@@ -87,13 +86,13 @@ fun EditSavingsRecordScreen(
                             text = "Edit Savings Record",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = EditRecordDarkText
+                            color = colors.textPrimary
                         )
                         IconButton(onClick = onDismiss) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Close popup",
-                                tint = EditRecordDarkText
+                                tint = colors.textPrimary
                             )
                         }
                     }
@@ -103,7 +102,8 @@ fun EditSavingsRecordScreen(
                         value = "May 2026",
                         trailingIcon = {
                             Icon(Icons.Default.KeyboardArrowDown, null)
-                        }
+                        },
+                        colors = colors
                     )
 
                     EditRecordField(
@@ -111,7 +111,8 @@ fun EditSavingsRecordScreen(
                         value = "LKR 196,400",
                         trailingIcon = {
                             Icon(Icons.Default.KeyboardArrowDown, null)
-                        }
+                        },
+                        colors = colors
                     )
 
                     EditRecordField(
@@ -119,13 +120,14 @@ fun EditSavingsRecordScreen(
                         value = "LKR 53,200",
                         trailingIcon = {
                             Icon(Icons.Default.KeyboardArrowDown, null)
-                        }
+                        },
+                        colors = colors
                     )
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = EditRecordPurpleInfo)
+                        colors = CardDefaults.cardColors(containerColor = colors.accent)
                     ) {
                         Text(
                             text = "Saving Rate 28%",
@@ -141,7 +143,8 @@ fun EditSavingsRecordScreen(
                         value = "05/05/2026",
                         trailingIcon = {
                             Icon(Icons.Default.CalendarToday, null)
-                        }
+                        },
+                        colors = colors
                     )
 
                     Spacer(modifier = Modifier.height(2.dp))
@@ -152,13 +155,13 @@ fun EditSavingsRecordScreen(
                     ) {
                         EditRecordActionButton(
                             text = "Save Changes",
-                            backgroundColor = EditRecordGreenBtn,
+                            backgroundColor = colors.success,
                             modifier = Modifier.weight(1f),
                             onClick = onDismiss
                         )
                         EditRecordActionButton(
                             text = "Cancel",
-                            backgroundColor = EditRecordPurpleBtn,
+                            backgroundColor = colors.accent.copy(alpha = 0.6f),
                             modifier = Modifier.weight(1f),
                             onClick = onDismiss
                         )
@@ -173,14 +176,15 @@ fun EditSavingsRecordScreen(
 private fun EditRecordField(
     label: String,
     value: String,
-    trailingIcon: @Composable (() -> Unit)? = null
+    trailingIcon: @Composable (() -> Unit)? = null,
+    colors: SavingsColors
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text = label,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = EditRecordLabelGray
+            color = colors.muted
         )
 
         OutlinedTextField(
@@ -192,12 +196,12 @@ private fun EditRecordField(
             shape = RoundedCornerShape(12.dp),
             trailingIcon = trailingIcon,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = EditRecordCardWhite,
-                unfocusedContainerColor = EditRecordCardWhite,
-                focusedBorderColor = EditRecordFieldBorder,
-                unfocusedBorderColor = EditRecordFieldBorder,
-                focusedTextColor = EditRecordDarkText,
-                unfocusedTextColor = EditRecordDarkText
+                focusedContainerColor = colors.cardBg,
+                unfocusedContainerColor = colors.cardBg,
+                focusedBorderColor = colors.fieldBorder,
+                unfocusedBorderColor = colors.fieldBorder,
+                focusedTextColor = colors.textPrimary,
+                unfocusedTextColor = colors.textPrimary
             )
         )
     }

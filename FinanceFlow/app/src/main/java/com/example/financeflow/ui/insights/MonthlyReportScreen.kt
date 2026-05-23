@@ -64,6 +64,7 @@ private val fakeExpenseItems = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MonthlyReportScreen(
+    isDarkTheme: Boolean = false,
     onNavigateUp: () -> Unit = {},
     onTabSelected: (String) -> Unit = {},
     onClose: () -> Unit = {}

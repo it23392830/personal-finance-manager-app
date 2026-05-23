@@ -34,21 +34,24 @@ val dummyHistory = listOf(
 
 @Composable
 fun SavingsHistoryCard(
+    isDarkTheme: Boolean = false,
     entries: List<SavingHistoryEntry> = dummyHistory,
     onEditClick: () -> Unit = {},
     onDeleteClick: (SavingHistoryEntry) -> Unit = {}
 ) {
+    val colors = getSavingsColors(isDarkTheme)
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Savings History",
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.DarkGray,
+            color = colors.textPrimary,
             modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
         )
 
         entries.forEach { entry ->
             HistoryItem(
+                isDarkTheme = isDarkTheme,
                 entry = entry,
                 onEditClick = onEditClick,
                 onDeleteClick = { onDeleteClick(entry) }
@@ -60,11 +63,13 @@ fun SavingsHistoryCard(
 
 @Composable
 fun HistoryItem(
+    isDarkTheme: Boolean = false,
     entry: SavingHistoryEntry,
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val colors = getSavingsColors(isDarkTheme)
 
     Card(
         modifier = Modifier
@@ -72,7 +77,7 @@ fun HistoryItem(
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFDF5))
+        colors = CardDefaults.cardColors(containerColor = colors.formBg)
     ) {
         Row(
             modifier = Modifier
@@ -86,22 +91,22 @@ fun HistoryItem(
                     text = entry.month,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = Color(0xFF1A1A1A)
+                    color = colors.textPrimary
                 )
                 Text(
                     text = "Income: ${entry.income}",
                     fontSize = 13.sp,
-                    color = Color(0xFF4A4A4A)
+                    color = colors.textSecondary
                 )
                 Text(
                     text = "Saved: ${entry.saved}",
                     fontSize = 13.sp,
-                    color = Color(0xFF4A4A4A)
+                    color = colors.textSecondary
                 )
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFFB39DDB))
+                        .background(colors.accent.copy(alpha = 0.4f))
                         .padding(horizontal = 10.dp, vertical = 2.dp)
                 ) {
                     Text(
@@ -118,7 +123,7 @@ fun HistoryItem(
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "More options",
-                        tint = Color(0xFF4A4A4A)
+                        tint = colors.textSecondary
                     )
                 }
 

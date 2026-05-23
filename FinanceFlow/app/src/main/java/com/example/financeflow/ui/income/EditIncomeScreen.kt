@@ -69,6 +69,7 @@ private val sampleCurrencies = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditIncomeScreen(
+    isDarkTheme: Boolean = false,
     initialSource: String      = "Salary",
     initialAmount: String      = "135,000.00",
     initialCurrency: String    = "LKR (Sri Lankan Rupee)",
