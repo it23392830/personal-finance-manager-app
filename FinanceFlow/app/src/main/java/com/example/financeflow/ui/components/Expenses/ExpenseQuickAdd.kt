@@ -37,12 +37,18 @@ fun ExpenseQuickAdd(
             ) {
                 Text(
                     "Quick Add",
-                    fontSize = 16.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = ExpenseColors.TextPrimary
                 )
-                TextButton(onClick = onCustomClick) {
-                    Text("Custom", color = ExpenseColors.HeaderRed, fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = onCustomClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = ExpenseColors.HeaderRed),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Text("+ Add Expenses", fontSize = 12.sp, color = androidx.compose.ui.graphics.Color.White)
                 }
             }
 
