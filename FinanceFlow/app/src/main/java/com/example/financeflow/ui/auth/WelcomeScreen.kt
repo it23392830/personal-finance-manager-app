@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
@@ -29,18 +28,10 @@ fun WelcomeScreen(onNavigateToHome: () -> Unit = {}) {
     val composition = rememberLottieComposition(
         LottieCompositionSpec.Asset("welcome.json")
     )
-    val pawsComposition = rememberLottieComposition(
-        LottieCompositionSpec.Asset("paws-pet.json")
-    )
     val progress = animateLottieCompositionAsState(
         composition = composition.value,
         iterations = LottieConstants.IterateForever,
-        speed = 2f
-    )
-    val pawsProgress = animateLottieCompositionAsState(
-        composition = pawsComposition.value,
-        iterations = LottieConstants.IterateForever,
-        speed = 1.2f
+        speed = 2.3f
     )
 
     LaunchedEffect(Unit) {
@@ -56,27 +47,23 @@ fun WelcomeScreen(onNavigateToHome: () -> Unit = {}) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 96.dp),
+                .padding(horizontal = 24.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.Center
         ) {
-            LottieAnimation(
-                composition = composition.value,
-                progress = { progress.value },
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.82f)
-                    .size(260.dp)
-            )
-
-            Box(modifier = Modifier.height(8.dp))
-
-            LottieAnimation(
-                composition = pawsComposition.value,
-                progress = { pawsProgress.value },
-                modifier = Modifier
-                    .fillMaxWidth(0.42f)
-                    .size(92.dp)
-            )
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                LottieAnimation(
+                    composition = composition.value,
+                    progress = { progress.value },
+                    modifier = Modifier
+                        .fillMaxWidth(0.90f)
+                        .size(300.dp)
+                )
+            }
         }
     }
 }
