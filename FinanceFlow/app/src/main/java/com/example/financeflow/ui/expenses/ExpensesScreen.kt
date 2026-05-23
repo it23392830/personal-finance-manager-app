@@ -3,12 +3,8 @@ package com.example.financeflow.ui.expenses
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -261,23 +257,12 @@ val HARDCODED_PATTERN_STATS = listOf(
 fun ExpensesScreen(
     onAddExpenseClick: () -> Unit = {}
 ) {
-    // ── Tab ───────────────────────────────────────────────────
-    var selectedTab by remember { mutableIntStateOf(0) }
-
     // ── Month ─────────────────────────────────────────────────
     var selectedMonth by remember { mutableStateOf("2026-05") }
 
     // ── Expense lists ─────────────────────────────────────────
     var expenses     by remember { mutableStateOf(HARDCODED_EXPENSES) }
     var recurringList by remember { mutableStateOf(HARDCODED_RECURRING) }
-
-    // ── History filters ───────────────────────────────────────
-    var searchQuery     by remember { mutableStateOf("") }
-    var showFilters     by remember { mutableStateOf(false) }
-    var filterType      by remember { mutableStateOf("all") }
-    var filterCategory  by remember { mutableStateOf("all") }
-    var filterPayment   by remember { mutableStateOf("all") }
-    var sortBy          by remember { mutableStateOf("newest") }
 
     // ── Form dialog ───────────────────────────────────────────
     var showFormDialog  by remember { mutableStateOf(false) }
@@ -313,32 +298,6 @@ fun ExpensesScreen(
     val todayExpenses       = expenses.filter { it.date == TODAY }
     val missedRecurring     = recurringList.filter { it.missed && it.isActive }
     val recentCategoryIds   = expenses.map { it.categoryId }.distinct().take(3)
-
-    // Filtering + sorting
-    val filteredExpenses = monthExpenses
-        .filter { e ->
-            (searchQuery.isBlank() ||
-                e.description.contains(searchQuery, ignoreCase = true) ||
-                getCatDisplayLabel(e.categoryId).contains(searchQuery, ignoreCase = true))
-            && (filterType == "all" || (filterType == "essential" && e.type == ExpenseType.ESSENTIAL)
-                                    || (filterType == "discretionary" && e.type == ExpenseType.DISCRETIONARY))
-            && (filterCategory == "all" || e.categoryId == filterCategory
-                                        || getCat(e.categoryId).parentId == filterCategory)
-            && (filterPayment == "all" || e.paymentMethod.name.lowercase() == filterPayment)
-        }
-        .let { list ->
-            when (sortBy) {
-                "oldest"  -> list.sortedBy   { it.date }
-                "highest" -> list.sortedByDescending { it.amount }
-                "lowest"  -> list.sortedBy   { it.amount }
-                else      -> list.sortedByDescending { it.date }
-            }
-        }
-
-    val groupedHistory = filteredExpenses
-        .groupBy { it.date }
-        .entries
-        .sortedByDescending { it.key }
 
     // ── Helper lambdas (defined here, passed to components) ───
 
@@ -386,17 +345,7 @@ fun ExpensesScreen(
     }
 
     // ── Scaffold ──────────────────────────────────────────────
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { openAddForm() },
-                containerColor = ExpenseColors.HeaderRed,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Expense", tint = Color.White)
-            }
-        }
-    ) { innerPadding ->
+    Scaffold { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -419,195 +368,73 @@ fun ExpensesScreen(
                 )
             }
 
-            // ── Tabs ────────────────────────────────────────────
-            ExpenseTabRow(
-                selectedTab    = selectedTab,
-                onTabSelected  = { selectedTab = it }
-            )
+            // ── Overview Section ──────────────────────────────
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                ExpenseBudgetCard(
+                    remaining       = remaining,
+                    todayTotal      = todayTotal,
+                    essentialTotal  = essentialTotal
+                )
+                ExpenseQuickAdd(
+                    recentCategoryIds = recentCategoryIds,
+                    onCategoryClick   = { catId -> openAddForm(catId) },
+                    onCustomClick     = { openAddForm() }
+                )
+                ExpenseSmartSuggestions(
+                    suggestions       = HARDCODED_SUGGESTIONS,
+                    onSuggestionClick = { s ->
+                        formDescription = s.description; formAmount = s.amount.toString()
+                        formCategory = s.categoryId; formPayment = s.paymentMethod
+                        formType = ExpenseType.DISCRETIONARY; isEditMode = false
+                        showFormDialog = true
+                    }
+                )
+                ExpenseTodayList(
+                    todayExpenses = todayExpenses,
+                    openMenuId    = openMenuId,
+                    onMenuToggle  = { id -> openMenuId = if (openMenuId == id) null else id },
+                    onEdit        = { exp -> openEditForm(exp) },
+                    onDelete      = { id -> deletingId = id; showDeleteDialog = true }
+                )
+                ExpenseReminderCard()
+            }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(24.dp))
 
-            // ── Tab Content ─────────────────────────────────────
-            when (selectedTab) {
+            // ── Recurring Section ─────────────────────────────
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Recurring Expenses",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = ExpenseColors.TextPrimary
+                    )
+                )
 
-                // ── Overview ──────────────────────────────────────
-                0 -> Column(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    ExpenseBudgetCard(
-                        remaining       = remaining,
-                        budgetTotal     = DISCRETIONARY_BUDGET,
-                        budgetUsedPct   = budgetUsedPct,
-                        todayTotal      = todayTotal,
-                        essentialTotal  = essentialTotal,
-                        totalSpent      = totalSpent
-                    )
-                    ExpenseQuickAdd(
-                        recentCategoryIds = recentCategoryIds,
-                        onCategoryClick   = { catId -> openAddForm(catId) },
-                        onCustomClick     = { openAddForm() }
-                    )
-                    ExpenseSmartSuggestions(
-                        suggestions       = HARDCODED_SUGGESTIONS,
-                        onSuggestionClick = { s ->
-                            formDescription = s.description; formAmount = s.amount.toString()
-                            formCategory = s.categoryId; formPayment = s.paymentMethod
-                            formType = ExpenseType.DISCRETIONARY; isEditMode = false
-                            showFormDialog = true
-                        }
-                    )
-                    ExpenseTodayList(
-                        todayExpenses = todayExpenses,
-                        openMenuId    = openMenuId,
-                        onMenuToggle  = { id -> openMenuId = if (openMenuId == id) null else id },
-                        onEdit        = { exp -> openEditForm(exp) },
-                        onDelete      = { id -> deletingId = id; showDeleteDialog = true }
-                    )
-                    ExpenseReminderCard()
-                    Spacer(Modifier.height(80.dp))
-                }
-
-                // ── Analytics ─────────────────────────────────────
-                1 -> Column(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    ExpenseDonutChart(
-                        essentialTotal     = essentialTotal,
-                        discretionaryTotal = discretionaryTotal,
-                        totalSpent         = totalSpent
-                    )
-                    ExpenseCategoryChart(breakdown = HARDCODED_CATEGORY_BREAKDOWN)
-                    ExpenseWeeklyChart(weeklyData  = HARDCODED_WEEKLY_TREND)
-                    ExpenseInsightsCard(insights   = HARDCODED_INSIGHTS)
-                    ExpensePatternGrid(stats       = HARDCODED_PATTERN_STATS)
-                    Spacer(Modifier.height(80.dp))
-                }
-
-                // ── History ───────────────────────────────────────
-                2 -> Column(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Search bar
-                    OutlinedTextField(
-                        value         = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder   = { Text("Search expenses…", fontSize = 13.sp) },
-                        leadingIcon   = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                        modifier      = Modifier.fillMaxWidth(),
-                        shape         = RoundedCornerShape(12.dp),
-                        singleLine    = true
-                    )
-
-                    // Sort + filter toggle row
-                    Row(
-                        modifier             = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Filter toggle button
-                        val isFilterActive = filterType != "all" || filterCategory != "all" || filterPayment != "all"
-                        FilterToggleButton(
-                            active   = showFilters || isFilterActive,
-                            hasDot   = isFilterActive,
-                            onClick  = { showFilters = !showFilters }
-                        )
-                        // Sort pills
-                        listOf("newest","oldest","highest","lowest").forEach { s ->
-                            SortPill(
-                                label    = s.replaceFirstChar { it.uppercase() },
-                                selected = sortBy == s,
-                                onClick  = { sortBy = s }
-                            )
+                ExpenseMissedAlert(
+                    missedItems = missedRecurring,
+                    onMarkPaid  = { id ->
+                        recurringList = recurringList.map {
+                            if (it.id == id) it.copy(missed = false, lastPaid = TODAY)
+                            else it
                         }
                     }
-
-                    // Filter panel
-                    if (showFilters) {
-                        ExpenseFilterPanel(
-                            filterType            = filterType,
-                            onFilterTypeChange    = { filterType = it },
-                            filterCategory        = filterCategory,
-                            onFilterCategoryChange = { filterCategory = it },
-                            filterPayment         = filterPayment,
-                            onFilterPaymentChange = { filterPayment = it }
-                        )
-                    }
-
-                    // Results summary
-                    Row(
-                        modifier             = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("${filteredExpenses.size} transactions",
-                            fontSize = 12.sp, color = ExpenseColors.TextMuted)
-                        Text("Total: ${fmtLKR(filteredExpenses.sumOf { it.amount })}",
-                            fontSize = 12.sp, fontWeight = FontWeight.Bold,
-                            color = ExpenseColors.TextPrimary)
-                    }
-
-                    // Grouped expense list
-                    if (groupedHistory.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("No matching expenses found",
-                                fontSize = 14.sp, color = ExpenseColors.TextMuted)
-                        }
-                    } else {
-                        groupedHistory.forEach { (date, exps) ->
-                            ExpenseDateHeader(
-                                dateLabel = "${relativeDate(date, TODAY).uppercase()} — $date",
-                                dayTotal  = exps.sumOf { it.amount }
-                            )
-                            Card(
-                                shape    = RoundedCornerShape(16.dp),
-                                colors   = CardDefaults.cardColors(containerColor = ExpenseColors.CardBg),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                            ) {
-                                Column {
-                                    exps.forEach { exp ->
-                                        ExpenseItemRow(
-                                            item         = exp,
-                                            isMenuOpen   = openMenuId == exp.id,
-                                            onMenuToggle = { openMenuId = if (openMenuId == exp.id) null else exp.id },
-                                            onEdit       = { openEditForm(exp) },
-                                            onDelete     = { deletingId = exp.id; showDeleteDialog = true }
-                                        )
-                                    }
-                                }
-                            }
+                )
+                ExpenseRecurringList(
+                    recurringList  = recurringList,
+                    onToggleActive = { id ->
+                        recurringList = recurringList.map {
+                            if (it.id == id) it.copy(isActive = !it.isActive) else it
                         }
                     }
-                    Spacer(Modifier.height(80.dp))
-                }
-
-                // ── Recurring ─────────────────────────────────────
-                3 -> Column(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    ExpenseMissedAlert(
-                        missedItems = missedRecurring,
-                        onMarkPaid  = { id ->
-                            recurringList = recurringList.map {
-                                if (it.id == id) it.copy(missed = false, lastPaid = TODAY)
-                                else it
-                            }
-                        }
-                    )
-                    ExpenseRecurringList(
-                        recurringList  = recurringList,
-                        onToggleActive = { id ->
-                            recurringList = recurringList.map {
-                                if (it.id == id) it.copy(isActive = !it.isActive) else it
-                            }
-                        }
-                    )
-                    Spacer(Modifier.height(80.dp))
-                }
+                )
+                Spacer(Modifier.height(80.dp))
             }
         }
 

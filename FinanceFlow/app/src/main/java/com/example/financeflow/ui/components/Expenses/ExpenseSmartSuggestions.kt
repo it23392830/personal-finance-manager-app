@@ -8,7 +8,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,75 +26,66 @@ fun ExpenseSmartSuggestions(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF1F2)) // Light pink
     ) {
-        Column(
-            modifier = Modifier
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color(0xFFEEF2FF), Color(0xFFF5F3FF))
-                    )
-                )
-                .padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "⚡ Smart Suggestions",
-                fontSize = 15.sp,
+                "Smart Suggestions",
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = ExpenseColors.PrimaryText
+                color = Color.Black
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
             suggestions.forEach { suggestion ->
                 val category = getCat(suggestion.categoryId)
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
-                        .background(Color.White.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                        .shadow(1.dp, RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
                         .clickable { onSuggestionClick(suggestion) }
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(12.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(category.bgColor.copy(alpha = 0.2f), RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(category.emoji, fontSize = 18.sp)
-                    }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .background(category.bgColor.copy(alpha = 0.1f), RoundedCornerShape(8.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(category.emoji, fontSize = 16.sp)
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                suggestion.description,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+                        }
 
-                    Spacer(Modifier.width(12.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            suggestion.description,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = ExpenseColors.TextPrimary
-                        )
-                        Text(
-                            "~${fmtLKR(suggestion.amount)} • ${suggestion.count}x",
-                            fontSize = 11.sp,
-                            color = ExpenseColors.TextMuted
-                        )
-                    }
-
-                    Surface(
-                        color = ExpenseColors.PrimaryBorder,
-                        shape = RoundedCornerShape(99.dp)
-                    ) {
-                        Text(
-                            suggestion.badge,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ExpenseColors.PrimaryText,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                        )
+                        Surface(
+                            color = Color.White,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E7EB)),
+                            shape = RoundedCornerShape(99.dp)
+                        ) {
+                            Text(
+                                suggestion.badge,
+                                fontSize = 10.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                 }
             }
