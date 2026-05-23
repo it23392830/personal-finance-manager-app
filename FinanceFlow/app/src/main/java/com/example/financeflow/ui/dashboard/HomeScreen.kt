@@ -182,7 +182,6 @@ fun HomeScreen(
                 )
             }
         }
-
         if (showHeaderIcons) {
             // Theme icon at top-left
             Box(modifier = Modifier.fillMaxWidth()) {
