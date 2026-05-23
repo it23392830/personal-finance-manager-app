@@ -45,6 +45,12 @@ fun AppNavGraph(
                         popUpTo(Routes.SPLASH) { inclusive = true }
                         launchSingleTop = true
                     }
+                },
+                onNavigateToHome = {
+                    navController.navigate(Routes.DASHBOARD) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
             )
         }
