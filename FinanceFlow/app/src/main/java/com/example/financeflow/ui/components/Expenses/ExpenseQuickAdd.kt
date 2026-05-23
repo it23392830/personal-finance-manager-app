@@ -140,7 +140,7 @@ private fun CategoryQuickItem(
 fun ExpenseQuickAddPreview() {
     FinanceFlowTheme {
         ExpenseQuickAdd(
-            recentCategoryIds = listOf("food_coffee", "transport_ride", "shopping"),
+            recentCategoryIds = listOf("food_coffee", "transport_ride", "food_dining"),
             onCategoryClick = {},
             onCustomClick = {},
             modifier = Modifier.padding(16.dp)
