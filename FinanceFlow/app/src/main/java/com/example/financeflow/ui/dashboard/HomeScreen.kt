@@ -24,8 +24,6 @@ import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.components.Home.BalanceCard
 import com.example.financeflow.ui.components.Home.BalanceCardData
 import com.example.financeflow.ui.components.Home.ExpenseBreakdownSection
-import com.example.financeflow.ui.components.Home.HomeNotificationBell
-import com.example.financeflow.ui.components.Home.HomeQuickActionPanel
 import com.example.financeflow.ui.components.Home.MoneyFlowSection
 import com.example.financeflow.ui.components.Home.QuickActionRow
 import com.example.financeflow.ui.components.Home.expenseSampleData
@@ -100,7 +98,6 @@ fun HomeScreen(
     onExpensesClick: () -> Unit = {},
     onSavingsClick: () -> Unit = {},
     onGoalCardClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {}
     onThemeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
@@ -119,20 +116,10 @@ fun HomeScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            item {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    BalanceCard(data = sampleBalanceData)
+            // add space so the icons placed at the top-left sit visually above the card
+            item { Spacer(modifier = Modifier.height(28.dp)) }
 
-                    // ADD THIS — top-right corner
-                    HomeNotificationBell(
-                        hasUnread = true,               // hardcoded true
-                        unreadCount = 3,                // hardcoded count
-                        onClick = onNotificationClick,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 8.dp, end = 16.dp)
-                    )
-                }
+            item {
                 BalanceCard(
                     data = sampleBalanceData,
                     onThemeClick = onThemeClick,
@@ -145,19 +132,6 @@ fun HomeScreen(
                     onAddIncomeClick = onAddIncomeClick,
                     onAddExpenseClick = onAddExpenseClick
                 )
-            }
-
-            item {
-                Spacer(Modifier.height(16.dp))
-
-                HomeQuickActionPanel(
-                    onAddIncomeClick    = onAddIncomeClick,
-                    onAddExpenseClick   = onAddExpenseClick,
-                    onViewSavingsClick  = onSavingsClick,
-                    onTransactionsClick = onExpensesClick
-                )
-
-                Spacer(Modifier.height(16.dp))
             }
 
             item {
@@ -195,6 +169,29 @@ fun HomeScreen(
                 BudgetUsageBar(
                     usedPercent      = OPTIONAL_BUDGET_USED_PERCENT,
                     remainingAmount  = OPTIONAL_BUDGET_REMAINING
+                )
+            }
+        }
+        // Icons placed outside the card at the top-left of the screen (drawn on top)
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 12.dp, top = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onThemeClick) {
+                Icon(
+                    imageVector = Icons.Outlined.LightMode,
+                    contentDescription = "Theme",
+                    tint = TextPrimary
+                )
+            }
+            IconButton(onClick = onProfileClick) {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    contentDescription = "Profile",
+                    tint = TextPrimary
                 )
             }
         }
@@ -417,22 +414,30 @@ private fun BudgetUsageBar(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFFFE0E0))
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(ProgressTrackBg)
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(animatedProgress)
+                        .fillMaxWidth(animatedProgress.coerceIn(0f, 1f))
                         .fillMaxHeight()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(50))
                         .background(
                             brush = Brush.horizontalGradient(
-                                colors = listOf(Color(0xFFFF8A80), Color(0xFFFF5252))
+                                colors = listOf(Color(0xFFFF5252), Color(0xFFFF8A80))
                             )
                         )
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFF5F3FF, showSystemUi = true)
+@Composable
+private fun HomeScreenPreview() {
+    MaterialTheme {
+        HomeScreen()
     }
 }
