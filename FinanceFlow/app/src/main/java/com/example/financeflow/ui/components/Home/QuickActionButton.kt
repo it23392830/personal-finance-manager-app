@@ -2,8 +2,6 @@ package com.example.financeflow.ui.components.Home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,7 +42,7 @@ private val ButtonTextWhite = Color(0xFFFFFFFF)
 @Composable
 fun QuickActionButton(
     label: String,
-    icon: ImageVector = Icons.Default.Add,
+    icon: ImageVector? = null,
     backgroundColor: Color,
     contentColor: Color = ButtonTextWhite,
     onClick: () -> Unit = {},
@@ -76,13 +74,15 @@ fun QuickActionButton(
                 verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                Icon(
-                    imageVector        = icon,
-                    contentDescription = null,
-                    modifier           = Modifier.size(20.dp),
-                    tint               = contentColor
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+                if (icon != null) {
+                    Icon(
+                        imageVector        = icon,
+                        contentDescription = null,
+                        modifier           = Modifier.size(20.dp),
+                        tint               = contentColor
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 Text(
                     text  = label,
                     style = MaterialTheme.typography.labelLarge.copy(
