@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
@@ -99,16 +100,25 @@ fun HomeScreen(
     onSavingsClick: () -> Unit = {},
     onGoalCardClick: () -> Unit = {},
     onThemeClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {}
+    onProfileClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {}
 ) {
+    val listState = rememberLazyListState()
+    val showHeaderIcons by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(ScaffoldBg)
     ) {
         LazyColumn(
-            modifier            = Modifier.fillMaxSize(),
-            contentPadding      = PaddingValues(
+            state          = listState,
+            modifier       = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
                 start  = 16.dp,
                 end    = 16.dp,
                 top    = 20.dp,
@@ -116,6 +126,9 @@ fun HomeScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            // add space so the icons placed at the top-left sit visually above the card
+            item { Spacer(modifier = Modifier.height(24.dp)) }
+
             item {
                 BalanceCard(
                     data = sampleBalanceData,
@@ -167,6 +180,49 @@ fun HomeScreen(
                     usedPercent      = OPTIONAL_BUDGET_USED_PERCENT,
                     remainingAmount  = OPTIONAL_BUDGET_REMAINING
                 )
+            }
+        }
+
+        if (showHeaderIcons) {
+            // Theme icon at top-left
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = 12.dp, top = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onThemeClick) {
+                        Icon(
+                            imageVector = Icons.Outlined.LightMode,
+                            contentDescription = "Theme",
+                            tint = TextPrimary
+                        )
+                    }
+                }
+
+                // Profile + notification icons at top-right
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(end = 12.dp, top = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onProfileClick) {
+                        Icon(
+                            imageVector = Icons.Outlined.Person,
+                            contentDescription = "Profile",
+                            tint = TextPrimary
+                        )
+                    }
+                    IconButton(onClick = onNotificationClick) {
+                        Icon(
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = "Notifications",
+                            tint = TextPrimary
+                        )
+                    }
+                }
             }
         }
     }
