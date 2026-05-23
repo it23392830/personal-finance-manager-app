@@ -13,6 +13,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.example.financeflow.viewmodel.income.IncomeViewModel
+import com.example.financeflow.model.Income
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,12 +59,15 @@ private val DividerColor    = Color(0xFFE9E2FF)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeleteIncomeScreen(
+    incomeId: String = "",
     incomeSource: String    = "Salary",
     incomeAmount: String    = "LKR 135,000.00",
     incomeDate: String      = "05/05/2026",
     onConfirmDelete: () -> Unit = {},
     onCancel: () -> Unit    = {}
 ) {
+    val viewModel: IncomeViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
     // Controls the spring-in animation of the warning card
     var cardVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { cardVisible = true }
@@ -181,7 +189,12 @@ fun DeleteIncomeScreen(
 
                             // Delete – red filled
                             Button(
-                                onClick = onConfirmDelete,
+                                onClick = {
+                                    scope.launch {
+                                        if (incomeId.isNotBlank()) viewModel.deleteIncome(incomeId)
+                                        onConfirmDelete()
+                                    }
+                                },
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(50.dp),

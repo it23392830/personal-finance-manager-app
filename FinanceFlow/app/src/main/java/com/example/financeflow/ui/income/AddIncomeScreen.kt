@@ -27,6 +27,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.example.financeflow.viewmodel.income.IncomeViewModel
+import com.example.financeflow.model.Income
+import com.example.financeflow.model.IncomeSource
+import com.google.firebase.Timestamp
 
 // ─── Theme Colors ────────────────────────────────────────────────────────────
 private val BgPurple    = Color(0xFFF3ECFF)
@@ -87,6 +94,8 @@ fun AddIncomeScreen(
     var sourceExpanded   by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
+    val viewModel: IncomeViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
 
     // ── Root scaffold ─────────────────────────────────────────────────────────
     Scaffold(
@@ -201,8 +210,32 @@ fun AddIncomeScreen(
             // ── Add Income Button ─────────────────────────────────────────────
             Button(
                 onClick = {
-                    onAddIncome(selectedSource, amount, selectedCurrency,
-                        description, date, notes)
+                    // Create domain Income and persist via ViewModel, then call callbacks
+                    val amountVal = amount.replace(",", "").toDoubleOrNull() ?: 0.0
+                    val currencyCode = selectedCurrency.split(" ").firstOrNull() ?: "LKR"
+                    val sourceEnum = when (selectedSource.lowercase()) {
+                        "salary" -> IncomeSource.SALARY
+                        "freelance" -> IncomeSource.FREELANCE
+                        "adsense" -> IncomeSource.ADSENSE
+                        "crypto" -> IncomeSource.CRYPTO
+                        "investment" -> IncomeSource.INVESTMENT
+                        "rental" -> IncomeSource.RENTAL
+                        else -> IncomeSource.OTHER
+                    }
+
+                    val income = Income(
+                        source = sourceEnum.name,
+                        amount = amountVal,
+                        currency = currencyCode,
+                        description = description,
+                        date = Timestamp.now()
+                    )
+
+                    scope.launch {
+                        viewModel.addIncome(income)
+                        onAddIncome(selectedSource, amount, selectedCurrency, description, date, notes)
+                        onNavigateUp()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()

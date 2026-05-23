@@ -107,4 +107,16 @@ class IncomeRepository @Inject constructor(
             .delete()
             .await()
     }
+
+    /** Fetches a single Income by id (one-shot). */
+    suspend fun getIncomeById(incomeId: String): Income? {
+        val doc = firestore
+            .collection("users").document(uid)
+            .collection("income")
+            .document(incomeId)
+            .get()
+            .await()
+
+        return doc?.toObject(Income::class.java)?.copy(id = doc.id)
+    }
 }

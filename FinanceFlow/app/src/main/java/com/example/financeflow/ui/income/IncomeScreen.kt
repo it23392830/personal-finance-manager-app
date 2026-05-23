@@ -17,6 +17,11 @@ import com.example.financeflow.model.*
 import com.google.firebase.Timestamp
 
 import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import com.example.financeflow.navigation.Routes
+import com.example.financeflow.viewmodel.income.IncomeViewModel
 import com.example.financeflow.ui.components.Income.AddIncomeDialog
 import com.example.financeflow.ui.components.Income.DeleteIncomeDialog
 import com.example.financeflow.ui.components.Income.EditIncomeDialog
@@ -35,40 +40,49 @@ private val GreenText = Color(0xFF22C55E)
 private val CardWhite = Color.White
 
 @Composable
-fun IncomeScreen(navController: NavController) {
+fun IncomeScreen(navController: NavController, viewModel: IncomeViewModel = hiltViewModel()) {
+
+    val uiState by viewModel.uiState.collectAsState()
 
     IncomeScreenContent(
-        uiState = previewUiState,
+        uiState = uiState,
 
-        onMonthSelected = {},
+        onMonthSelected = { monthYear ->
+            viewModel.setSelectedMonth(monthYear.year, monthYear.month)
+        },
 
-        onAddIncome = {},
+        onAddIncome = { income ->
+            viewModel.addIncome(income)
+            navController.popBackStack()
+        },
 
-        onUpdateIncome = {},
+        onUpdateIncome = { income ->
+            viewModel.updateIncome(income)
+            navController.popBackStack()
+        },
 
-        onDeleteIncome = {},
+        onDeleteIncome = { income ->
+            viewModel.deleteIncome(income.id)
+            navController.popBackStack()
+        },
 
         onShowAddDialog = {
-            navController.navigate(com.example.financeflow.navigation.Routes.ADD_INCOME)
+            navController.navigate(Routes.ADD_INCOME)
         },
 
-        onDismissAdd = {},
+        onDismissAdd = { viewModel.dismissAddDialog() },
 
         onShowEditDialog = { income ->
-            navController.navigate(
-                com.example.financeflow.navigation.Routes.EDIT_INCOME.replace("{incomeId}", income.id)
-            )
+            navController.navigate(Routes.EDIT_INCOME.replace("{incomeId}", income.id))
         },
 
-        onDismissEdit = {},
+        onDismissEdit = { viewModel.dismissEditDialog() },
 
         onShowDeleteDialog = { income ->
-            navController.navigate(
-                com.example.financeflow.navigation.Routes.DELETE_INCOME.replace("{incomeId}", income.id)
-            )
+            navController.navigate(Routes.DELETE_INCOME.replace("{incomeId}", income.id))
         },
 
-        onDismissDelete = {}
+        onDismissDelete = { viewModel.dismissDeleteDialog() }
     )
 }
 
@@ -435,5 +449,17 @@ private val previewUiState = IncomeUiState(
 )
 @Composable
 fun IncomePreview() {
-    IncomeScreen(navController = androidx.navigation.compose.rememberNavController())
+    IncomeScreenContent(
+        uiState = previewUiState,
+        onMonthSelected = {},
+        onAddIncome = {},
+        onUpdateIncome = {},
+        onDeleteIncome = {},
+        onShowAddDialog = {},
+        onDismissAdd = {},
+        onShowEditDialog = {},
+        onDismissEdit = {},
+        onShowDeleteDialog = {},
+        onDismissDelete = {}
+    )
 }

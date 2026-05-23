@@ -11,6 +11,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.example.financeflow.viewmodel.income.IncomeViewModel
+import com.example.financeflow.model.Income
+import com.example.financeflow.model.IncomeSource
+import com.google.firebase.Timestamp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -69,6 +76,7 @@ private val sampleCurrencies = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditIncomeScreen(
+    incomeId: String = "",
     initialSource: String      = "Salary",
     initialAmount: String      = "135,000.00",
     initialCurrency: String    = "LKR (Sri Lankan Rupee)",
@@ -86,6 +94,31 @@ fun EditIncomeScreen(
     var description      by remember { mutableStateOf(initialDescription) }
     var date             by remember { mutableStateOf(initialDate) }
     var notes            by remember { mutableStateOf(initialNotes) }
+
+    val viewModel: IncomeViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
+
+    // Load income when incomeId provided
+    LaunchedEffect(incomeId) {
+        if (incomeId.isNotBlank()) {
+            val loaded = viewModel.getIncomeById(incomeId)
+            loaded?.let { inc ->
+                selectedSource = when (inc.source.lowercase()) {
+                    "salary" -> "Salary"
+                    "freelance" -> "Freelance"
+                    "adsense" -> "AdSense"
+                    "crypto" -> "Crypto"
+                    "investment" -> "Investment"
+                    "rental" -> "Rental"
+                    else -> "Other"
+                }
+                amount = String.format("%.2f", inc.amount)
+                selectedCurrency = inc.currency
+                description = inc.description
+                date = inc.date.toDate().let { d -> java.text.SimpleDateFormat("MM/dd/yyyy").format(d) }
+            }
+        }
+    }
 
     var currencyExpanded by remember { mutableStateOf(false) }
     var sourceExpanded   by remember { mutableStateOf(false) }
@@ -205,8 +238,31 @@ fun EditIncomeScreen(
                 // Save Changes – green
                 Button(
                     onClick = {
-                        onSaveChanges(selectedSource, amount, selectedCurrency,
-                            description, date, notes)
+                        // build Income and update via ViewModel
+                        val amountVal = amount.replace(",", "").toDoubleOrNull() ?: 0.0
+                        val sourceEnum = when (selectedSource.lowercase()) {
+                            "salary" -> IncomeSource.SALARY
+                            "freelance" -> IncomeSource.FREELANCE
+                            "adsense" -> IncomeSource.ADSENSE
+                            "crypto" -> IncomeSource.CRYPTO
+                            "investment" -> IncomeSource.INVESTMENT
+                            "rental" -> IncomeSource.RENTAL
+                            else -> IncomeSource.OTHER
+                        }
+
+                        val income = Income(
+                            id = incomeId,
+                            source = sourceEnum.name,
+                            amount = amountVal,
+                            currency = selectedCurrency.split(" ").firstOrNull() ?: selectedCurrency,
+                            description = description,
+                            date = Timestamp.now()
+                        )
+
+                        scope.launch {
+                            viewModel.updateIncome(income)
+                            onSaveChanges(selectedSource, amount, selectedCurrency, description, date, notes)
+                        }
                     },
                     modifier = Modifier
                         .weight(1f)
