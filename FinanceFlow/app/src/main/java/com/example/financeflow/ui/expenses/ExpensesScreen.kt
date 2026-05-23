@@ -15,9 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.financeflow.ui.expenses.components.*
+import com.example.financeflow.ui.components.Expenses.*
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
@@ -460,7 +462,7 @@ fun ExpensesScreen(
                         openMenuId    = openMenuId,
                         onMenuToggle  = { id -> openMenuId = if (openMenuId == id) null else id },
                         onEdit        = { exp -> openEditForm(exp) },
-                        onDelete      = { id  -> deletingId = id; showDeleteDialog = true }
+                        onDelete      = { id -> deletingId = id; showDeleteDialog = true }
                     )
                     ExpenseReminderCard()
                     Spacer(Modifier.height(80.dp))
@@ -634,5 +636,13 @@ fun ExpensesScreen(
                 onDismiss = { showDeleteDialog = false; deletingId = null }
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExpensesScreenPreview() {
+    FinanceFlowTheme {
+        ExpensesScreen()
     }
 }

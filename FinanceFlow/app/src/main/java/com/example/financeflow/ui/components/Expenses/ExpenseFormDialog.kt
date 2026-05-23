@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.expenses.components
+package com.example.financeflow.ui.components.Expenses
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,11 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.financeflow.ui.expenses.*
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -311,5 +313,35 @@ private fun PaymentMethodButton(
                 color = if (selected) ExpenseColors.PrimaryText else ExpenseColors.TextPrimary
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExpenseFormDialogPreview() {
+    FinanceFlowTheme {
+        ExpenseFormDialog(
+            isEditMode = false,
+            amount = "1200",
+            onAmountChange = {},
+            description = "Lunch",
+            onDescriptionChange = {},
+            category = "food_dining",
+            onCategoryChange = {},
+            expenseType = ExpenseType.DISCRETIONARY,
+            onTypeChange = {},
+            paymentMethod = PaymentMethod.CARD,
+            onPaymentChange = {},
+            date = "2026-05-21",
+            onDateChange = {},
+            notes = "",
+            onNotesChange = {},
+            isRecurring = false,
+            onRecurringChange = {},
+            goalImpactDays = 0.5f,
+            catTree = CAT_TREE,
+            onConfirm = {},
+            onDismiss = {}
+        )
     }
 }

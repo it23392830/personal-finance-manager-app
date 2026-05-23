@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.expenses.components
+package com.example.financeflow.ui.components.Expenses
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,9 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.expenses.*
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseSmartSuggestions(
@@ -96,5 +98,17 @@ fun ExpenseSmartSuggestions(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExpenseSmartSuggestionsPreview() {
+    FinanceFlowTheme {
+        ExpenseSmartSuggestions(
+            suggestions = HARDCODED_SUGGESTIONS,
+            onSuggestionClick = {},
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

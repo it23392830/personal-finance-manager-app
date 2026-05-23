@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.expenses.components
+package com.example.financeflow.ui.components.Expenses
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,11 +8,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.expenses.*
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseRecurringList(
@@ -165,7 +167,7 @@ private fun RecurringItemRow(
         Switch(
             checked = item.isActive,
             onCheckedChange = { onToggleActive() },
-            scale = 0.8f
+            modifier = Modifier.scale(0.8f)
         )
     }
 }
@@ -181,4 +183,14 @@ private fun calculateDaysUntil(targetDate: String, today: String): Int {
     }
 }
 
-private fun Modifier.scale(scale: Float): Modifier = this // Helper as scale isn't a direct Modifier param for Switch
+@Preview(showBackground = true)
+@Composable
+fun ExpenseRecurringListPreview() {
+    FinanceFlowTheme {
+        ExpenseRecurringList(
+            recurringList = HARDCODED_RECURRING,
+            onToggleActive = {},
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}

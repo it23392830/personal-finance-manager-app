@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.expenses.components
+package com.example.financeflow.ui.components.Expenses
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -6,7 +6,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.financeflow.ui.expenses.ExpenseColors
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseDeleteDialog(
@@ -31,4 +33,15 @@ fun ExpenseDeleteDialog(
             }
         }
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExpenseDeleteDialogPreview() {
+    FinanceFlowTheme {
+        ExpenseDeleteDialog(
+            onConfirm = {},
+            onDismiss = {}
+        )
+    }
 }

@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.expenses.components
+package com.example.financeflow.ui.components.Expenses
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,9 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.expenses.ExpenseColors
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseHeader(
@@ -69,5 +71,17 @@ fun ExpenseHeader(
                 Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.White)
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExpenseHeaderPreview() {
+    FinanceFlowTheme {
+        ExpenseHeader(
+            selectedMonth = "2026-05",
+            onMonthChange = {},
+            onAddClick = {}
+        )
     }
 }

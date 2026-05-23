@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.expenses.components
+package com.example.financeflow.ui.components.Expenses
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -12,10 +12,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.expenses.ExpenseColors
 import com.example.financeflow.ui.expenses.fmtLKR
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseDonutChart(
@@ -124,5 +126,18 @@ private fun DonutStatItem(
                 color = ExpenseColors.TextPrimary
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExpenseDonutChartPreview() {
+    FinanceFlowTheme {
+        ExpenseDonutChart(
+            essentialTotal = 25000,
+            discretionaryTotal = 15000,
+            totalSpent = 40000,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

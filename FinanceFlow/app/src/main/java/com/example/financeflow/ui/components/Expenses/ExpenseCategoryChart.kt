@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.expenses.components
+package com.example.financeflow.ui.components.Expenses
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,11 +8,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.expenses.CategoryBreakdownItem
 import com.example.financeflow.ui.expenses.ExpenseColors
+import com.example.financeflow.ui.expenses.HARDCODED_CATEGORY_BREAKDOWN
 import com.example.financeflow.ui.expenses.fmtLKR
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseCategoryChart(
@@ -77,6 +80,16 @@ fun ExpenseCategoryChart(
                     }
                 }
             }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExpenseCategoryChartPreview() {
+    FinanceFlowTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            ExpenseCategoryChart(breakdown = HARDCODED_CATEGORY_BREAKDOWN)
         }
     }
 }

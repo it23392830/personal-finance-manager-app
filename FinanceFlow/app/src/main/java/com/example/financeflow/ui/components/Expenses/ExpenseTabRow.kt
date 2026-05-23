@@ -1,15 +1,16 @@
-package com.example.financeflow.ui.expenses.components
+package com.example.financeflow.ui.components.Expenses
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.expenses.ExpenseColors
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseTabRow(
@@ -49,5 +50,16 @@ fun ExpenseTabRow(
                 unselectedContentColor = ExpenseColors.TextMuted
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExpenseTabRowPreview() {
+    FinanceFlowTheme {
+        ExpenseTabRow(
+            selectedTab = 0,
+            onTabSelected = {}
+        )
     }
 }

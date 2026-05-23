@@ -1,7 +1,6 @@
-package com.example.financeflow.ui.expenses.components
+package com.example.financeflow.ui.components.Expenses
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,11 +10,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.expenses.*
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseItemRow(
@@ -97,8 +97,7 @@ fun ExpenseItemRow(
                 }
                 DropdownMenu(
                     expanded = isMenuOpen,
-                    onDismissRequest = onMenuToggle,
-                    containerColor = Color.White
+                    onDismissRequest = onMenuToggle
                 ) {
                     DropdownMenuItem(
                         text = { Text("✏️ Edit") },
@@ -113,5 +112,19 @@ fun ExpenseItemRow(
             }
         }
         HorizontalDivider(thickness = 0.5.dp, color = ExpenseColors.Border, modifier = Modifier.padding(horizontal = 12.dp))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExpenseItemRowPreview() {
+    FinanceFlowTheme {
+        ExpenseItemRow(
+            item = HARDCODED_EXPENSES[0],
+            isMenuOpen = false,
+            onMenuToggle = {},
+            onEdit = {},
+            onDelete = {}
+        )
     }
 }

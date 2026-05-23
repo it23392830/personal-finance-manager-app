@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.expenses.components
+package com.example.financeflow.ui.components.Expenses
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,11 +9,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.expenses.ExpenseColors
+import com.example.financeflow.ui.expenses.HARDCODED_PATTERN_STATS
 import com.example.financeflow.ui.expenses.PatternStatUiItem
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpensePatternGrid(
@@ -30,7 +32,7 @@ fun ExpensePatternGrid(
             Text(
                 "📊 Spending Patterns",
                 fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                 color = ExpenseColors.TextPrimary
             )
 
@@ -69,11 +71,22 @@ private fun PatternCell(stat: PatternStatUiItem, modifier: Modifier = Modifier) 
             Text(
                 stat.value,
                 fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                 color = ExpenseColors.TextPrimary,
                 maxLines = 1
             )
             Text(stat.sub, fontSize = 10.sp, color = ExpenseColors.TextMuted, maxLines = 1)
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExpensePatternGridPreview() {
+    FinanceFlowTheme {
+        ExpensePatternGrid(
+            stats = HARDCODED_PATTERN_STATS,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

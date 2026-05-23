@@ -1,4 +1,4 @@
-xpenseBudgetCard.ktpackage com.example.financeflow.ui.expenses.components
+package com.example.financeflow.ui.components.Expenses
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,10 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.expenses.ExpenseColors
 import com.example.financeflow.ui.expenses.fmtLKR
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseBudgetCard(
@@ -121,5 +123,21 @@ private fun BudgetStat(
     ) {
         Text(label, fontSize = 10.sp, color = ExpenseColors.TextMuted)
         Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = valueColor)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ExpenseBudgetCardPreview() {
+    FinanceFlowTheme {
+        ExpenseBudgetCard(
+            remaining = 15000,
+            budgetTotal = 50000,
+            budgetUsedPct = 70f,
+            todayTotal = 1200,
+            essentialTotal = 25000,
+            totalSpent = 35000,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
