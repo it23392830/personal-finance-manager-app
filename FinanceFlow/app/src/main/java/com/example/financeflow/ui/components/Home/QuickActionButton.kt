@@ -107,6 +107,7 @@ fun QuickActionButton(
  */
 @Composable
 fun QuickActionRow(
+    isDarkTheme: Boolean = false,
     onAddIncomeClick: () -> Unit = {},
     onAddExpenseClick: () -> Unit = {},
     modifier: Modifier = Modifier

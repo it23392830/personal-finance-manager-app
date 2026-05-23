@@ -21,10 +21,38 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import com.example.financeflow.ui.components.savings.CardWhite
 
-//  Design Tokens
-private val TextPrimary     = Color(0xFF1A1A2E)
-private val TextSecondary   = Color(0xFF6B7280)
+//  Design Tokens - Light Mode
+private val LightTextPrimary     = Color(0xFF1A1A2E)
+private val LightTextSecondary   = Color(0xFF6B7280)
+private val LightCardBg          = Color.White
+
+//  Design Tokens - Dark Mode
+private val DarkTextPrimary      = Color(0xFFE8E8E8)
+private val DarkTextSecondary    = Color(0xFFB0B0B0)
+private val DarkCardBg           = Color(0xFF2A2A3E)
+
 private val PrimaryPurple   = Color(0xFF7C4DFF)
+
+data class SummaryCardColors(
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val cardBg: Color
+)
+
+private fun getSummaryCardColors(isDarkTheme: Boolean): SummaryCardColors =
+    if (isDarkTheme) {
+        SummaryCardColors(
+            textPrimary = DarkTextPrimary,
+            textSecondary = DarkTextSecondary,
+            cardBg = DarkCardBg
+        )
+    } else {
+        SummaryCardColors(
+            textPrimary = LightTextPrimary,
+            textSecondary = LightTextSecondary,
+            cardBg = LightCardBg
+        )
+    }
 
 // Pastel icon backgrounds
 val PastelGreen   = Color(0xFFE8F5E9)
@@ -89,10 +117,12 @@ fun moneyFlowSampleData(): List<SummaryCardData> = listOf(
  */
 @Composable
 fun SummaryCard(
+    isDarkTheme: Boolean = false,
     data: SummaryCardData,
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val colors = getSummaryCardColors(isDarkTheme)
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -103,7 +133,7 @@ fun SummaryCard(
                 spotColor     = PrimaryPurple.copy(alpha = 0.10f)
             )
             .clip(RoundedCornerShape(16.dp))
-            .background(CardWhite)
+            .background(colors.cardBg)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
@@ -133,7 +163,7 @@ fun SummaryCard(
                 Text(
                     text  = data.title,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color      = TextSecondary,
+                        color      = colors.textSecondary,
                         fontSize   = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -141,7 +171,7 @@ fun SummaryCard(
                 Text(
                     text  = "${data.currencySymbol} ${"%,d".format(data.amount)}",
                     style = MaterialTheme.typography.titleMedium.copy(
-                        color      = TextPrimary,
+                        color      = colors.textPrimary,
                         fontWeight = FontWeight.Bold,
                         fontSize   = 16.sp
                     )
@@ -173,6 +203,7 @@ fun SummaryCard(
  */
 @Composable
 fun MoneyFlowSection(
+    isDarkTheme: Boolean = false,
     items: List<SummaryCardData> = moneyFlowSampleData(),
     onIncomeClick: () -> Unit = {},
     onGoalsClick: () -> Unit = {},
@@ -180,17 +211,19 @@ fun MoneyFlowSection(
     onSavingsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val colors = getSummaryCardColors(isDarkTheme)
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
             text  = "Your Money Flow",
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
-                color      = TextPrimary,
+                color      = colors.textPrimary,
                 fontSize   = 18.sp
             )
         )
         items.forEach { item ->
             SummaryCard(
+                isDarkTheme = isDarkTheme,
                 data = item,
                 onClick = {
                     when (item.title) {
