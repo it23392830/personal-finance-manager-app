@@ -65,6 +65,10 @@ android {
     }
 }
 
+kapt {
+    correctErrorTypes = true
+}
+
 kotlin {
     jvmToolchain(17)
 }
@@ -144,7 +148,7 @@ dependencies {
     )
 
     kapt(
-        "com.google.dagger:hilt-compiler:2.51.1"
+        "com.google.dagger:hilt-android-compiler:2.51.1"
     )
 
     implementation(
@@ -188,4 +192,5 @@ dependencies {
     )
 
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("com.airbnb.android:lottie-compose:6.4.0")
 }

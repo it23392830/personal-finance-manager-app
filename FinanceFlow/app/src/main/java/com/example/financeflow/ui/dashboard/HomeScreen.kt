@@ -101,6 +101,8 @@ fun HomeScreen(
     onSavingsClick: () -> Unit = {},
     onGoalCardClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {}
+    onThemeClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -131,6 +133,11 @@ fun HomeScreen(
                             .padding(top = 8.dp, end = 16.dp)
                     )
                 }
+                BalanceCard(
+                    data = sampleBalanceData,
+                    onThemeClick = onThemeClick,
+                    onProfileClick = onProfileClick
+                )
             }
 
             item {

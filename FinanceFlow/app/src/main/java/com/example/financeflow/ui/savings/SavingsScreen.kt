@@ -63,10 +63,7 @@ fun SavingsScreen(navController: NavController) {
         item {
             HeaderCard(
                 selectedMonth = "May 2026",
-                onMonthSelected = { /* UI only */ },
-                onProfileClick = {
-                    navController.navigate(Routes.PROFILE)
-                }
+                onMonthSelected = { /* UI only */ }
             )
         }
 

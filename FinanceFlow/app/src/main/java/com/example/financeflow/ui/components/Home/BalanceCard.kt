@@ -6,6 +6,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -66,7 +68,9 @@ fun BalanceCard(
     data: BalanceCardData = BalanceCardData(),
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 24.dp,
-    elevation: Dp = 6.dp
+    elevation: Dp = 6.dp,
+    onThemeClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
 ) {
     Box(
         modifier = modifier
@@ -88,7 +92,11 @@ fun BalanceCard(
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
             // ── Greeting row ────────────────────────────────
-            GreetingRow(userName = data.userName, streakDays = data.streakDays)
+            GreetingRow(
+                userName = data.userName,
+                onThemeClick = onThemeClick,
+                onProfileClick = onProfileClick
+            )
 
             // ── Balance block ───────────────────────────────
             BalanceBlock(
@@ -119,6 +127,13 @@ fun BalanceCard(
                     useStreakIcon   = true
                 )
             }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                StreakChip(days = data.streakDays)
+            }
         }
     }
 }
@@ -130,7 +145,8 @@ fun BalanceCard(
 @Composable
 private fun GreetingRow(
     userName: String,
-    streakDays: Int
+    onThemeClick: () -> Unit,
+    onProfileClick: () -> Unit
 ) {
     Row(
         modifier            = Modifier.fillMaxWidth(),
@@ -155,8 +171,25 @@ private fun GreetingRow(
             )
         }
 
-        // Streak chip
-        StreakChip(days = streakDays)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onThemeClick) {
+                Icon(
+                    imageVector = Icons.Outlined.LightMode,
+                    contentDescription = "Theme",
+                    tint = TextPrimary
+                )
+            }
+            IconButton(onClick = onProfileClick) {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    contentDescription = "Profile",
+                    tint = TextPrimary
+                )
+            }
+        }
     }
 }
 
