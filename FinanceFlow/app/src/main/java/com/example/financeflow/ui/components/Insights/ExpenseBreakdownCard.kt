@@ -36,6 +36,7 @@ data class BreakdownItem(val label: String, val amount: String)
  */
 @Composable
 fun ExpenseBreakdownCard(
+    isDarkTheme: Boolean = false,
     mustTotal: String = "Rs52,000",
     mustPct: String = "43% of total",
     optionalTotal: String = "Rs68,400",
@@ -53,9 +54,10 @@ fun ExpenseBreakdownCard(
         BreakdownItem("Shopping",       "LKR 8,500")
     )
 ) {
+    val colors = getInsightsColors(isDarkTheme)
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = CardWhite,
+        color = colors.CardWhite,
         shadowElevation = 4.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -65,7 +67,7 @@ fun ExpenseBreakdownCard(
                 text = "Expense Breakdown",
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
-                color = TextDark
+                color = colors.TextDark
             )
 
             Spacer(Modifier.height(14.dp))
@@ -86,7 +88,7 @@ fun ExpenseBreakdownCard(
                     Text("Must Expenses", fontSize = 11.sp, color = MustRed, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(4.dp))
                     Text(mustTotal, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = MustRed)
-                    Text(mustPct, fontSize = 11.sp, color = TextMuted)
+                    Text(mustPct, fontSize = 11.sp, color = colors.TextMuted)
                 }
 
                 // Optional chip
@@ -100,7 +102,7 @@ fun ExpenseBreakdownCard(
                     Text("Optional Expenses", fontSize = 11.sp, color = OptionalBlue, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(4.dp))
                     Text(optionalTotal, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = OptionalBlue)
-                    Text(optionalPct, fontSize = 11.sp, color = TextMuted)
+                    Text(optionalPct, fontSize = 11.sp, color = colors.TextMuted)
                 }
             }
 
@@ -111,7 +113,8 @@ fun ExpenseBreakdownCard(
                 header = "Must Expenses",
                 headerColor = MustRed,
                 items = mustItems,
-                amountColor = MustRed
+                amountColor = MustRed,
+                isDarkTheme = isDarkTheme
             )
 
             Spacer(Modifier.height(14.dp))
@@ -121,7 +124,8 @@ fun ExpenseBreakdownCard(
                 header = "Optional Expenses",
                 headerColor = OptionalBlue,
                 items = optionalItems,
-                amountColor = OptionalBlue
+                amountColor = OptionalBlue,
+                isDarkTheme = isDarkTheme
             )
         }
     }
@@ -133,8 +137,10 @@ private fun BreakdownSection(
     header: String,
     headerColor: Color,
     items: List<BreakdownItem>,
-    amountColor: Color
+    amountColor: Color,
+    isDarkTheme: Boolean = false
 ) {
+    val colors = getInsightsColors(isDarkTheme)
     Text(
         text = header,
         fontWeight = FontWeight.Bold,
@@ -149,7 +155,7 @@ private fun BreakdownSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = item.label, fontSize = 13.sp, color = Color(0xFF1E1B2E))
+                Text(text = item.label, fontSize = 13.sp, color = colors.TextDark)
                 Text(
                     text = item.amount,
                     fontSize = 13.sp,

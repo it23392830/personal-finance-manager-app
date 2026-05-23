@@ -44,15 +44,17 @@ private val ScoreBg       = Color(0xFFF3ECFF)
  */
 @Composable
 fun FinancialHealthCard(
+    isDarkTheme: Boolean = false,
     score: Int = 23,
     label: String = "Good – Keep Improving!",
     savingsRate: String = "28.8%",
     consistency: String = "75/100",
     goalProgress: String = "2.2"
 ) {
+    val colors = getInsightsColors(isDarkTheme)
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = CardWhite,
+        color = colors.CardWhite,
         shadowElevation = 4.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -68,19 +70,19 @@ fun FinancialHealthCard(
                     text = "Financial Health Score",
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
-                    color = TextDark
+                    color = colors.TextDark
                 )
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(ScoreBg),
+                        .background(colors.DayDetailBg),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.EmojiEvents,
                         contentDescription = null,
-                        tint = PrimaryPurple,
+                        tint = colors.PrimaryPurple,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -93,7 +95,7 @@ fun FinancialHealthCard(
                 text = score.toString(),
                 fontSize = 42.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = PrimaryPurple
+                color = colors.PrimaryPurple
             )
 
             Spacer(Modifier.height(8.dp))
@@ -105,14 +107,14 @@ fun FinancialHealthCard(
                     .fillMaxWidth()
                     .height(10.dp)
                     .clip(RoundedCornerShape(50.dp)),
-                color = PrimaryPurple,
-                trackColor = ScoreBg,
+                color = colors.PrimaryPurple,
+                trackColor = colors.DayDetailBg,
                 strokeCap = StrokeCap.Round
             )
 
             Spacer(Modifier.height(6.dp))
 
-            Text(text = label, fontSize = 12.sp, color = TextMuted)
+            Text(text = label, fontSize = 12.sp, color = colors.TextMuted)
 
             Spacer(Modifier.height(16.dp))
 
@@ -125,18 +127,21 @@ fun FinancialHealthCard(
                     icon = Icons.Default.Star,
                     label = "Savings Rate",
                     value = savingsRate,
+                    isDarkTheme = isDarkTheme,
                     modifier = Modifier.weight(1f)
                 )
                 HealthMetricChip(
                     icon = Icons.Default.Favorite,
                     label = "Consistency",
                     value = consistency,
+                    isDarkTheme = isDarkTheme,
                     modifier = Modifier.weight(1f)
                 )
                 HealthMetricChip(
                     icon = Icons.Default.FlashOn,
                     label = "Goal Progress",
                     value = goalProgress,
+                    isDarkTheme = isDarkTheme,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -150,20 +155,22 @@ private fun HealthMetricChip(
     icon: ImageVector,
     label: String,
     value: String,
+    isDarkTheme: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val colors = getInsightsColors(isDarkTheme)
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF3ECFF))
+            .background(colors.DayDetailBg)
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Icon(imageVector = icon, contentDescription = null,
-            tint = PrimaryPurple, modifier = Modifier.size(18.dp))
-        Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E1B2E))
-        Text(text = label, fontSize = 10.sp, color = Color(0xFF9CA3AF))
+            tint = colors.PrimaryPurple, modifier = Modifier.size(18.dp))
+        Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = colors.TextDark)
+        Text(text = label, fontSize = 10.sp, color = colors.TextMuted)
     }
 }
 

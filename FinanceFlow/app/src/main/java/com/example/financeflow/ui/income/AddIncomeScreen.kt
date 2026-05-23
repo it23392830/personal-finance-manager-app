@@ -38,6 +38,42 @@ private val TextMuted   = Color(0xFF9CA3AF)
 private val FieldBg     = Color(0xFFF9F6FF)
 private val DividerColor = Color(0xFFE9E2FF)
 
+data class IncomeFormColors(
+    val background: Color,
+    val cardBg: Color,
+    val primary: Color,
+    val success: Color,
+    val textPrimary: Color,
+    val textMuted: Color,
+    val fieldBg: Color,
+    val divider: Color
+)
+
+fun getIncomeFormColors(isDarkTheme: Boolean): IncomeFormColors =
+    if (isDarkTheme) {
+        IncomeFormColors(
+            background = Color(0xFF111827),
+            cardBg = Color(0xFF1F2937),
+            primary = Color(0xFFA78BFA),
+            success = Color(0xFF22C55E),
+            textPrimary = Color(0xFFF9FAFB),
+            textMuted = Color(0xFF9CA3AF),
+            fieldBg = Color(0xFF0F172A),
+            divider = Color(0xFF374151)
+        )
+    } else {
+        IncomeFormColors(
+            background = BgPurple,
+            cardBg = CardWhite,
+            primary = PrimaryPurple,
+            success = IncomeGreen,
+            textPrimary = TextDark,
+            textMuted = TextMuted,
+            fieldBg = FieldBg,
+            divider = DividerColor
+        )
+    }
+
 // ─── Income Source Options ────────────────────────────────────────────────────
 @Suppress("DEPRECATION")
 private val incomeSourceOptions = listOf(
@@ -76,6 +112,7 @@ fun AddIncomeScreen(
                   description: String, date: String, notes: String) -> Unit = { _, _, _, _, _, _ -> },
     onNavigateUp: () -> Unit = {}
 ) {
+    val colors = getIncomeFormColors(isDarkTheme)
     // ── Local UI state ────────────────────────────────────────────────────────
     var amount          by remember { mutableStateOf("") }
     var selectedCurrency by remember { mutableStateOf(currencyOptions[0]) }
@@ -91,9 +128,9 @@ fun AddIncomeScreen(
 
     // ── Root scaffold ─────────────────────────────────────────────────────────
     Scaffold(
-        containerColor = BgPurple,
+        containerColor = colors.background,
         topBar = {
-            IncomeTopBar(title = "Add Income", onNavigateUp = onNavigateUp)
+            IncomeTopBar(title = "Add Income", onNavigateUp = onNavigateUp, isDarkTheme = isDarkTheme)
         }
     ) { innerPadding ->
 
@@ -113,15 +150,15 @@ fun AddIncomeScreen(
             ) {
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = CardWhite,
+                    color = colors.cardBg,
                     tonalElevation = 0.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .shadow(
                             elevation = 8.dp,
                             shape = RoundedCornerShape(20.dp),
-                            ambientColor = PrimaryPurple.copy(alpha = 0.12f),
-                            spotColor = PrimaryPurple.copy(alpha = 0.18f)
+                            ambientColor = colors.primary.copy(alpha = 0.12f),
+                            spotColor = colors.primary.copy(alpha = 0.18f)
                         )
                 ) {
                     Column(
@@ -130,68 +167,74 @@ fun AddIncomeScreen(
                     ) {
 
                         // Amount
-                        IncomeFieldLabel("Amount")
+                        IncomeFieldLabel("Amount", isDarkTheme = isDarkTheme)
                         IncomeAmountField(
                             value = amount,
-                            onValueChange = { amount = it }
+                            onValueChange = { amount = it },
+                            isDarkTheme = isDarkTheme
                         )
 
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                        HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
                         // Currency
-                        IncomeFieldLabel("Currency")
+                        IncomeFieldLabel("Currency", isDarkTheme = isDarkTheme)
                         IncomeDropdownField(
                             selectedValue = selectedCurrency,
                             options = currencyOptions,
                             expanded = currencyExpanded,
                             onExpandChange = { currencyExpanded = it },
                             onOptionSelected = { selectedCurrency = it; currencyExpanded = false },
-                            leadingIcon = Icons.Default.CurrencyExchange
+                            leadingIcon = Icons.Default.CurrencyExchange,
+                            isDarkTheme = isDarkTheme
                         )
 
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                        HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
                         // Income Source
-                        IncomeFieldLabel("Income Source")
+                        IncomeFieldLabel("Income Source", isDarkTheme = isDarkTheme)
                         IncomeSourceDropdown(
                             selectedSource = selectedSource,
                             sourceOptions = incomeSourceOptions,
                             expanded = sourceExpanded,
                             onExpandChange = { sourceExpanded = it },
-                            onOptionSelected = { selectedSource = it; sourceExpanded = false }
+                            onOptionSelected = { selectedSource = it; sourceExpanded = false },
+                            isDarkTheme = isDarkTheme
                         )
 
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                        HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
                         // Description
-                        IncomeFieldLabel("Description (Optional)")
+                        IncomeFieldLabel("Description (Optional)", isDarkTheme = isDarkTheme)
                         IncomeTextField(
                             value = description,
                             onValueChange = { description = it },
                             placeholder = "e.g., React Project for ABC Co.",
-                            leadingIcon = Icons.Default.Description
+                            leadingIcon = Icons.Default.Description,
+                            isDarkTheme = isDarkTheme
                         )
 
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                        HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
                         // Date
-                        IncomeFieldLabel("Date")
+                        IncomeFieldLabel("Date", isDarkTheme = isDarkTheme)
                         IncomeDateField(
                             value = date,
-                            onValueChange = { date = it }
+                            onValueChange = { date = it },
+                            isDarkTheme = isDarkTheme
                         )
 
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                        HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
                         // Notes
-                        IncomeFieldLabel("Notes (Optional)")
+                        IncomeFieldLabel("Notes (Optional)", isDarkTheme = isDarkTheme)
                         IncomeTextField(
                             value = notes,
                             onValueChange = { notes = it },
                             placeholder = "Any additional notes…",
                             leadingIcon = Icons.Default.Notes,
                             singleLine = false,
-                            minLines = 3
+                            minLines = 3,
+                            isDarkTheme = isDarkTheme
                         )
                     }
                 }
@@ -210,7 +253,7 @@ fun AddIncomeScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = IncomeGreen,
+                    containerColor = colors.success,
                     contentColor = Color.White
                 ),
                 elevation = ButtonDefaults.buttonElevation(
@@ -241,12 +284,13 @@ fun AddIncomeScreen(
 /** Top app bar shared across Income screens */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IncomeTopBar(title: String, onNavigateUp: () -> Unit) {
+fun IncomeTopBar(title: String, onNavigateUp: () -> Unit, isDarkTheme: Boolean = false) {
+    val colors = getIncomeFormColors(isDarkTheme)
     TopAppBar(
         title = {
             Text(
                 text = title,
-                color = PrimaryPurple,
+                color = colors.primary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
@@ -256,34 +300,36 @@ fun IncomeTopBar(title: String, onNavigateUp: () -> Unit) {
                 Icon(
                     imageVector = Icons.Default.ArrowBackIosNew,
                     contentDescription = "Back",
-                    tint = PrimaryPurple
+                    tint = colors.primary
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = BgPurple),
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.background),
         modifier = Modifier.shadow(0.dp)
     )
 }
 
 /** Small bold label above each field */
 @Composable
-fun IncomeFieldLabel(text: String) {
+fun IncomeFieldLabel(text: String, isDarkTheme: Boolean = false) {
+    val colors = getIncomeFormColors(isDarkTheme)
     Text(
         text = text,
         fontSize = 13.sp,
         fontWeight = FontWeight.SemiBold,
-        color = TextDark.copy(alpha = 0.7f)
+        color = colors.textPrimary.copy(alpha = 0.7f)
     )
 }
 
 /** Styled numeric Amount field with up/down arrows */
 @Composable
-fun IncomeAmountField(value: String, onValueChange: (String) -> Unit) {
+fun IncomeAmountField(value: String, onValueChange: (String) -> Unit, isDarkTheme: Boolean = false) {
+    val colors = getIncomeFormColors(isDarkTheme)
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth(),
-        placeholder = { Text("0.00", color = TextMuted) },
+        placeholder = { Text("0.00", color = colors.textMuted) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         singleLine = true,
         trailingIcon = {
@@ -291,7 +337,7 @@ fun IncomeAmountField(value: String, onValueChange: (String) -> Unit) {
                 Icon(
                     Icons.Default.KeyboardArrowUp,
                     contentDescription = null,
-                    tint = PrimaryPurple,
+                    tint = colors.primary,
                     modifier = Modifier
                         .size(20.dp)
                         .clickable {
@@ -302,7 +348,7 @@ fun IncomeAmountField(value: String, onValueChange: (String) -> Unit) {
                 Icon(
                     Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = PrimaryPurple,
+                    tint = colors.primary,
                     modifier = Modifier
                         .size(20.dp)
                         .clickable {
@@ -314,12 +360,12 @@ fun IncomeAmountField(value: String, onValueChange: (String) -> Unit) {
         },
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = PrimaryPurple,
-            unfocusedBorderColor = DividerColor,
-            focusedContainerColor = FieldBg,
-            unfocusedContainerColor = FieldBg,
-            focusedTextColor = TextDark,
-            unfocusedTextColor = TextDark
+            focusedBorderColor = colors.primary,
+            unfocusedBorderColor = colors.divider,
+            focusedContainerColor = colors.fieldBg,
+            unfocusedContainerColor = colors.fieldBg,
+            focusedTextColor = colors.textPrimary,
+            unfocusedTextColor = colors.textPrimary
         )
     )
 }
@@ -332,33 +378,36 @@ fun IncomeTextField(
     placeholder: String,
     leadingIcon: ImageVector,
     singleLine: Boolean = true,
-    minLines: Int = 1
+    minLines: Int = 1,
+    isDarkTheme: Boolean = false
 ) {
+    val colors = getIncomeFormColors(isDarkTheme)
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth(),
-        placeholder = { Text(placeholder, color = TextMuted, fontSize = 14.sp) },
+        placeholder = { Text(placeholder, color = colors.textMuted, fontSize = 14.sp) },
         leadingIcon = {
-            Icon(leadingIcon, contentDescription = null, tint = PrimaryPurple, modifier = Modifier.size(20.dp))
+            Icon(leadingIcon, contentDescription = null, tint = colors.primary, modifier = Modifier.size(20.dp))
         },
         singleLine = singleLine,
         minLines = minLines,
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = PrimaryPurple,
-            unfocusedBorderColor = DividerColor,
-            focusedContainerColor = FieldBg,
-            unfocusedContainerColor = FieldBg,
-            focusedTextColor = TextDark,
-            unfocusedTextColor = TextDark
+            focusedBorderColor = colors.primary,
+            unfocusedBorderColor = colors.divider,
+            focusedContainerColor = colors.fieldBg,
+            unfocusedContainerColor = colors.fieldBg,
+            focusedTextColor = colors.textPrimary,
+            unfocusedTextColor = colors.textPrimary
         )
     )
 }
 
 /** Date field with calendar icon */
 @Composable
-fun IncomeDateField(value: String, onValueChange: (String) -> Unit) {
+fun IncomeDateField(value: String, onValueChange: (String) -> Unit, isDarkTheme: Boolean = false) {
+    val colors = getIncomeFormColors(isDarkTheme)
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -368,18 +417,18 @@ fun IncomeDateField(value: String, onValueChange: (String) -> Unit) {
             Icon(
                 Icons.Default.CalendarMonth,
                 contentDescription = "Pick date",
-                tint = PrimaryPurple,
+                tint = colors.primary,
                 modifier = Modifier.size(20.dp)
             )
         },
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = PrimaryPurple,
-            unfocusedBorderColor = DividerColor,
-            focusedContainerColor = FieldBg,
-            unfocusedContainerColor = FieldBg,
-            focusedTextColor = TextDark,
-            unfocusedTextColor = TextDark
+            focusedBorderColor = colors.primary,
+            unfocusedBorderColor = colors.divider,
+            focusedContainerColor = colors.fieldBg,
+            unfocusedContainerColor = colors.fieldBg,
+            focusedTextColor = colors.textPrimary,
+            unfocusedTextColor = colors.textPrimary
         )
     )
 }
@@ -393,8 +442,10 @@ fun IncomeDropdownField(
     expanded: Boolean,
     onExpandChange: (Boolean) -> Unit,
     onOptionSelected: (String) -> Unit,
-    leadingIcon: ImageVector
+    leadingIcon: ImageVector,
+    isDarkTheme: Boolean = false
 ) {
+    val colors = getIncomeFormColors(isDarkTheme)
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = onExpandChange
@@ -407,17 +458,17 @@ fun IncomeDropdownField(
                 .fillMaxWidth()
                 .menuAnchor(),
             leadingIcon = {
-                Icon(leadingIcon, contentDescription = null, tint = PrimaryPurple, modifier = Modifier.size(20.dp))
+                Icon(leadingIcon, contentDescription = null, tint = colors.primary, modifier = Modifier.size(20.dp))
             },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimaryPurple,
-                unfocusedBorderColor = DividerColor,
-                focusedContainerColor = FieldBg,
-                unfocusedContainerColor = FieldBg,
-                focusedTextColor = TextDark,
-                unfocusedTextColor = TextDark
+                focusedBorderColor = colors.primary,
+                unfocusedBorderColor = colors.divider,
+                focusedContainerColor = colors.fieldBg,
+                unfocusedContainerColor = colors.fieldBg,
+                focusedTextColor = colors.textPrimary,
+                unfocusedTextColor = colors.textPrimary
             )
         )
         ExposedDropdownMenu(
@@ -426,7 +477,7 @@ fun IncomeDropdownField(
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option, color = TextDark) },
+                    text = { Text(option, color = colors.textPrimary) },
                     onClick = { onOptionSelected(option) }
                 )
             }
@@ -442,8 +493,10 @@ fun IncomeSourceDropdown(
     sourceOptions: List<Pair<String, ImageVector>>,
     expanded: Boolean,
     onExpandChange: (Boolean) -> Unit,
-    onOptionSelected: (String) -> Unit
+    onOptionSelected: (String) -> Unit,
+    isDarkTheme: Boolean = false
 ) {
+    val colors = getIncomeFormColors(isDarkTheme)
     val selectedIcon = sourceOptions.find { it.first == selectedSource }?.second
         ?: Icons.Default.Category
 
@@ -459,17 +512,17 @@ fun IncomeSourceDropdown(
                 .fillMaxWidth()
                 .menuAnchor(),
             leadingIcon = {
-                Icon(selectedIcon, contentDescription = null, tint = PrimaryPurple, modifier = Modifier.size(20.dp))
+                Icon(selectedIcon, contentDescription = null, tint = colors.primary, modifier = Modifier.size(20.dp))
             },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimaryPurple,
-                unfocusedBorderColor = DividerColor,
-                focusedContainerColor = FieldBg,
-                unfocusedContainerColor = FieldBg,
-                focusedTextColor = TextDark,
-                unfocusedTextColor = TextDark
+                focusedBorderColor = colors.primary,
+                unfocusedBorderColor = colors.divider,
+                focusedContainerColor = colors.fieldBg,
+                unfocusedContainerColor = colors.fieldBg,
+                focusedTextColor = colors.textPrimary,
+                unfocusedTextColor = colors.textPrimary
             )
         )
         ExposedDropdownMenu(
@@ -478,8 +531,8 @@ fun IncomeSourceDropdown(
         ) {
             sourceOptions.forEach { (label, icon) ->
                 DropdownMenuItem(
-                    text = { Text(label, color = TextDark) },
-                    leadingIcon = { Icon(icon, contentDescription = null, tint = PrimaryPurple) },
+                    text = { Text(label, color = colors.textPrimary) },
+                    leadingIcon = { Icon(icon, contentDescription = null, tint = colors.primary) },
                     onClick = { onOptionSelected(label) }
                 )
             }

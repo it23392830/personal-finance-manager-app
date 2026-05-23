@@ -27,6 +27,7 @@ import com.example.financeflow.ui.theme.FinanceFlowTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseFormDialog(
+    isDarkTheme: Boolean = false,
     isEditMode: Boolean,
     amount: String,            onAmountChange: (String) -> Unit,
     description: String,       onDescriptionChange: (String) -> Unit,
@@ -41,6 +42,7 @@ fun ExpenseFormDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val colors = getExpensesColors(isDarkTheme)
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -50,7 +52,7 @@ fun ExpenseFormDialog(
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.9f),
             shape = RoundedCornerShape(24.dp),
-            color = Color.White
+            color = colors.CardBg
         ) {
             Column(
                 modifier = Modifier
@@ -61,7 +63,7 @@ fun ExpenseFormDialog(
                     text = if (isEditMode) "Edit Expense" else "Add New Expense",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ExpenseColors.TextPrimary
+                    color = colors.TextPrimary
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -78,20 +80,22 @@ fun ExpenseFormDialog(
                             label = "Essential",
                             emoji = "🛡️",
                             selected = expenseType == ExpenseType.ESSENTIAL,
-                            color = ExpenseColors.MustAmber,
-                            bgColor = ExpenseColors.MustBg,
-                            borderColor = ExpenseColors.MustBorder,
+                            color = colors.MustAmber,
+                            bgColor = colors.MustBg,
+                            borderColor = colors.MustBorder,
                             onClick = { onTypeChange(ExpenseType.ESSENTIAL) },
+                            isDarkTheme = isDarkTheme,
                             modifier = Modifier.weight(1f)
                         )
                         TypeToggleButton(
                             label = "Discretionary",
                             emoji = "🎯",
                             selected = expenseType == ExpenseType.DISCRETIONARY,
-                            color = ExpenseColors.Primary,
-                            bgColor = ExpenseColors.PrimaryLight,
-                            borderColor = ExpenseColors.PrimaryBorder,
+                            color = colors.Primary,
+                            bgColor = colors.PrimaryLight,
+                            borderColor = colors.PrimaryBorder,
                             onClick = { onTypeChange(ExpenseType.DISCRETIONARY) },
+                            isDarkTheme = isDarkTheme,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -113,16 +117,16 @@ fun ExpenseFormDialog(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(ExpenseColors.MustBg, RoundedCornerShape(12.dp))
-                                .border(1.dp, ExpenseColors.MustBorder, RoundedCornerShape(12.dp))
+                                .background(colors.MustBg, RoundedCornerShape(12.dp))
+                                .border(1.dp, colors.MustBorder, RoundedCornerShape(12.dp))
                                 .padding(12.dp)
                         ) {
-                            Text(
-                                text = "⚡ This expense delays your MacBook Pro goal by ~${"%.1f".format(goalImpactDays)} days",
-                                fontSize = 12.sp,
-                                color = ExpenseColors.MustText,
-                                fontWeight = FontWeight.Medium
-                            )
+                                    Text(
+                                        text = "⚡ This expense delays your MacBook Pro goal by ~${"%.1f".format(goalImpactDays)} days",
+                                        fontSize = 12.sp,
+                                        color = colors.MustText,
+                                        fontWeight = FontWeight.Medium
+                                    )
                         }
                     }
 
@@ -144,7 +148,7 @@ fun ExpenseFormDialog(
                         ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
-                            modifier = Modifier.background(Color.White)
+                            modifier = Modifier.background(colors.CardBg)
                         ) {
                             catTree.forEach { (parent, children) ->
                                 DropdownMenuItem(
@@ -173,7 +177,7 @@ fun ExpenseFormDialog(
                     )
 
                     // 6. Payment Method Grid
-                    Text("Payment Method", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = ExpenseColors.TextMuted)
+                    Text("Payment Method", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = colors.TextMuted)
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         val methods = PaymentMethod.values().toList()
                         methods.chunked(2).forEach { rowMethods ->
@@ -183,6 +187,7 @@ fun ExpenseFormDialog(
                                         method = method,
                                         selected = paymentMethod == method,
                                         onClick = { onPaymentChange(method) },
+                                        isDarkTheme = isDarkTheme,
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -197,11 +202,11 @@ fun ExpenseFormDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Date", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = ExpenseColors.TextMuted)
-                            Text(date, fontSize = 15.sp, color = ExpenseColors.TextPrimary)
+                            Text("Date", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = colors.TextMuted)
+                            Text(date, fontSize = 15.sp, color = colors.TextPrimary)
                         }
                         IconButton(onClick = { /* Date picker logic simplified */ }) {
-                            Icon(Icons.Default.CalendarMonth, contentDescription = "Pick Date", tint = ExpenseColors.Primary)
+                            Icon(Icons.Default.CalendarMonth, contentDescription = "Pick Date", tint = colors.Primary)
                         }
                     }
 
@@ -222,13 +227,13 @@ fun ExpenseFormDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Recurring Expense", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ExpenseColors.TextPrimary)
-                            Text("Automatically log this every month", fontSize = 11.sp, color = ExpenseColors.TextMuted)
+                            Text("Recurring Expense", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = colors.TextPrimary)
+                            Text("Automatically log this every month", fontSize = 11.sp, color = colors.TextMuted)
                         }
                         Switch(
                             checked = isRecurring,
                             onCheckedChange = onRecurringChange,
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = ExpenseColors.SuccessGreen)
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = colors.SuccessGreen)
                         )
                     }
                 }
@@ -244,13 +249,13 @@ fun ExpenseFormDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel", color = ExpenseColors.TextMuted)
+                        Text("Cancel", color = colors.TextMuted)
                     }
                     Button(
                         onClick = onConfirm,
                         modifier = Modifier.weight(1.5f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isEditMode) ExpenseColors.Primary else ExpenseColors.HeaderRed
+                            containerColor = if (isEditMode) colors.Primary else colors.HeaderRed
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -271,13 +276,16 @@ private fun TypeToggleButton(
     bgColor: Color,
     borderColor: Color,
     onClick: () -> Unit,
+    isDarkTheme: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(isDarkTheme)
+
     Surface(
         onClick = onClick,
-        color = if (selected) bgColor else Color.White,
+        color = if (selected) bgColor else colors.CardBg,
         shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, if (selected) borderColor else ExpenseColors.Border),
+        border = androidx.compose.foundation.BorderStroke(1.dp, if (selected) borderColor else colors.Border),
         modifier = modifier.height(44.dp)
     ) {
         Row(
@@ -286,7 +294,7 @@ private fun TypeToggleButton(
         ) {
             Text(emoji, fontSize = 16.sp)
             Spacer(Modifier.width(8.dp))
-            Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (selected) color else ExpenseColors.TextMuted)
+            Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (selected) color else colors.TextMuted)
         }
     }
 }
@@ -296,13 +304,16 @@ private fun PaymentMethodButton(
     method: PaymentMethod,
     selected: Boolean,
     onClick: () -> Unit,
+    isDarkTheme: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(isDarkTheme)
+
     Surface(
         onClick = onClick,
-        color = if (selected) ExpenseColors.PrimaryLight else Color.White,
+        color = if (selected) colors.PrimaryLight else colors.CardBg,
         shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, if (selected) ExpenseColors.PrimaryBorder else ExpenseColors.Border),
+        border = androidx.compose.foundation.BorderStroke(1.dp, if (selected) colors.PrimaryBorder else colors.Border),
         modifier = modifier.height(40.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
@@ -310,7 +321,7 @@ private fun PaymentMethodButton(
                 method.label,
                 fontSize = 12.sp,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                color = if (selected) ExpenseColors.PrimaryText else ExpenseColors.TextPrimary
+                color = if (selected) colors.PrimaryText else colors.TextPrimary
             )
         }
     }

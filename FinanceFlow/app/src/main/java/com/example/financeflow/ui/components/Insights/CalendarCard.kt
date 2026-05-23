@@ -93,17 +93,19 @@ val sampleMay2026Days: List<CalendarDay> = buildList {
  */
 @Composable
 fun CalendarCard(
+    isDarkTheme: Boolean = false,
     month: String = "May 2026",
     startDayOffset: Int = 5,
     days: List<CalendarDay> = sampleMay2026Days,
     selectedDay: Int? = null,
     onDaySelected: (CalendarDay) -> Unit = {}
 ) {
+    val colors = getInsightsColors(isDarkTheme)
     val weekHeaders = listOf("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT")
 
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = CardWhite,
+        color = colors.CardWhite,
         shadowElevation = 4.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -117,7 +119,7 @@ fun CalendarCard(
                 androidx.compose.material3.Icon(
                     imageVector = Icons.Default.CalendarMonth,
                     contentDescription = null,
-                    tint = PrimaryPurple,
+                    tint = colors.PrimaryPurple,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(Modifier.width(8.dp))
@@ -125,7 +127,7 @@ fun CalendarCard(
                     text = "Activity Calendar – $month",
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
-                    color = TextDark
+                    color = colors.TextDark
                 )
             }
 
@@ -142,7 +144,7 @@ fun CalendarCard(
                             text = header,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = TextMuted
+                            color = colors.TextMuted
                         )
                     }
                 }
@@ -179,7 +181,7 @@ fun CalendarCard(
                                         .background(day.activity.color())
                                         .then(
                                             if (isSelected)
-                                                Modifier.border(2.dp, PrimaryPurple, RoundedCornerShape(8.dp))
+                                                Modifier.border(2.dp, colors.PrimaryPurple, RoundedCornerShape(8.dp))
                                             else Modifier
                                         )
                                         .clickable { onDaySelected(day) }
@@ -189,7 +191,7 @@ fun CalendarCard(
                                         fontSize = 11.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                         color = if (day.activity == ActivityLevel.HIGH) Color.White
-                                        else TextDark
+                                        else colors.TextDark
                                     )
                                 }
                             } else {
@@ -225,7 +227,7 @@ fun CalendarCard(
                                 .clip(RoundedCornerShape(3.dp))
                                 .background(color)
                         )
-                        Text(text = label, fontSize = 10.sp, color = TextMuted)
+                        Text(text = label, fontSize = 10.sp, color = colors.TextMuted)
                     }
                 }
             }

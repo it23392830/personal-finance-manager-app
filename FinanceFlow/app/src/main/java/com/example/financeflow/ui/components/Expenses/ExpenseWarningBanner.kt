@@ -19,15 +19,17 @@ import com.example.financeflow.ui.theme.FinanceFlowTheme
 fun ExpenseWarningBanner(
     budgetUsedPct: Float,
     remaining: Int,
+    isDarkTheme: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(isDarkTheme)
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        color = ExpenseColors.AmberWarning,
+        color = colors.AmberWarning,
         shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, ExpenseColors.MustBorder)
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.MustBorder)
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -36,7 +38,7 @@ fun ExpenseWarningBanner(
             Icon(
                 Icons.Default.Warning,
                 contentDescription = null,
-                tint = ExpenseColors.MustAmber,
+                tint = colors.MustAmber,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(Modifier.width(12.dp))
@@ -45,12 +47,12 @@ fun ExpenseWarningBanner(
                     "Budget Alert: ${budgetUsedPct.toInt()}% used",
                     fontSize = 13.sp,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = ExpenseColors.MustText
+                    color = colors.MustText
                 )
                 Text(
                     "You have ${fmtLKR(remaining)} left for this month.",
                     fontSize = 11.sp,
-                    color = ExpenseColors.MustText.copy(alpha = 0.8f)
+                    color = colors.MustText.copy(alpha = 0.8f)
                 )
             }
         }

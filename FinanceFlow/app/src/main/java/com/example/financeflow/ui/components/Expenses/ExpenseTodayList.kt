@@ -17,6 +17,7 @@ import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseTodayList(
+    isDarkTheme: Boolean = false,
     todayExpenses: List<ExpenseUiItem>,
     openMenuId: Int?,
     onMenuToggle: (Int) -> Unit,
@@ -24,10 +25,12 @@ fun ExpenseTodayList(
     onDelete: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(isDarkTheme)
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = ExpenseColors.CardBg),
+        colors = CardDefaults.cardColors(containerColor = colors.CardBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -39,17 +42,17 @@ fun ExpenseTodayList(
                     "Today",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ExpenseColors.TextPrimary
+                    color = colors.TextPrimary
                 )
                 Surface(
-                    color = ExpenseColors.SurfaceGrey,
+                    color = colors.SurfaceGrey,
                     shape = RoundedCornerShape(99.dp)
                 ) {
                     Text(
                         text = todayExpenses.size.toString(),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = ExpenseColors.TextMuted,
+                        color = colors.TextMuted,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
@@ -67,7 +70,7 @@ fun ExpenseTodayList(
                     Text(
                         "No expenses today. Tap a category to add one.",
                         fontSize = 13.sp,
-                        color = ExpenseColors.TextMuted
+                        color = colors.TextMuted
                     )
                 }
             } else {
@@ -78,7 +81,8 @@ fun ExpenseTodayList(
                             isMenuOpen = openMenuId == exp.id,
                             onMenuToggle = { onMenuToggle(exp.id) },
                             onEdit = { onEdit(exp) },
-                            onDelete = { onDelete(exp.id) }
+                            onDelete = { onDelete(exp.id) },
+                            colors = colors
                         )
                     }
                 }

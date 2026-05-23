@@ -153,14 +153,14 @@ fun GoalInfoCard(
             Text(
                 text = "Goal",
                 fontSize = 12.sp,
-                color = Color.Gray
+                color = colors2.muted
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = goalName,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFF1A1A1A)
+                color = colors2.textPrimary
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -169,7 +169,8 @@ fun GoalInfoCard(
             GoalAmountRow(
                 label  = "Current Amount",
                 value  = currentAmount,
-                valueColor = colors2.textPrimary
+                valueColor = colors2.textPrimary,
+                isDarkTheme = isDarkTheme
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -178,7 +179,8 @@ fun GoalInfoCard(
             GoalAmountRow(
                 label  = "Amount Saved",
                 value  = savedAmount,
-                valueColor = colors2.success
+                valueColor = colors2.success,
+                isDarkTheme = isDarkTheme
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -212,13 +214,15 @@ fun GoalInfoCard(
 private fun GoalAmountRow(
     label: String,
     value: String,
-    valueColor: Color
+    valueColor: Color,
+    isDarkTheme: Boolean = false
 ) {
+    val colors = getSavingsColors(isDarkTheme)
     Column {
         Text(
             text     = label,
             fontSize = 12.sp,
-            color    = Color.Gray
+            color    = colors.muted
         )
         Spacer(modifier = Modifier.height(3.dp))
         Text(

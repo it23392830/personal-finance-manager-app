@@ -154,7 +154,7 @@ fun SavingsByGoalCard(
                 Text(text = "No goals yet. Add one to get started!", fontSize = 13.sp, color = colors.muted, modifier = Modifier.padding(vertical = 8.dp))
             } else {
                 goals.forEachIndexed { index, goal ->
-                    GoalProgressItem(goal = goal, onEditClick = { onEditClick(goal) }, onDeleteClick = { onDeleteClick(goal) })
+                    GoalProgressItem(isDarkTheme = isDarkTheme, goal = goal, onEditClick = { onEditClick(goal) }, onDeleteClick = { onDeleteClick(goal) })
                     if (index < goals.lastIndex) {
                         Divider(modifier = Modifier.padding(vertical = 14.dp), color = colors.progressTrack)
                     }

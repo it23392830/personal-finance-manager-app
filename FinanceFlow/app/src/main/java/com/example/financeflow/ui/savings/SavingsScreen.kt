@@ -121,12 +121,13 @@ fun SavingsScreen(
         }
 
         item {
-            SavingsInsightsCard()
+            SavingsInsightsCard(isDarkTheme = isDarkTheme)
         }
     }
 
     editingGoal?.let { goal ->
         EditGoalAllocationScreen(
+            isDarkTheme = isDarkTheme,
             goalName = goal.name,
             allocatedAmount = goal.savedAmount,
             targetAmount = goal.targetAmount,
@@ -138,12 +139,14 @@ fun SavingsScreen(
 
     if (showEditSavingsPopup) {
         EditSavingsRecordScreen(
+            isDarkTheme = isDarkTheme,
             onDismiss = { showEditSavingsPopup = false }
         )
     }
 
     if (showDeleteDialog) {
         DeleteConfirmationDialog(
+            isDarkTheme = isDarkTheme,
             onDelete = {
                 selectedGoal?.let { goals.remove(it) }
                 selectedHistory?.let { history.remove(it) }

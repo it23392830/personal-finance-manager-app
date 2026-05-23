@@ -25,12 +25,13 @@ fun ExpenseHeader(
     selectedMonth: String,
     onMonthChange: (String) -> Unit,
     onAddClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    colors: ExpensesColors = getExpensesColors(false)
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(ExpenseColors.HeaderRed)
+            .background(colors.HeaderRed)
             .padding(top = 24.dp, bottom = 24.dp, start = 16.dp, end = 16.dp)
     ) {
         Row(
@@ -56,7 +57,7 @@ fun ExpenseHeader(
                     Icon(
                         imageVector = Icons.Outlined.LightMode,
                         contentDescription = "Theme",
-                        tint = Color.White,
+                            tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -64,7 +65,7 @@ fun ExpenseHeader(
                     Icon(
                         imageVector = Icons.Outlined.Person,
                         contentDescription = "Profile",
-                        tint = Color.White,
+                            tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -79,7 +80,7 @@ fun ExpenseHeader(
                 .fillMaxWidth()
                 .height(44.dp)
                 .clip(RoundedCornerShape(12.dp)),
-            color = Color.White
+            color = colors.CardBg
         ) {
             Row(
                 modifier = Modifier
@@ -90,14 +91,14 @@ fun ExpenseHeader(
             ) {
                 Text(
                     text = "May 2026",
-                    color = Color(0xFF1F2937),
+                    color = colors.TextPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = null,
-                    tint = Color(0xFF6B7280)
+                    tint = colors.TextMuted
                 )
             }
         }

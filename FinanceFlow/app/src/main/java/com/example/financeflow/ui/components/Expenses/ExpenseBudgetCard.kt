@@ -24,12 +24,13 @@ fun ExpenseBudgetCard(
     remaining: Int,
     todayTotal: Int,
     essentialTotal: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    colors: ExpensesColors = getExpensesColors(false)
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF1F2))
+        colors = CardDefaults.cardColors(containerColor = colors.ExpenseBg)
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -42,14 +43,14 @@ fun ExpenseBudgetCard(
                 Icon(
                     Icons.Outlined.AccountBalanceWallet,
                     contentDescription = null,
-                    tint = Color.Black,
+                    tint = colors.TextPrimary,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     "Optional Budget Remaining",
                     fontSize = 14.sp,
-                    color = Color.Black,
+                    color = colors.TextPrimary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -60,7 +61,7 @@ fun ExpenseBudgetCard(
                 text = fmtLKR(remaining),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFFE11D48)
+                color = colors.ExpenseRed
             )
 
             Spacer(Modifier.height(24.dp))
@@ -88,19 +89,20 @@ fun ExpenseBudgetCard(
 private fun BudgetStatBox(
     label: String,
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    colors: ExpensesColors = getExpensesColors(false)
 ) {
     Box(
         modifier = modifier
             .shadow(2.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
+            .background(colors.CardBg)
             .padding(vertical = 12.dp, horizontal = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(label, fontSize = 10.sp, color = Color.Black, fontWeight = FontWeight.Medium)
-            Text(value, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+            Text(label, fontSize = 10.sp, color = colors.TextPrimary, fontWeight = FontWeight.Medium)
+            Text(value, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = colors.TextPrimary)
         }
     }
 }

@@ -375,44 +375,47 @@ private fun DailySavingsPanel(
 }
 
 @Composable
-fun SavingsByGoalCard(
+fun GoalProgressListCard(
+    isDarkTheme: Boolean = false,
     goals: List<SavingGoal> = defaultGoals,
     onEditClick: (SavingGoal) -> Unit = {},
     onDeleteClick: (SavingGoal) -> Unit = {}
 ) {
+    val colors = getGoalProgressCardColors(isDarkTheme)
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp)),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite)
+        colors = CardDefaults.cardColors(containerColor = colors.cardBg)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Savings by Goal",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.DarkGray
+                color = colors.textPrimary
             )
             Spacer(modifier = Modifier.height(16.dp))
             if (goals.isEmpty()) {
                 Text(
                     text = "No goals yet. Add one to get started!",
                     fontSize = 13.sp,
-                    color = Color.Gray,
+                    color = colors.textSecondary,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             } else {
                 goals.forEachIndexed { index, goal ->
                     GoalProgressItem(
                         goal = goal,
+                        isDarkTheme = isDarkTheme,
                         onEditClick = { onEditClick(goal) },
                         onDeleteClick = { onDeleteClick(goal) }
                     )
                     if (index < goals.lastIndex) {
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 14.dp),
-                            color = Color(0xFFF0F0F0),
+                            color = colors.progressTrack,
                             thickness = 1.dp
                         )
                     }
@@ -425,10 +428,12 @@ fun SavingsByGoalCard(
 @Composable
 fun GoalProgressItem(
     goal: SavingGoal,
+    isDarkTheme: Boolean = false,
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {}
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
+    val colors = getGoalProgressCardColors(isDarkTheme)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -440,14 +445,14 @@ fun GoalProgressItem(
                 text = goal.name,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.DarkGray,
+                color = colors.textPrimary,
                 modifier = Modifier.weight(1f)
             )
             Text(
                 text = goal.savedAmount,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.DarkGray
+                color = colors.textPrimary
             )
             Spacer(modifier = Modifier.width(4.dp))
             Box {
@@ -458,12 +463,13 @@ fun GoalProgressItem(
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "More options",
-                        tint = Color.Gray,
+                        tint = colors.textSecondary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
 
                 ActionMenuCard(
+                    isDarkTheme = isDarkTheme,
                     expanded = menuExpanded,
                     onDismiss = { menuExpanded = false },
                     onEditClick = {
@@ -484,7 +490,7 @@ fun GoalProgressItem(
                 .fillMaxWidth()
                 .height(8.dp),
             color = OrangeAccent,
-            trackColor = Color(0xFFF0E6D0),
+            trackColor = colors.progressTrack,
             strokeCap = StrokeCap.Round
         )
         Spacer(modifier = Modifier.height(6.dp))
@@ -495,12 +501,12 @@ fun GoalProgressItem(
             Text(
                 text = goal.progressLabel,
                 fontSize = 11.sp,
-                color = Color.Gray
+                color = colors.textSecondary
             )
             Text(
                 text = goal.targetAmount,
                 fontSize = 11.sp,
-                color = Color.Gray
+                color = colors.textSecondary
             )
         }
     }
@@ -518,10 +524,10 @@ private fun GoalProgressCardPreview() {
 
 @Preview(showBackground = true, backgroundColor = 0xFFEDE2FF)
 @Composable
-fun PreviewSavingsByGoalCard() {
+fun PreviewGoalProgressListCard() {
     MaterialTheme {
         Box(modifier = Modifier.padding(16.dp)) {
-            SavingsByGoalCard()
+            GoalProgressListCard()
         }
     }
 }

@@ -128,6 +128,7 @@ fun HistoryItem(
                 }
 
                 ActionMenuCard(
+                    isDarkTheme = isDarkTheme,
                     expanded = expanded,
                     onDismiss = { expanded = false },
                     onEditClick = {

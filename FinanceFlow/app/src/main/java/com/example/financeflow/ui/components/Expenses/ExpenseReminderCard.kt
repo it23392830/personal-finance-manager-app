@@ -16,20 +16,21 @@ import androidx.compose.ui.unit.dp
 import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
-fun ExpenseReminderCard(modifier: Modifier = Modifier) {
+fun ExpenseReminderCard(isDarkTheme: Boolean = false, modifier: Modifier = Modifier) {
+    val colors = getExpensesColors(isDarkTheme)
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(64.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFFFAE8FF)) // Light purple
+            .background(if (isDarkTheme) colors.PurpleBg else Color(0xFFFAE8FF))
             .padding(horizontal = 24.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         Icon(
             imageVector = Icons.Outlined.Schedule,
             contentDescription = "Reminder",
-            tint = Color.Black,
+            tint = colors.TextPrimary,
             modifier = Modifier.size(28.dp)
         )
     }

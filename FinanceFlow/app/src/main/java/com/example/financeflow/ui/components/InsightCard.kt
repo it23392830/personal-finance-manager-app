@@ -18,23 +18,24 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.financeflow.ui.theme.CardWhite
+import com.example.financeflow.ui.components.savings.getSavingsColors
 
 @Composable
-fun SavingsInsightsCard() {
+fun SavingsInsightsCard(isDarkTheme: Boolean = false) {
+    val colors = getSavingsColors(isDarkTheme)
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp)),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite)
+        colors = CardDefaults.cardColors(containerColor = colors.cardBg)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Savings Insights",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.DarkGray
+                color = colors.textPrimary
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -42,8 +43,9 @@ fun SavingsInsightsCard() {
             InsightRow(
                 icon = Icons.Outlined.Lightbulb,
                 iconTint = Color(0xFFFFB100),
-                iconBg = Color(0xFFFFF8E1),
-                text = "You've saved 15% more than last month! Keep it up."
+                iconBg = if (isDarkTheme) Color(0xFF3F3210) else Color(0xFFFFF8E1),
+                text = "You've saved 15% more than last month! Keep it up.",
+                isDarkTheme = isDarkTheme
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -51,8 +53,9 @@ fun SavingsInsightsCard() {
             InsightRow(
                 icon = Icons.Outlined.TrendingUp,
                 iconTint = Color(0xFF4CAF50),
-                iconBg = Color(0xFFE8F5E9),
-                text = "Based on your current rate, you'll reach your 'MacBook' goal in 4 months."
+                iconBg = if (isDarkTheme) Color(0xFF173524) else Color(0xFFE8F5E9),
+                text = "Based on your current rate, you'll reach your 'MacBook' goal in 4 months.",
+                isDarkTheme = isDarkTheme
             )
         }
     }
@@ -63,8 +66,10 @@ private fun InsightRow(
     icon: ImageVector,
     iconTint: Color,
     iconBg: Color,
-    text: String
+    text: String,
+    isDarkTheme: Boolean = false
 ) {
+    val colors = getSavingsColors(isDarkTheme)
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -87,7 +92,7 @@ private fun InsightRow(
         Text(
             text = text,
             fontSize = 13.sp,
-            color = Color.Gray,
+            color = colors.textSecondary,
             lineHeight = 18.sp
         )
     }
