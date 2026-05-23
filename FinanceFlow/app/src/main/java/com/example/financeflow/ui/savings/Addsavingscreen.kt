@@ -25,6 +25,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.*
 
 
 // Color tokens
@@ -57,6 +58,15 @@ private val goalOptions = listOf(
     "Other"
 )
 
+// Sample Income data for filtering
+private val rawIncomeData = listOf(
+    "Salary (Job)" to "2026-05-01",
+    "Freelance (Web Project)" to "2026-05-15",
+    "Side Hustle (Sales)" to "2026-05-20",
+    "Dividends (JKH)" to "2026-05-25",   // Future - should be filtered out
+    "Bonus (April)" to "2026-04-28"     // Previous month - should be filtered out
+)
+
 
 // AddSavingScreen
 //
@@ -75,12 +85,25 @@ fun AddSavingScreen(
     var amount          by remember { mutableStateOf("") }
     var selectedCurrency by remember { mutableStateOf(currencyOptions[0]) }
     var selectedGoal    by remember { mutableStateOf("") }
+    var selectedIncome  by remember { mutableStateOf("") }
     var description     by remember { mutableStateOf("") }
     var selectedDate    by remember { mutableStateOf("05/05/2026") }
 
     // ── Dropdown expanded state ─────────────────────────────────────────────
     var currencyExpanded by remember { mutableStateOf(false) }
     var goalExpanded     by remember { mutableStateOf(false) }
+    var incomeExpanded   by remember { mutableStateOf(false) }
+
+    // ── Filtering Logic ───────────────────────────────────────────────────
+    // Using May 21, 2026 as "Today" to match project constants
+    val todayStr = "2026-05-21"
+    val currentMonth = "2026-05"
+
+    val incomeOptions = remember {
+        rawIncomeData
+            .filter { (_, date) -> date.startsWith(currentMonth) && date <= todayStr }
+            .map { it.first }
+    }
 
     Column(
         modifier = Modifier
@@ -147,14 +170,30 @@ fun AddSavingScreen(
                     isPlaceholder = selectedGoal.isEmpty()
                 )
 
-                // ── Field 4: Description ────────────────────────────────────
+                // ── Field 4: Income Source ──────────────────────────────────
+                FormFieldLabel(text = "Income Source")
+                DropdownField(
+                    value        = selectedIncome.ifEmpty { "Select Income" },
+                    expanded     = incomeExpanded,
+                    options      = incomeOptions,
+                    onExpand     = { incomeExpanded = true },
+                    onDismiss    = { incomeExpanded = false },
+                    onSelect     = {
+                        selectedIncome = it
+                        incomeExpanded = false
+                    },
+                    leadingIcon  = Icons.Default.Payments,
+                    isPlaceholder = selectedIncome.isEmpty()
+                )
+
+                // ── Field 5: Description ────────────────────────────────────
                 FormFieldLabel(text = "Description (Optional)")
                 DescriptionField(
                     value    = description,
                     onChange = { description = it }
                 )
 
-                // ── Field 5: Date ───────────────────────────────────────────
+                // ── Field 6: Date ───────────────────────────────────────────
                 FormFieldLabel(text = "Date")
                 DateField(
                     value    = selectedDate,
