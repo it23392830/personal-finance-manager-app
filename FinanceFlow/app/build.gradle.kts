@@ -9,10 +9,7 @@ plugins {
     id("com.google.gms.google-services")
 
     id("com.google.dagger.hilt.android")
-
     id("com.google.devtools.ksp")
-
-    kotlin("kapt")
 }
 
 android {
@@ -62,17 +59,19 @@ android {
     }
 
     buildFeatures {
-
         compose = true
     }
 }
 
-kapt {
-    correctErrorTypes = true
-}
-
 kotlin {
     jvmToolchain(17)
+}
+
+// Workaround: force Kotlin language/api version to 1.9 to avoid KAPT issues with Kotlin 2.0
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
@@ -127,9 +126,6 @@ dependencies {
         "androidx.lifecycle:lifecycle-runtime-compose:2.8.3"
     )
 
-    // WorkManager
-    implementation("androidx.work:work-runtime-ktx:2.9.1")
-
     // Firebase BOM
     implementation(
         platform(
@@ -151,19 +147,14 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx")
 
     // Hilt
-    implementation(
-        "com.google.dagger:hilt-android:2.51.1"
-    )
+    implementation("com.google.dagger:hilt-android:2.52")
+    ksp("com.google.dagger:hilt-android-compiler:2.52")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
-    kapt(
-        "com.google.dagger:hilt-android-compiler:2.51.1"
-    )
-
-    implementation(
-        "androidx.hilt:hilt-navigation-compose:1.2.0"
-    )
-
+    // WorkManager + Hilt integration
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.hilt:hilt-work:1.2.0")
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
 
     // Coroutines
     implementation(
@@ -209,5 +200,5 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.airbnb.android:lottie-compose:6.4.0")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
-    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

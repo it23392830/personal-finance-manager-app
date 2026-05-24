@@ -548,7 +548,6 @@ fun ExpensesScreen(
         if (showPastDialog) {
             val dateOptions = state.currentMonthTransactions.map { it.date }.distinct().sortedDescending()
             var selectedPastDate by remember { mutableStateOf(dateOptions.firstOrNull() ?: "") }
-
             Dialog(
                 onDismissRequest = { showPastDialog = false },
                 properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -595,7 +594,6 @@ fun ExpensesScreen(
                                     color = colors.TextMuted,
                                     modifier = Modifier.padding(bottom = 8.dp)
                                 )
-
                                 var expanded by remember { mutableStateOf(false) }
                                 ExposedDropdownMenuBox(
                                     expanded = expanded,

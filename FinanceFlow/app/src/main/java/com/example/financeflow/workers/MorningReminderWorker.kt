@@ -29,8 +29,8 @@ class MorningReminderWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         if (auth.currentUser == null) return Result.success()
 
-        val title = "Good Morning \uD83C\uDF1E"
-        val message = "Don't forget to add today's income and expenses."
+        val title = "Expense Streak Reminder"
+        val message = "Don't forget to log your expenses today 🔥"
         val notification = FinanceNotification(
             id = UUID.randomUUID().toString(),
             title = title,

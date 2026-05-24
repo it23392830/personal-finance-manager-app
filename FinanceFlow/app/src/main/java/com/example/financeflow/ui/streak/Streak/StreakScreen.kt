@@ -11,14 +11,13 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.financeflow.presentation.viewmodel.StreakViewModel
 import com.example.financeflow.ui.components.streak.CurrentStreakCard
 import com.example.financeflow.ui.components.streak.EncouragementCard
 import com.example.financeflow.ui.components.streak.FreezeStatusCard
@@ -27,6 +26,10 @@ import com.example.financeflow.ui.components.streak.StreakCalendarDay
 import com.example.financeflow.ui.components.streak.StreakDayState
 import com.example.financeflow.ui.components.streak.StreakTopBar
 import com.example.financeflow.ui.components.streak.StreakWidget
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.TextStyle
+import java.util.Locale
 
 enum class StreakVisualState {
     Active,
@@ -46,20 +49,31 @@ private data class StreakMonthData(
 )
 
 private fun buildMonthDays(
-    daysInMonth: Int,
-    leadingEmptyDays: Int,
-    statesByDay: Map<Int, StreakDayState>
+    month: YearMonth,
+    completedDates: Set<LocalDate>,
+    freezeDates: Set<LocalDate>,
+    today: LocalDate
 ): List<StreakCalendarDay> {
     val cells = mutableListOf<StreakCalendarDay>()
+    val leadingEmptyDays = month.atDay(1).dayOfWeek.value % 7
 
     repeat(leadingEmptyDays) {
         cells += StreakCalendarDay("", StreakDayState.Empty)
     }
 
-    (1..daysInMonth).forEach { day ->
+    (1..month.lengthOfMonth()).forEach { day ->
+        val date = month.atDay(day)
+        val state = when {
+            date in freezeDates -> StreakDayState.Freeze
+            date == today -> StreakDayState.Current
+            date in completedDates -> StreakDayState.Completed
+            date.isAfter(today) -> StreakDayState.Future
+            else -> StreakDayState.Missed
+        }
+
         cells += StreakCalendarDay(
             label = day.toString(),
-            state = statesByDay[day] ?: StreakDayState.Missed
+            state = state
         )
     }
 
@@ -71,108 +85,38 @@ private fun buildMonthDays(
 }
 
 @Composable
-fun StreakScreen(isDarkTheme: Boolean = false) {
-    val visualState = StreakVisualState.Active
-    val streakCount = if (visualState == StreakVisualState.Zero) 0 else 7
+fun StreakScreen(
+    isDarkTheme: Boolean = false,
+    viewModel: StreakViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val calendarState by viewModel.calendarState.collectAsState()
+    val visualState = when {
+        uiState.freeze -> StreakVisualState.Frozen
+        uiState.currentStreak == 0 -> StreakVisualState.Zero
+        else -> StreakVisualState.Active
+    }
     val backgroundColor = if (isDarkTheme) Color(0xFF111827) else Color(0xFFFFFBF8)
+    val today = LocalDate.now()
 
-    val streakMonths = remember {
-        listOf(
-            StreakMonthData(
-                monthLabel = "January 2026",
-                days = buildMonthDays(
-                    daysInMonth = 31,
-                    leadingEmptyDays = 4,
-                    statesByDay = buildMap {
-                        put(3, StreakDayState.Completed)
-                        put(4, StreakDayState.Completed)
-                        put(5, StreakDayState.Completed)
-                        put(8, StreakDayState.Freeze)
-                        put(11, StreakDayState.Completed)
-                        put(12, StreakDayState.Completed)
-                        put(18, StreakDayState.Completed)
-                        put(19, StreakDayState.Completed)
-                        put(24, StreakDayState.Completed)
-                        put(25, StreakDayState.Completed)
-                    }
-                )
-            ),
-            StreakMonthData(
-                monthLabel = "February 2026",
-                days = buildMonthDays(
-                    daysInMonth = 28,
-                    leadingEmptyDays = 0,
-                    statesByDay = buildMap {
-                        (1..6).forEach { put(it, StreakDayState.Completed) }
-                        put(7, StreakDayState.Freeze)
-                        (8..13).forEach { put(it, StreakDayState.Completed) }
-                        put(15, StreakDayState.Completed)
-                        put(20, StreakDayState.Completed)
-                        put(21, StreakDayState.Completed)
-                        put(22, StreakDayState.Completed)
-                    }
-                )
-            ),
-            StreakMonthData(
-                monthLabel = "March 2026",
-                days = buildMonthDays(
-                    daysInMonth = 31,
-                    leadingEmptyDays = 0,
-                    statesByDay = buildMap {
-                        (2..8).forEach { put(it, StreakDayState.Completed) }
-                        put(9, StreakDayState.Freeze)
-                        (10..14).forEach { put(it, StreakDayState.Completed) }
-                        put(20, StreakDayState.Completed)
-                        put(21, StreakDayState.Completed)
-                        put(29, StreakDayState.Completed)
-                    }
-                )
-            ),
-            StreakMonthData(
-                monthLabel = "April 2026",
-                days = buildMonthDays(
-                    daysInMonth = 30,
-                    leadingEmptyDays = 3,
-                    statesByDay = buildMap {
-                        (1..5).forEach { put(it, StreakDayState.Completed) }
-                        put(6, StreakDayState.Freeze)
-                        (10..14).forEach { put(it, StreakDayState.Completed) }
-                        put(19, StreakDayState.Completed)
-                        put(20, StreakDayState.Completed)
-                        put(27, StreakDayState.Completed)
-                        put(28, StreakDayState.Completed)
-                    }
-                )
-            ),
-            StreakMonthData(
-                monthLabel = "May 2026",
-                days = buildMonthDays(
-                    daysInMonth = 31,
-                    leadingEmptyDays = 5,
-                    statesByDay = buildMap {
-                        (2..8).forEach { put(it, StreakDayState.Completed) }
-                        put(9, StreakDayState.Freeze)
-                        (10..13).forEach { put(it, StreakDayState.Completed) }
-                        (14..15).forEach { put(it, StreakDayState.Missed) }
-                        (16..23).forEach { put(it, StreakDayState.Completed) }
-                        put(24, StreakDayState.Current)
-                        (25..31).forEach { put(it, StreakDayState.Future) }
-                    }
-                )
-            )
+    val selectedMonth = calendarState.visibleMonths
+        .getOrElse(calendarState.selectedMonthIndex) { YearMonth.now() }
+        .toMonthData(
+            completedDates = calendarState.completedDates,
+            freezeDates = calendarState.freezeDates,
+            today = today
         )
-    }
-    var selectedMonthIndex by remember { mutableIntStateOf(streakMonths.lastIndex) }
-    val selectedMonth = streakMonths[selectedMonthIndex]
 
-    val widgets = remember {
-        listOf(
-            StreakWidgetData("🔥", "Current Streak", "7 Days"),
-            StreakWidgetData("❄", "Freeze Available", "1 Remaining"),
-            StreakWidgetData("📅", "Best Streak", "20 Days"),
-            StreakWidgetData("⭐", "Consistency", "85%")
-        )
-    }
+    val widgets = listOf(
+        StreakWidgetData("🔥", "Current Streak", "${uiState.currentStreak} Days"),
+        StreakWidgetData(
+            "❄",
+            if (uiState.freeze) "Freeze Mode" else "Missed Days",
+            if (uiState.freeze) "Frozen" else uiState.missedDays.toString()
+        ),
+        StreakWidgetData("⭐", "Best Streak", "${uiState.bestStreak} Days"),
+        StreakWidgetData("📅", "Status", uiState.status.ifBlank { "BROKEN" })
+    )
 
     LazyColumn(
         modifier = Modifier
@@ -183,7 +127,7 @@ fun StreakScreen(isDarkTheme: Boolean = false) {
     ) {
         item {
             StreakTopBar(
-                streakCount = streakCount,
+                streakCount = uiState.currentStreak,
                 visualState = visualState,
                 isDarkTheme = isDarkTheme
             )
@@ -191,7 +135,7 @@ fun StreakScreen(isDarkTheme: Boolean = false) {
 
         item {
             CurrentStreakCard(
-                streakCount = streakCount,
+                streakCount = uiState.currentStreak,
                 visualState = visualState,
                 isDarkTheme = isDarkTheme
             )
@@ -209,18 +153,10 @@ fun StreakScreen(isDarkTheme: Boolean = false) {
                 monthLabel = selectedMonth.monthLabel,
                 days = selectedMonth.days,
                 isDarkTheme = isDarkTheme,
-                canNavigatePrevious = selectedMonthIndex > 0,
-                canNavigateNext = selectedMonthIndex < streakMonths.lastIndex,
-                onPreviousMonth = {
-                    if (selectedMonthIndex > 0) {
-                        selectedMonthIndex -= 1
-                    }
-                },
-                onNextMonth = {
-                    if (selectedMonthIndex < streakMonths.lastIndex) {
-                        selectedMonthIndex += 1
-                    }
-                }
+                canNavigatePrevious = calendarState.selectedMonthIndex > 0,
+                canNavigateNext = calendarState.selectedMonthIndex < calendarState.visibleMonths.lastIndex,
+                onPreviousMonth = viewModel::selectPreviousMonth,
+                onNextMonth = viewModel::selectNextMonth
             )
         }
 
@@ -253,10 +189,19 @@ fun StreakScreen(isDarkTheme: Boolean = false) {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun StreakScreenPreview() {
-    MaterialTheme {
-        StreakScreen()
-    }
+private fun YearMonth.toMonthData(
+    completedDates: Set<LocalDate>,
+    freezeDates: Set<LocalDate>,
+    today: LocalDate
+): StreakMonthData {
+    val monthLabel = "${month.getDisplayName(TextStyle.FULL, Locale.getDefault())} $year"
+    return StreakMonthData(
+        monthLabel = monthLabel,
+        days = buildMonthDays(
+            month = this,
+            completedDates = completedDates,
+            freezeDates = freezeDates,
+            today = today
+        )
+    )
 }

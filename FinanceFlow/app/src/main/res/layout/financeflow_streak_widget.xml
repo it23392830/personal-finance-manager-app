@@ -21,6 +21,7 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/widget_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/streak_widget_title"
@@ -29,6 +30,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/widget_motivation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
@@ -45,16 +47,18 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/widget_hero_icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🔥"
                 android:textSize="28sp" />
 
             <TextView
+                android:id="@+id/widget_hero_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="ON FIRE"
+                android:text="ACTIVE"
                 android:textColor="#FFFFFF"
                 android:textSize="9sp"
                 android:textStyle="bold" />
@@ -97,31 +101,16 @@
                 android:orientation="vertical"
                 android:padding="12dp">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:background="@drawable/widget_streak_fire_dot"
-                        android:gravity="center"
-                        android:text="🔥"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="@string/streak_widget_current_label"
-                        android:textColor="#7C3AED"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+                    android:text="@string/streak_widget_current_label"
+                    android:textColor="#7C3AED"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/widget_current_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -140,31 +129,16 @@
                 android:orientation="vertical"
                 android:padding="12dp">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:background="@drawable/widget_streak_freeze_dot"
-                        android:gravity="center"
-                        android:text="❄"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="@string/streak_widget_freeze_label"
-                        android:textColor="#2563EB"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+                    android:text="@string/streak_widget_freeze_label"
+                    android:textColor="#2563EB"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/widget_freeze_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -199,6 +173,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/widget_best_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
@@ -220,16 +195,17 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/streak_widget_consistency_label"
+                    android:text="@string/streak_widget_status_label"
                     android:textColor="#EA580C"
                     android:textSize="11sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/widget_status_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="@string/streak_widget_consistency_value"
+                    android:text="@string/streak_widget_status_value"
                     android:textColor="#1D1B2D"
                     android:textSize="17sp"
                     android:textStyle="bold" />

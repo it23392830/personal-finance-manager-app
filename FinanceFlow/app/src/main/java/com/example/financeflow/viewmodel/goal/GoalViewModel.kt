@@ -69,89 +69,7 @@ class GoalViewModel @Inject constructor(
         return Timestamp(calendar.time)
     }
 
-    // ─── Mock Data Exactly Matching Mockup Image ───────────────────────────
-    
-    private val mockGoals = listOf(
-        Goal(
-            id = "1",
-            title = "MacBook Pro M4",
-            description = "Latest MacBook Pro for development work",
-            category = "Technology",
-            targetAmount = 490000.0,
-            currentSavedAmount = 196400.0,
-            deadlineDate = getMockTimestamp(267),
-            createdAt = getMockTimestamp(-100),
-            unlockedBadges = listOf("BADGE_STARTED", "BADGE_25"),
-            icon = "💻",
-            color = "Purple"
-        ),
-        Goal(
-            id = "2",
-            title = "Emergency Fund",
-            description = "6 months of expenses as safety net",
-            category = "Security",
-            targetAmount = 300000.0,
-            currentSavedAmount = 85000.0,
-            deadlineDate = getMockTimestamp(369),
-            createdAt = getMockTimestamp(-150),
-            unlockedBadges = listOf("BADGE_STARTED", "BADGE_25"),
-            icon = "🛡️",
-            color = "Blue"
-        ),
-        Goal(
-            id = "3",
-            title = "Maldives Trip",
-            category = "Lifestyle",
-            targetAmount = 546000.0,
-            currentSavedAmount = 72618.0,
-            deadlineDate = getMockTimestamp(206),
-            createdAt = getMockTimestamp(-50),
-            unlockedBadges = listOf("BADGE_STARTED"),
-            icon = "✈️",
-            color = "Green"
-        )
-    )
-
-    private val mockAllocations = mapOf(
-        "1" to listOf(
-            GoalAllocation(
-                id = "a1",
-                goalId = "1",
-                amount = 53200.0,
-                monthlyTarget = 50000.0,
-                monthYear = "oct 2023",
-                note = "Tag:Freelance",
-                allocatedAt = getMockTimestamp(-30)
-            ),
-            GoalAllocation(
-                id = "a2",
-                goalId = "1",
-                amount = 48160.0,
-                monthlyTarget = 50000.0,
-                monthYear = "sep 2023",
-                note = "Tag:Salary",
-                allocatedAt = getMockTimestamp(-60)
-            ),
-            GoalAllocation(
-                id = "a3",
-                goalId = "1",
-                amount = 51500.0,
-                monthlyTarget = 50000.0,
-                monthYear = "apr 2025",
-                note = "Tag:Business",
-                allocatedAt = getMockTimestamp(-90)
-            ),
-            GoalAllocation(
-                id = "a4",
-                goalId = "1",
-                amount = 43200.0,
-                monthlyTarget = 50000.0,
-                monthYear = "apr 2025",
-                note = "Tag:Investment",
-                allocatedAt = getMockTimestamp(-120)
-            )
-        )
-    )
+    // No hardcoded demo data — real data comes from repository (Room + Firestore)
 
     private val _goalListState = MutableStateFlow(GoalListState())
     val goalListState: StateFlow<GoalListState> = _goalListState.asStateFlow()
@@ -163,7 +81,7 @@ class GoalViewModel @Inject constructor(
         viewModelScope.launch {
             repository.observeGoals().collect { result ->
                 val goals = result.getOrNull() ?: emptyList()
-                _goalListState.update { it.copy(goals = goals.ifEmpty { mockGoals }, isLoading = false, error = null) }
+                _goalListState.update { it.copy(goals = goals, isLoading = false, error = null) }
             }
         }
     }
@@ -173,40 +91,34 @@ class GoalViewModel @Inject constructor(
 
     fun loadGoalDetail(goalId: String) {
         _goalDetailState.update { it.copy(isLoading = true, goal = null, allocations = emptyList()) }
-        
+
         viewModelScope.launch {
             launch {
                 repository.observeGoal(goalId).collect { result ->
-                    val finalGoal = result.getOrNull() ?: mockGoals.find { it.id == goalId }
-                    _goalDetailState.update { it.copy(goal = finalGoal, isLoading = false) } 
+                    val finalGoal = result.getOrNull()
+                    _goalDetailState.update { it.copy(goal = finalGoal, isLoading = false) }
                 }
             }
             launch {
                 repository.observeAllocations(goalId).collect { result ->
                     val allocations = result.getOrNull() ?: emptyList()
-                    val finalAllocations = allocations.ifEmpty { mockAllocations[goalId] ?: emptyList() }
-                    _goalDetailState.update { it.copy(allocations = finalAllocations) }
+                    _goalDetailState.update { it.copy(allocations = allocations) }
                 }
             }
         }
     }
 
     fun clearNewBadges() { _goalDetailState.update { it.copy(newlyUnlockedBadges = emptyList()) } }
-    
+
     fun deleteGoal(goalId: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            repository.deleteGoal(goalId).onSuccess {
-                onSuccess()
-            }.onFailure {
-                // For demo purposes, if it's a mock goal, just succeed
-                if (goalId in listOf("1", "2", "3")) onSuccess()
-            }
+            repository.deleteGoal(goalId).onSuccess { onSuccess() }.onFailure { }
         }
     }
 
     private val _createGoalState = MutableStateFlow(CreateGoalState())
     val createGoalState: StateFlow<CreateGoalState> = _createGoalState.asStateFlow()
-    
+
     fun setEditGoal(goal: Goal) {
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.US)
         _createGoalState.value = CreateGoalState(
@@ -236,11 +148,11 @@ class GoalViewModel @Inject constructor(
     fun submitCreateGoal() {
         val state = _createGoalState.value
         _createGoalState.update { it.copy(isSubmitting = true) }
-        
+
         viewModelScope.launch {
             val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.US)
             val deadlineDate = try { sdf.parse(state.deadline) ?: Date() } catch (e: Exception) { Date() }
-            
+
             val goal = Goal(
                 id = state.id ?: "",
                 title = state.title,
@@ -280,14 +192,14 @@ class GoalViewModel @Inject constructor(
     fun onAllocationMonthlyTargetChanged(target: String) { _addAllocationState.update { it.copy(monthlyTarget = target) } }
     fun onAllocationMonthYearChanged(monthYear: String) { _addAllocationState.update { it.copy(monthYear = monthYear) } }
     fun onAllocationNoteChanged(note: String) { _addAllocationState.update { it.copy(note = note) } }
-    
+
     fun submitAllocation(goalId: String) {
         _addAllocationState.update { it.copy(isSubmitting = true) }
         viewModelScope.launch {
             val state = _addAllocationState.value
             val amount = state.amount.toDoubleOrNull() ?: 0.0
             val target = state.monthlyTarget.toDoubleOrNull() ?: 0.0
-            
+
             repository.addAllocation(goalId, amount, target, state.monthYear, state.note)
                 .onSuccess {
                     _addAllocationState.update { it.copy(isSubmitting = false, isSuccess = true) }
