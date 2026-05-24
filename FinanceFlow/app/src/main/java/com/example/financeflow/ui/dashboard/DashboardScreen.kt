@@ -58,6 +58,7 @@ fun DashboardScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             BottomNavigationBar(
+                isDarkTheme = isDarkTheme,
                 currentDestination = currentDestination,
                 onItemClick = { item ->
                     navController.navigate(item.route) {
