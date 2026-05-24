@@ -1,5 +1,7 @@
 package com.example.financeflow.model
 
+import com.example.financeflow.ui.expenses.CategoryBreakdownItem
+import com.example.financeflow.ui.expenses.ExpenseUiItem
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.PropertyName
 
@@ -21,6 +23,9 @@ data class Expense(
     val createdAt: Timestamp = Timestamp.now()
 )
 
+/**
+ * Fixed expense record stored in Firestore.
+ */
 data class FixedExpense(
     val id: String = "",
     val userId: String = "",
@@ -31,9 +36,13 @@ data class FixedExpense(
     val createdAt: Timestamp = Timestamp.now()
 )
 
+/**
+ * UI state for the Expenses screen.
+ */
 data class ExpenseUiState(
     val isLoading: Boolean = false,
     val selectedMonth: String = "",
+    val availableMonths: List<String> = emptyList(),
     val totalExpense: Double = 0.0,
     val todayExpenses: List<com.example.financeflow.ui.expenses.ExpenseUiItem> = emptyList(),
     val currentMonthTransactions: List<com.example.financeflow.ui.expenses.ExpenseUiItem> = emptyList(),

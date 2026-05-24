@@ -1,5 +1,6 @@
 package com.example.financeflow.ui.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +49,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.financeflow.viewmodel.ProfileViewModel
 
 private val LogoutBgPurple = Color(0xFFEDE2FF)
 private val LogoutCardWhite = Color(0xFFFFFFFF)
@@ -63,13 +68,30 @@ private val LogoutLabelGray = Color(0xFF888888)
 fun LogoutScreen(
     isDarkTheme: Boolean = false,
     onThemeToggle: () -> Unit = {},
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onAccountDeleted: () -> Unit = {},
+    profileViewModel: ProfileViewModel = hiltViewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val profile by profileViewModel.profile.collectAsState()
+    val error by profileViewModel.error.collectAsState()
+    val toastMessage by profileViewModel.toastMessage.collectAsState()
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     val palette = logoutPalette(isDarkTheme)
+
+    LaunchedEffect(toastMessage, error) {
+        toastMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            profileViewModel.clearMessages()
+        }
+        error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            profileViewModel.clearMessages()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -80,6 +102,7 @@ fun LogoutScreen(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         LogoutHeaderCard(
+            fullName = profile.fullName,
             palette = palette
         )
 
@@ -188,6 +211,7 @@ fun LogoutScreen(
     if (showDeleteDialog) {
         DeleteAccountDialog(
             isDarkTheme = isDarkTheme,
+            onConfirmDelete = { profileViewModel.deleteAccount(onAccountDeleted) },
             onDismiss = { showDeleteDialog = false }
         )
     }
@@ -195,6 +219,7 @@ fun LogoutScreen(
 
 @Composable
 private fun LogoutHeaderCard(
+    fullName: String,
     palette: LogoutPalette
 ) {
     Card(
@@ -219,7 +244,7 @@ private fun LogoutHeaderCard(
             )
 
             Text(
-                text = "Kavindu Silva",
+                text = fullName.ifBlank { "FinanceFlow User" },
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = palette.titleColor,

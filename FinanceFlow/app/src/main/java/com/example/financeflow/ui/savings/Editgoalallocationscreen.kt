@@ -49,6 +49,7 @@ fun EditGoalAllocationScreen(
     targetAmount:    String  = "LKR 490000",
     progressPercent: Float   = 0.401f,
     progressLabel:   String  = "40.1% complete",
+    onSave:          (String, Double, Double) -> Unit = { _, _, _ -> },
     onDismiss:       () -> Unit = {}
 ) {
     // ── Local editable state ───────────────────────────────────────────────
@@ -159,7 +160,9 @@ fun EditGoalAllocationScreen(
                             text            = "Save Changes",
                             backgroundColor = colors.success,
                             modifier        = Modifier.weight(1f),
-                            onClick         = onDismiss
+                            onClick         = {
+                                onSave(name, allocated.toMoneyDouble(), target.toMoneyDouble())
+                            }
                         )
                         // Cancel — purple, closes dialog
                         EditActionButton(
@@ -241,4 +244,12 @@ fun PreviewEditGoalAllocationScreen() {
     MaterialTheme {
         EditGoalAllocationScreen()
     }
+}
+
+/** Converts currency-like editable text into a Double for Firestore updates. */
+private fun String.toMoneyDouble(): Double {
+    return replace(",", "")
+        .replace("LKR", "", ignoreCase = true)
+        .trim()
+        .toDoubleOrNull() ?: 0.0
 }

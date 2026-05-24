@@ -23,14 +23,14 @@ import com.example.financeflow.ui.components.common.FeatureMonthHeader
 fun HeaderCard(
     isDarkTheme: Boolean = false,
     selectedMonth: String = "May 2026",
+    monthOptions: List<String> = listOf("May 2026", "April 2026", "March 2026", "February 2026", "January 2026"),
     onMonthSelected: (String) -> Unit = {}
 ) {
-    val months = listOf("May 2026", "April 2026", "March 2026", "February 2026", "January 2026")
     FeatureMonthHeader(
         title = "Savings Overview",
         subtitle = "Track your saving habits & allocations",
         selectedMonth = selectedMonth,
-        monthOptions = months,
+        monthOptions = monthOptions,
         onMonthSelected = onMonthSelected,
         headerColor = if (isDarkTheme) Color(0xFFB8871E) else Color(0xFFF4C542)
     )

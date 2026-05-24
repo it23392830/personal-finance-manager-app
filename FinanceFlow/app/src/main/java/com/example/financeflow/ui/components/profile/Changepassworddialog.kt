@@ -75,10 +75,13 @@ private fun changePasswordPalette(isDarkTheme: Boolean): ChangePasswordPalette =
 @Composable
 fun ChangePasswordDialog(
     isDarkTheme: Boolean = false,
+    onChangePassword: (String, String, String) -> Unit = { _, _, _ -> },
     onDismiss: () -> Unit = {}
 ) {
+    var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var currentPasswordVisible by remember { mutableStateOf(false) }
     var newPasswordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     val palette = changePasswordPalette(isDarkTheme)
@@ -125,6 +128,15 @@ fun ChangePasswordDialog(
                     }
 
                     PasswordField(
+                        label = "Current Password",
+                        value = currentPassword,
+                        visible = currentPasswordVisible,
+                        onChange = { currentPassword = it },
+                        onToggleVisibility = { currentPasswordVisible = !currentPasswordVisible },
+                        palette = palette
+                    )
+
+                    PasswordField(
                         label = "New Password",
                         value = newPassword,
                         visible = newPasswordVisible,
@@ -143,7 +155,10 @@ fun ChangePasswordDialog(
                     )
 
                     Button(
-                        onClick = onDismiss,
+                        onClick = {
+                            onChangePassword(currentPassword, newPassword, confirmPassword)
+                            onDismiss()
+                        },
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .fillMaxWidth(0.75f)
