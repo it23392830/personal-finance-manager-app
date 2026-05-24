@@ -22,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -35,6 +34,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,8 +52,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.financeflow.model.Saving
+import com.example.financeflow.model.SavingGoal
 import com.example.financeflow.ui.components.savings.SavingsColors
 import com.example.financeflow.ui.components.savings.getSavingsColors
+import com.example.financeflow.viewmodel.savings.SavingsViewModel
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 
 private val BgPurple = Color(0xFFEDE2FF)
 private val GreenBtn = Color(0xFF3DBD7D)
@@ -65,50 +73,51 @@ private val currencyOptions = listOf(
     "GBP (British Pound)"
 )
 
-private val goalOptions = listOf(
-    "MacBook Pro M4",
-    "Emergency Fund",
-    "Vacation",
-    "Travel Fund",
-    "Other"
-)
-
-private val rawIncomeData = listOf(
-    "Salary (Job)" to "2026-05-01",
-    "Freelance (Web Project)" to "2026-05-15",
-    "Side Hustle (Sales)" to "2026-05-20",
-    "Dividends (JKH)" to "2026-05-25",
-    "Bonus (April)" to "2026-04-28"
-)
-
 @Composable
 fun AddSavingScreen(
     isDarkTheme: Boolean = false,
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    viewModel: SavingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val goals by viewModel.goals.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val toastMessage by viewModel.toastMessage.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     var amount by remember { mutableStateOf("") }
+    var totalIncome by remember { mutableStateOf("") }
     var selectedCurrency by remember { mutableStateOf(currencyOptions[0]) }
     var selectedGoal by remember { mutableStateOf("") }
-    var selectedIncome by remember { mutableStateOf("") }
+    var newGoalName by remember { mutableStateOf("") }
+    var targetAmount by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var selectedDate by remember { mutableStateOf("05/05/2026") }
+    var selectedDate by remember { mutableStateOf(LocalDate.now().toString()) }
 
     var currencyExpanded by remember { mutableStateOf(false) }
     var goalExpanded by remember { mutableStateOf(false) }
-    var incomeExpanded by remember { mutableStateOf(false) }
-
-    val todayStr = "2026-05-21"
-    val currentMonth = "2026-05"
-    val incomeOptions = remember {
-        rawIncomeData
-            .filter { (_, date) -> date.startsWith(currentMonth) && date <= todayStr }
-            .map { it.first }
+    val goalOptions = remember(goals) {
+        val names = goals.map { it.goalName }.filter { it.isNotBlank() }
+        (names + "Other").distinct()
     }
 
     val colors = getSavingsColors(isDarkTheme)
+    val monthLabel = remember { YearMonth.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")) }
+
+    LaunchedEffect(toastMessage, errorMessage) {
+        toastMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.clearToast()
+            if (message.contains("saving added", ignoreCase = true)) {
+                onNavigateBack()
+            }
+        }
+        errorMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -135,6 +144,9 @@ fun AddSavingScreen(
             ) {
                 FormFieldLabel(text = "Amount", isDarkTheme = isDarkTheme)
                 AmountField(value = amount, onChange = { amount = it }, isDarkTheme = isDarkTheme)
+
+                FormFieldLabel(text = "Total Income", isDarkTheme = isDarkTheme)
+                AmountField(value = totalIncome, onChange = { totalIncome = it }, isDarkTheme = isDarkTheme)
 
                 FormFieldLabel(text = "Currency", isDarkTheme = isDarkTheme)
                 DropdownField(
@@ -168,21 +180,21 @@ fun AddSavingScreen(
                     isDarkTheme = isDarkTheme
                 )
 
-                FormFieldLabel(text = "Income Source", isDarkTheme = isDarkTheme)
-                DropdownField(
-                    value = selectedIncome.ifEmpty { "Select Income" },
-                    expanded = incomeExpanded,
-                    options = incomeOptions,
-                    onExpand = { incomeExpanded = true },
-                    onDismiss = { incomeExpanded = false },
-                    onSelect = {
-                        selectedIncome = it
-                        incomeExpanded = false
-                    },
-                    leadingIcon = Icons.Default.Payments,
-                    isPlaceholder = selectedIncome.isEmpty(),
-                    isDarkTheme = isDarkTheme
-                )
+                if (selectedGoal == "Other") {
+                    FormFieldLabel(text = "New Goal Name", isDarkTheme = isDarkTheme)
+                    DescriptionField(
+                        value = newGoalName,
+                        onChange = { newGoalName = it },
+                        isDarkTheme = isDarkTheme
+                    )
+
+                    FormFieldLabel(text = "Target Amount", isDarkTheme = isDarkTheme)
+                    AmountField(
+                        value = targetAmount,
+                        onChange = { targetAmount = it },
+                        isDarkTheme = isDarkTheme
+                    )
+                }
 
                 FormFieldLabel(text = "Description (Optional)", isDarkTheme = isDarkTheme)
                 DescriptionField(
@@ -208,7 +220,46 @@ fun AddSavingScreen(
                 text = "Save Changes",
                 backgroundColor = colors.success,
                 modifier = Modifier.weight(1f),
-                onClick = { Toast.makeText(context, "Saving Added", Toast.LENGTH_SHORT).show() }
+                enabled = !isLoading,
+                onClick = {
+                    val savedAmount = amount.toMoneyDouble()
+                    val incomeAmount = totalIncome.toMoneyDouble()
+                    val selectedGoalData = goals.firstOrNull { it.goalName == selectedGoal }
+                    val finalGoalName = if (selectedGoal == "Other") newGoalName.trim() else selectedGoal
+                    val finalTargetAmount = selectedGoalData?.targetAmount ?: targetAmount.toMoneyDouble()
+
+                    if (savedAmount <= 0.0 || incomeAmount <= 0.0) {
+                        Toast.makeText(context, "Enter valid saved amount and total income", Toast.LENGTH_SHORT).show()
+                        return@ActionButton
+                    }
+
+                    if (selectedGoal == "Other" && finalGoalName.isBlank()) {
+                        Toast.makeText(context, "Enter a goal name", Toast.LENGTH_SHORT).show()
+                        return@ActionButton
+                    }
+
+                    if (selectedGoal == "Other") {
+                        viewModel.addGoal(
+                            SavingGoal(
+                                goalName = finalGoalName,
+                                currentAmount = savedAmount,
+                                targetAmount = finalTargetAmount
+                            )
+                        )
+                    }
+
+                    viewModel.addSaving(
+                        Saving(
+                            amountSaved = savedAmount,
+                            totalIncome = incomeAmount,
+                            month = monthLabel,
+                            date = selectedDate,
+                            goalName = finalGoalName.ifBlank { "General" },
+                            description = description,
+                            targetAmount = finalTargetAmount
+                        )
+                    )
+                }
             )
             ActionButton(
                 text = "Cancel",
@@ -413,10 +464,12 @@ private fun ActionButton(
     text: String,
     backgroundColor: Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier
             .height(50.dp)
             .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp)),
@@ -428,6 +481,14 @@ private fun ActionButton(
     ) {
         Text(text = text, fontSize = 14.sp, fontWeight = FontWeight.Bold)
     }
+}
+
+/** Converts user-entered currency text into a Double. */
+private fun String.toMoneyDouble(): Double {
+    return replace(",", "")
+        .replace("LKR", "", ignoreCase = true)
+        .trim()
+        .toDoubleOrNull() ?: 0.0
 }
 
 @Preview(showBackground = true, showSystemUi = true, name = "AddSavingScreen Full")

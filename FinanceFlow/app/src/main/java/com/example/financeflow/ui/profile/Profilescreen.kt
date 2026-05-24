@@ -1,5 +1,8 @@
 package com.example.financeflow.ui.profile
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,6 +46,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,13 +59,17 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.example.financeflow.ui.components.profile.ChangePasswordDialog
 import com.example.financeflow.ui.components.profile.EditProfileDialog
+import com.example.financeflow.viewmodel.ProfileViewModel
 import com.example.financeflow.viewmodel.auth.AuthViewModel
 
 private val BgPurple = Color(0xFFEDE2FF)
@@ -72,11 +81,8 @@ private val FieldBorder = Color(0xFFD0C4E8)
 private val LabelGray = Color(0xFF888888)
 private val DarkText = Color(0xFF1A1A1A)
 
-private const val USER_NAME = "Kavindu Silva"
-private const val USER_EMAIL = "kavindusilva123@gmail.com"
-
 private val currencyOptions = listOf(
-    "LKR (Sri Lankan Rupee)", "USD (US Dollar)", "EUR (Euro)", "GBP (British Pound)"
+    "LKR", "USD", "EUR", "GBP"
 )
 private val trackerOptions = listOf("Real-Time", "Daily Summary", "Weekly Summary")
 
@@ -86,21 +92,34 @@ fun ProfileScreen(
     onThemeToggle: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
     onNavigateToLogout: () -> Unit = {},
-    viewModel: AuthViewModel = hiltViewModel()
+    profileViewModel: ProfileViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
-    var selectedCurrency by remember { mutableStateOf(currencyOptions[0]) }
-    var selectedTracker by remember { mutableStateOf(trackerOptions[0]) }
+    val context = LocalContext.current
+    val profile by profileViewModel.profile.collectAsState()
+    val error by profileViewModel.error.collectAsState()
+    val toastMessage by profileViewModel.toastMessage.collectAsState()
     var currencyExpanded by remember { mutableStateOf(false) }
     var trackerExpanded by remember { mutableStateOf(false) }
-
-    var pushNotifications by remember { mutableStateOf(true) }
-    var dailyReminder by remember { mutableStateOf(true) }
-    var weeklyReport by remember { mutableStateOf(true) }
 
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var showEditProfilePopup by remember { mutableStateOf(false) }
 
     val palette = profilePalette(isDarkTheme)
+    val imageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { profileViewModel.uploadProfileImage(it) }
+    }
+
+    LaunchedEffect(toastMessage, error) {
+        toastMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            profileViewModel.clearMessages()
+        }
+        error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            profileViewModel.clearMessages()
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -112,51 +131,61 @@ fun ProfileScreen(
         item {
             ProfileHeaderCard(
                 isDarkTheme = isDarkTheme,
+                fullName = profile.fullName,
+                email = profile.email,
                 palette = palette
             )
         }
         item {
             ProfileImageCard(
+                profileImage = profile.profileImage,
+                onChangePhoto = { imageLauncher.launch("image/*") },
                 onEditProfile = { showEditProfilePopup = true },
                 palette = palette
             )
         }
         item {
             UserInformationCard(
-                fullName = USER_NAME,
-                email = USER_EMAIL,
+                fullName = profile.fullName,
+                email = profile.email,
                 palette = palette
             )
         }
         item {
             SettingsCard(
-                selectedCurrency = selectedCurrency,
+                selectedCurrency = profile.baseCurrency,
                 currencyExpanded = currencyExpanded,
                 onCurrencyExpand = { currencyExpanded = true },
                 onCurrencyDismiss = { currencyExpanded = false },
                 onCurrencySelect = {
-                    selectedCurrency = it
                     currencyExpanded = false
+                    profileViewModel.updateProfile(profile.copy(baseCurrency = it))
                 },
-                selectedTracker = selectedTracker,
+                selectedTracker = profile.expenseTracker,
                 trackerExpanded = trackerExpanded,
                 onTrackerExpand = { trackerExpanded = true },
                 onTrackerDismiss = { trackerExpanded = false },
                 onTrackerSelect = {
-                    selectedTracker = it
                     trackerExpanded = false
+                    profileViewModel.updateProfile(profile.copy(expenseTracker = it))
                 },
                 palette = palette
             )
         }
         item {
             NotificationsCard(
-                pushEnabled = pushNotifications,
-                onPushToggle = { pushNotifications = it },
-                dailyEnabled = dailyReminder,
-                onDailyToggle = { dailyReminder = it },
-                weeklyEnabled = weeklyReport,
-                onWeeklyToggle = { weeklyReport = it },
+                pushEnabled = profile.pushNotifications,
+                onPushToggle = {
+                    profileViewModel.updateNotificationSettings(it, profile.dailyReminder, profile.weeklyReport)
+                },
+                dailyEnabled = profile.dailyReminder,
+                onDailyToggle = {
+                    profileViewModel.updateNotificationSettings(profile.pushNotifications, it, profile.weeklyReport)
+                },
+                weeklyEnabled = profile.weeklyReport,
+                onWeeklyToggle = {
+                    profileViewModel.updateNotificationSettings(profile.pushNotifications, profile.dailyReminder, it)
+                },
                 palette = palette
             )
         }
@@ -164,7 +193,7 @@ fun ProfileScreen(
             AccountActionsCard(
                 onChangePassword = { showChangePasswordDialog = true },
                 onLogOut = {
-                    viewModel.logout()
+                    authViewModel.logout()
                     onNavigateToLogout()
                 },
                 palette = palette
@@ -175,6 +204,7 @@ fun ProfileScreen(
     if (showChangePasswordDialog) {
         ChangePasswordDialog(
             isDarkTheme = isDarkTheme,
+            onChangePassword = profileViewModel::changePassword,
             onDismiss = { showChangePasswordDialog = false }
         )
     }
@@ -182,6 +212,11 @@ fun ProfileScreen(
     if (showEditProfilePopup) {
         EditProfileDialog(
             isDarkTheme = isDarkTheme,
+            initialFullName = profile.fullName,
+            initialEmail = profile.email,
+            onSave = { fullName, email ->
+                profileViewModel.updateProfile(profile.copy(fullName = fullName, email = email))
+            },
             onDismiss = { showEditProfilePopup = false }
         )
     }
@@ -190,6 +225,8 @@ fun ProfileScreen(
 @Composable
 private fun ProfileHeaderCard(
     isDarkTheme: Boolean,
+    fullName: String,
+    email: String,
     palette: ProfilePalette
 ) {
     Card(
@@ -217,14 +254,14 @@ private fun ProfileHeaderCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = USER_NAME,
+                    text = fullName.ifBlank { "FinanceFlow User" },
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = palette.primaryTextColor
                 )
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = USER_EMAIL,
+                    text = email.ifBlank { "No email found" },
                     fontSize = 11.sp,
                     color = palette.secondaryTextColor
                 )
@@ -235,6 +272,8 @@ private fun ProfileHeaderCard(
 
 @Composable
 private fun ProfileImageCard(
+    profileImage: String,
+    onChangePhoto: () -> Unit,
     onEditProfile: () -> Unit,
     palette: ProfilePalette
 ) {
@@ -260,19 +299,29 @@ private fun ProfileImageCard(
                         .border(3.dp, palette.cardColor, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Avatar",
-                        tint = CardWhite,
-                        modifier = Modifier.size(60.dp)
-                    )
+                    if (profileImage.isNotBlank()) {
+                        AsyncImage(
+                            model = profileImage,
+                            contentDescription = "Profile image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Avatar",
+                            tint = CardWhite,
+                            modifier = Modifier.size(60.dp)
+                        )
+                    }
                 }
                 Box(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
                         .background(PurpleBtn)
-                        .border(2.dp, palette.cardColor, CircleShape),
+                        .border(2.dp, palette.cardColor, CircleShape)
+                        .clickable { onChangePhoto() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
