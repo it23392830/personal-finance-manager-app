@@ -1,8 +1,8 @@
 package com.example.financeflow.auth
 
 import android.util.Log
+import com.example.financeflow.notifications.NotificationScheduler
 import com.example.financeflow.repository.income.IncomeRepository
-import com.example.financeflow.workers.NotificationScheduler
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

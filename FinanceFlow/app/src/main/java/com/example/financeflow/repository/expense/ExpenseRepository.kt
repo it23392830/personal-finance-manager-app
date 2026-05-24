@@ -4,12 +4,16 @@ import com.example.financeflow.data.local.dao.ExpenseDao
 import com.example.financeflow.data.local.dao.FixedExpenseDao
 import com.example.financeflow.data.local.entity.ExpenseEntity
 import com.example.financeflow.data.local.entity.FixedExpenseEntity
+import com.example.financeflow.data.repository.StreakRepository
 import com.example.financeflow.data.remote.ExpenseFirebaseService
 import com.example.financeflow.model.Expense
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,7 +22,8 @@ import javax.inject.Singleton
 class ExpenseRepository @Inject constructor(
     private val dao: ExpenseDao,
     private val fixedDao: FixedExpenseDao,
-    private val firebase: ExpenseFirebaseService
+    private val firebase: ExpenseFirebaseService,
+    private val streakRepository: StreakRepository
 ) {
 
     fun getAllForUserFlow(userId: String): Flow<List<Expense>> {
@@ -33,16 +38,19 @@ class ExpenseRepository @Inject constructor(
         val toSave = expense.copy(id = id, userId = uid, createdAt = Timestamp.now())
         dao.insertExpense(toSave.toEntity())
         firebase.addExpense(toSave, id)
+        streakRepository.addExpense(toSave.toStreakExpense())
     }
 
     suspend fun updateExpense(expense: Expense) {
         dao.updateExpense(expense.toEntity())
         firebase.updateExpense(expense)
+        streakRepository.updateStreak(forceWidgetRefresh = true)
     }
 
     suspend fun deleteExpense(id: String) {
         dao.deleteExpenseById(id)
         firebase.deleteExpense(id)
+        streakRepository.updateStreak(forceWidgetRefresh = true)
     }
 
     suspend fun syncFromFirestore() {
@@ -152,3 +160,24 @@ private fun com.example.financeflow.model.FixedExpense.toEntity(): FixedExpenseE
     isPaid = isPaid,
     createdAt = createdAt.toDate().time
 )
+
+private fun Expense.toStreakExpense(): com.example.financeflow.data.model.Expense {
+    val formatter = DateTimeFormatter.ISO_LOCAL_DATE
+    val zoneId = ZoneId.systemDefault()
+
+    fun Timestamp.toLocalDateString(): String {
+        return Instant.ofEpochSecond(seconds, nanoseconds.toLong())
+            .atZone(zoneId)
+            .toLocalDate()
+            .format(formatter)
+    }
+
+    return com.example.financeflow.data.model.Expense(
+        id = id,
+        amount = amount,
+        category = category,
+        description = description,
+        date = date.toLocalDateString(),
+        createdAt = createdAt.toLocalDateString()
+    )
+}

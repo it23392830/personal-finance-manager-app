@@ -125,6 +125,7 @@ private val OPTIONAL_BUDGET_REMAINING          = 13_900L
 @Composable
 fun HomeScreen(
     isDarkTheme: Boolean = false,
+    streakDays: Int = sampleBalanceData.streakDays,
     onAddIncomeClick: () -> Unit = {},
     onAddExpenseClick: () -> Unit = {},
     onIncomeClick: () -> Unit = {},
@@ -140,6 +141,7 @@ fun HomeScreen(
     unreadNotificationCount: Int = 0
 ) {
     val colors = getHomeScreenColors(isDarkTheme)
+    val balanceCardData = sampleBalanceData.copy(streakDays = streakDays)
     val listState = rememberLazyListState()
     val showHeaderIcons by remember {
         derivedStateOf {
@@ -169,7 +171,7 @@ fun HomeScreen(
             item {
                 BalanceCard(
                     isDarkTheme = isDarkTheme,
-                    data = sampleBalanceData,
+                    data = balanceCardData,
                     onStreakClick = onStreakClick,
                     onThemeClick = onThemeClick,
                     onProfileClick = onProfileClick

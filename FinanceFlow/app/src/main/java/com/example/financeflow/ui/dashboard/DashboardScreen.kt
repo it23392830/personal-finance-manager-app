@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -34,19 +35,33 @@ import com.example.financeflow.ui.savings.AddSavingScreen
 import com.example.financeflow.ui.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.SavingsScreen
 import com.example.financeflow.ui.streak.Streak.StreakScreen
+import com.example.financeflow.presentation.viewmodel.StreakViewModel
 import com.example.financeflow.viewmodel.notification.NotificationViewModel
 
 @Composable
 fun DashboardScreen(
     rootNavController: NavHostController,
     isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit
+    onThemeToggle: () -> Unit,
+    openStreakOnLaunch: Boolean = false,
+    onStreakLaunchHandled: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val notificationViewModel: NotificationViewModel = hiltViewModel()
+    val streakViewModel: StreakViewModel = hiltViewModel()
     val unreadNotificationCount by notificationViewModel.unreadCount.collectAsState()
+    val streakUiState by streakViewModel.uiState.collectAsState()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+
+    LaunchedEffect(openStreakOnLaunch) {
+        if (openStreakOnLaunch) {
+            navController.navigate(Routes.STREAK) {
+                launchSingleTop = true
+            }
+            onStreakLaunchHandled()
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -75,6 +90,7 @@ fun DashboardScreen(
             composable(Routes.HOME) {
                 HomeScreen(
                     isDarkTheme = isDarkTheme,
+                    streakDays = streakUiState.currentStreak,
                     onAddIncomeClick = { rootNavController.navigate(Routes.ADD_INCOME) },
                     onAddExpenseClick = { navController.navigate(Routes.EXPENSES) },
                     onIncomeClick = { navController.navigate(Routes.INCOME) },
@@ -82,6 +98,7 @@ fun DashboardScreen(
                     onExpensesClick = { navController.navigate(Routes.EXPENSES) },
                     onSavingsClick = { navController.navigate(Routes.SAVINGS) },
                     onGoalCardClick = { navController.navigate(Routes.GOALS) },
+                    onStreakClick = { navController.navigate(Routes.STREAK) },
                     onThemeClick = onThemeToggle,
                     onProfileClick = { navController.navigate(Routes.PROFILE) },
                     onNotificationClick = { navController.navigate(Routes.NOTIFICATIONS) },
