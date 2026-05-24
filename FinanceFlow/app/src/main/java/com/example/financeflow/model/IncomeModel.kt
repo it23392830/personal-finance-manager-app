@@ -1,6 +1,7 @@
 package com.example.financeflow.model
 
 import com.google.firebase.Timestamp
+import com.example.financeflow.ui.components.Income.MonthYear
 
 /**
  * Represents an income source category (e.g. Salary, Freelance, AdSense, Crypto).
@@ -42,11 +43,11 @@ data class Income(
 )
 
 /**
- * Aggregated view of incomes grouped by [IncomeSource] for a given month.
+ * Aggregated view of incomes grouped by source for a given month.
  * Computed locally from a list of [Income] entries.
  */
 data class IncomeBySource(
-    val source: IncomeSource,
+    val source: String,
     val totalAmount: Double,
     val transactionCount: Int,
     val percentage: Double          // 0–100
@@ -63,8 +64,12 @@ data class IncomeUiState(
     val displayCurrency: Currency = Currency.LKR,
     val incomeBySource: List<IncomeBySource> = emptyList(),
     val recentTransactions: List<Income> = emptyList(),
+    val currentMonthTransactions: List<Income> = emptyList(),
     val daysUntilNextSalary: Int? = null,
     val errorMessage: String? = null,
+    val incomeSources: List<String> = emptyList(),
+    val availableMonths: List<MonthYear> = emptyList(),
+    val isSuccess: Boolean = false,
 
     // Dialog visibility flags
     val showAddDialog: Boolean = false,

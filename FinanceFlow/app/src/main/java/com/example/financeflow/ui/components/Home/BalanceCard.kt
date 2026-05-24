@@ -1,6 +1,7 @@
 package com.example.financeflow.ui.components.Home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -110,6 +111,7 @@ fun BalanceCard(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 24.dp,
     elevation: Dp = 6.dp,
+    onStreakClick: () -> Unit = {},
     onThemeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
@@ -179,7 +181,11 @@ fun BalanceCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                StreakChip(isDarkTheme = isDarkTheme, days = data.streakDays)
+                StreakChip(
+                    isDarkTheme = isDarkTheme,
+                    days = data.streakDays,
+                    onClick = onStreakClick
+                )
             }
         }
     }
@@ -224,8 +230,13 @@ private fun GreetingRow(
 }
 
 @Composable
-private fun StreakChip(isDarkTheme: Boolean = false, days: Int) {
+private fun StreakChip(
+    isDarkTheme: Boolean = false,
+    days: Int,
+    onClick: () -> Unit = {}
+) {
     Surface(
+        modifier = Modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(50),
         color = if (isDarkTheme) Color(0xFF3E3E2A) else Color(0xFFFFFDE7),
         tonalElevation = 0.dp,

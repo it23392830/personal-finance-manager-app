@@ -2,10 +2,28 @@ package com.example.financeflow.ui.components.profile
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -18,19 +36,45 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-private val CardWhite    = Color(0xFFFFFFFF)
-private val GreenSave    = Color(0xFF16A34A)
-private val PurpleCancel = Color(0xFF9C6CF7)
-private val FieldBg      = Color(0xFFF5F3FF)
-private val FieldBorder  = Color(0xFFD0C4E8)
-private val DarkText     = Color(0xFF1A1A1A)
-private val LabelGray    = Color(0xFF555555)
+private val EditSaveGreen = Color(0xFF16A34A)
+private val EditCancelPurple = Color(0xFF9C6CF7)
+
+private data class EditProfileDialogPalette(
+    val card: Color,
+    val field: Color,
+    val fieldBorder: Color,
+    val text: Color,
+    val muted: Color
+)
+
+private fun editProfileDialogPalette(isDarkTheme: Boolean): EditProfileDialogPalette =
+    if (isDarkTheme) {
+        EditProfileDialogPalette(
+            card = Color(0xFF241F30),
+            field = Color(0xFF2F293A),
+            fieldBorder = Color(0xFF5C4F72),
+            text = Color(0xFFF4EEFF),
+            muted = Color(0xFFB8AEC8)
+        )
+    } else {
+        EditProfileDialogPalette(
+            card = Color(0xFFFFFFFF),
+            field = Color(0xFFF5F3FF),
+            fieldBorder = Color(0xFFD0C4E8),
+            text = Color(0xFF1A1A1A),
+            muted = Color(0xFF555555)
+        )
+    }
 
 @Composable
-fun EditProfileDialog(onDismiss: () -> Unit = {}) {
+fun EditProfileDialog(
+    isDarkTheme: Boolean = false,
+    onDismiss: () -> Unit = {}
+) {
     val context = LocalContext.current
     var fullName by remember { mutableStateOf("Kavindu Silva") }
     var email by remember { mutableStateOf("kavindusilva123@gmail.com") }
+    val palette = editProfileDialogPalette(isDarkTheme)
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -47,7 +91,7 @@ fun EditProfileDialog(onDismiss: () -> Unit = {}) {
                     .fillMaxWidth(0.90f)
                     .wrapContentHeight()
                     .shadow(elevation = 10.dp, shape = RoundedCornerShape(25.dp))
-                    .background(CardWhite, RoundedCornerShape(25.dp))
+                    .background(palette.card, RoundedCornerShape(25.dp))
                     .padding(horizontal = 24.dp, vertical = 28.dp)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -55,19 +99,21 @@ fun EditProfileDialog(onDismiss: () -> Unit = {}) {
                         text = "Personal Information",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = DarkText
+                        color = palette.text
                     )
 
                     EditProfileField(
                         label = "Full Name",
                         value = fullName,
-                        onChange = { fullName = it }
+                        onChange = { fullName = it },
+                        palette = palette
                     )
 
                     EditProfileField(
                         label = "E mail",
                         value = email,
-                        onChange = { email = it }
+                        onChange = { email = it },
+                        palette = palette
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -87,15 +133,11 @@ fun EditProfileDialog(onDismiss: () -> Unit = {}) {
                                 .shadow(elevation = 4.dp, shape = RoundedCornerShape(14.dp)),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = GreenSave,
-                                contentColor = CardWhite
+                                containerColor = EditSaveGreen,
+                                contentColor = Color.White
                             )
                         ) {
-                            Text(
-                                text = "Save Changes",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text(text = "Save Changes", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
 
                         Button(
@@ -106,15 +148,11 @@ fun EditProfileDialog(onDismiss: () -> Unit = {}) {
                                 .shadow(elevation = 4.dp, shape = RoundedCornerShape(14.dp)),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = PurpleCancel,
-                                contentColor = CardWhite
+                                containerColor = EditCancelPurple,
+                                contentColor = Color.White
                             )
                         ) {
-                            Text(
-                                text = "Cancel",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text(text = "Cancel", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -127,14 +165,15 @@ fun EditProfileDialog(onDismiss: () -> Unit = {}) {
 private fun EditProfileField(
     label: String,
     value: String,
-    onChange: (String) -> Unit
+    onChange: (String) -> Unit,
+    palette: EditProfileDialogPalette
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text = label,
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
-            color = LabelGray
+            color = palette.muted
         )
         OutlinedTextField(
             value = value,
@@ -143,19 +182,19 @@ private fun EditProfileField(
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = FieldBg,
-                unfocusedContainerColor = FieldBg,
-                focusedBorderColor = FieldBorder,
-                unfocusedBorderColor = FieldBorder,
-                cursorColor = DarkText,
-                focusedTextColor = DarkText,
-                unfocusedTextColor = DarkText
+                focusedContainerColor = palette.field,
+                unfocusedContainerColor = palette.field,
+                focusedBorderColor = palette.fieldBorder,
+                unfocusedBorderColor = palette.fieldBorder,
+                cursorColor = palette.text,
+                focusedTextColor = palette.text,
+                unfocusedTextColor = palette.text
             )
         )
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true, name = "EditProfileDialog")
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewEditProfileDialog() {
     MaterialTheme {

@@ -17,7 +17,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,6 +25,7 @@ import com.example.financeflow.ui.components.Home.BalanceCard
 import com.example.financeflow.ui.components.Home.BalanceCardData
 import com.example.financeflow.ui.components.Home.ExpenseBreakdownSection
 import com.example.financeflow.ui.components.Home.MoneyFlowSection
+import com.example.financeflow.ui.components.Home.MonthlySummaryCard
 import com.example.financeflow.ui.components.Home.QuickActionRow
 import com.example.financeflow.ui.components.Home.expenseSampleData
 import com.example.financeflow.ui.components.Home.moneyFlowSampleData
@@ -115,14 +115,6 @@ private val sampleIncomeSources = listOf(
     IncomeSourceItem("Crypto Trading",  2_300L, isPositive = true)
 )
 
-private data class MonthlySummaryData(
-    val month: String         = "May 2026",
-    val savingsRatePercent: Int = 28,
-    val optionalBudgetPercent: Int = 17
-)
-
-private val sampleMonthlySummary = MonthlySummaryData()
-
 private const val OPTIONAL_BUDGET_USED_PERCENT = 83
 private val OPTIONAL_BUDGET_REMAINING          = 13_900L
 
@@ -139,6 +131,8 @@ fun HomeScreen(
     onExpensesClick: () -> Unit = {},
     onSavingsClick: () -> Unit = {},
     onGoalCardClick: () -> Unit = {},
+    onViewInsightsClick: () -> Unit = {},
+    onStreakClick: () -> Unit = {},
     onThemeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {}
@@ -174,6 +168,7 @@ fun HomeScreen(
                 BalanceCard(
                     isDarkTheme = isDarkTheme,
                     data = sampleBalanceData,
+                    onStreakClick = onStreakClick,
                     onThemeClick = onThemeClick,
                     onProfileClick = onProfileClick
                 )
@@ -209,10 +204,6 @@ fun HomeScreen(
             }
 
             item {
-                MonthlySummarySection(isDarkTheme = isDarkTheme, data = sampleMonthlySummary)
-            }
-
-            item {
                 IncomeSourcesCard(isDarkTheme = isDarkTheme, sources = sampleIncomeSources)
             }
 
@@ -227,6 +218,13 @@ fun HomeScreen(
                     remainingAmount  = OPTIONAL_BUDGET_REMAINING
                 )
             }
+
+            item {
+                MonthlySummaryCard(
+                    isDarkTheme = isDarkTheme,
+                    onViewInsightsClick = onViewInsightsClick
+                )
+            }
         }
         if (showHeaderIcons) {
             // Theme icon at top-left
@@ -239,8 +237,8 @@ fun HomeScreen(
                 ) {
                     IconButton(onClick = onThemeClick) {
                         Icon(
-                            imageVector = Icons.Outlined.LightMode,
-                            contentDescription = "Theme",
+                            imageVector = if (isDarkTheme) Icons.Outlined.DarkMode else Icons.Outlined.LightMode,
+                            contentDescription = if (isDarkTheme) "Dark Mode" else "Light Mode",
                             tint = colors.textPrimary
                         )
                     }
@@ -289,94 +287,6 @@ private fun SectionHeader(
             fontSize   = 18.sp
         )
     )
-}
-
-@Composable
-private fun MonthlySummarySection(isDarkTheme: Boolean = false, data: MonthlySummaryData) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        SectionHeader(isDarkTheme = isDarkTheme, title = "${data.month} Summary")
-
-        Row(
-            modifier              = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment     = Alignment.CenterVertically
-        ) {
-            SummaryStatTile(
-                isDarkTheme = isDarkTheme,
-                label      = "Savings Rate",
-                value      = "${data.savingsRatePercent}%",
-                icon       = Icons.Outlined.Savings,
-                background = if (isDarkTheme) Color(0xFF1B3E1B) else Color(0xFFE8F5E9),
-                iconTint   = Color(0xFF2DBD6E),
-                textColor  = Color(0xFF2DBD6E),
-                modifier   = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            SummaryStatTile(
-                isDarkTheme = isDarkTheme,
-                label      = "Optional Budget",
-                value      = "${data.optionalBudgetPercent}%",
-                icon       = Icons.Outlined.AttachMoney,
-                background = if (isDarkTheme) Color(0xFF3E1B1B) else Color(0xFFFFEBEE),
-                iconTint   = Color(0xFFFF5252),
-                textColor  = Color(0xFFFF5252),
-                modifier   = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun SummaryStatTile(
-    isDarkTheme: Boolean = false,
-    label: String,
-    value: String,
-    icon: ImageVector,
-    background: Color,
-    iconTint: Color,
-    textColor: Color,
-    modifier: Modifier = Modifier
-) {
-    val colors = getHomeScreenColors(isDarkTheme)
-    Box(
-        modifier = modifier
-            .shadow(
-                elevation    = 3.dp,
-                shape        = RoundedCornerShape(16.dp),
-                ambientColor = iconTint.copy(alpha = 0.08f)
-            )
-            .clip(RoundedCornerShape(16.dp))
-            .background(background)
-            .padding(horizontal = 16.dp, vertical = 18.dp)
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier            = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector        = icon,
-                contentDescription = null,
-                tint               = iconTint,
-                modifier           = Modifier.size(28.dp)
-            )
-            Text(
-                text  = value,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    color      = textColor,
-                    fontSize   = 28.sp
-                )
-            )
-            Text(
-                text  = label,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color    = colors.textSecondary,
-                    fontSize = 12.sp
-                )
-            )
-        }
-    }
 }
 
 @Composable

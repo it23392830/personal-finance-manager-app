@@ -29,7 +29,9 @@ import com.example.financeflow.ui.savings.GoalDetailsScreen
 @Composable
 fun AppNavGraph(
     isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit
+    onThemeToggle: () -> Unit,
+    openStreakOnLaunch: Boolean = false,
+    onStreakLaunchHandled: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val topPadding = WindowInsets.systemBars.asPaddingValues().calculateTopPadding()
@@ -113,7 +115,9 @@ fun AppNavGraph(
             DashboardScreen(
                 rootNavController = navController,
                 isDarkTheme = isDarkTheme,
-                onThemeToggle = onThemeToggle
+                onThemeToggle = onThemeToggle,
+                openStreakOnLaunch = openStreakOnLaunch,
+                onStreakLaunchHandled = onStreakLaunchHandled
             )
         }
 
@@ -128,8 +132,10 @@ fun AppNavGraph(
         composable(
             route = Routes.EDIT_INCOME,
             arguments = listOf(navArgument("incomeId") { type = NavType.StringType })
-        ) {
+        ) { backStackEntry ->
+            val incomeId = backStackEntry.arguments?.getString("incomeId") ?: ""
             EditIncomeScreen(
+                incomeId = incomeId,
                 isDarkTheme = isDarkTheme,
                 onCancel = { navController.popBackStack() },
                 onSaveChanges = { _, _, _, _, _, _ -> navController.popBackStack() }
@@ -139,8 +145,10 @@ fun AppNavGraph(
         composable(
             route = Routes.DELETE_INCOME,
             arguments = listOf(navArgument("incomeId") { type = NavType.StringType })
-        ) {
+        ) { backStackEntry ->
+            val incomeId = backStackEntry.arguments?.getString("incomeId") ?: ""
             DeleteIncomeScreen(
+                incomeId = incomeId,
                 isDarkTheme = isDarkTheme,
                 onCancel = { navController.popBackStack() },
                 onConfirmDelete = { navController.popBackStack() }

@@ -2,8 +2,10 @@ package com.example.financeflow.ui.savings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -58,9 +60,6 @@ fun SavingsScreen(
             .fillMaxSize()
             .background(colors.background),
         contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 20.dp,
             bottom = 32.dp
         ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -74,54 +73,64 @@ fun SavingsScreen(
         }
 
         item {
-            SavingsThisMonthCard(
-                isDarkTheme = isDarkTheme,
-                amount = "LKR 53,200",
-                totalIncome = "LKR 187,500",
-                savingRate = "28%",
-                onAddNewSaving = {
-                    navController.navigate(Routes.GOAL_DETAILS)
-                }
-            )
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                SavingsThisMonthCard(
+                    isDarkTheme = isDarkTheme,
+                    amount = "LKR 53,200",
+                    totalIncome = "LKR 187,500",
+                    savingRate = "28%",
+                    onAddNewSaving = {
+                        navController.navigate(Routes.GOAL_DETAILS)
+                    }
+                )
+            }
         }
 
         item {
-            LifetimeStatisticsCard(
-                isDarkTheme = isDarkTheme,
-                totalSaved = "LKR 301,600",
-                avgSavingsRate = "26.8%",
-                periodLabel = "Total Saved (6 mon)"
-            )
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                LifetimeStatisticsCard(
+                    isDarkTheme = isDarkTheme,
+                    totalSaved = "LKR 301,600",
+                    avgSavingsRate = "26.8%",
+                    periodLabel = "Total Saved (6 mon)"
+                )
+            }
         }
 
         item {
-            SavingsByGoalCard(
-                isDarkTheme = isDarkTheme,
-                goals = goals,
-                onEditClick = { goal -> editingGoal = goal },
-                onDeleteClick = { goal ->
-                    selectedGoal = goal
-                    selectedHistory = null
-                    showDeleteDialog = true
-                }
-            )
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                SavingsByGoalCard(
+                    isDarkTheme = isDarkTheme,
+                    goals = goals,
+                    onEditClick = { goal -> editingGoal = goal },
+                    onDeleteClick = { goal ->
+                        selectedGoal = goal
+                        selectedHistory = null
+                        showDeleteDialog = true
+                    }
+                )
+            }
         }
 
         item {
-            SavingsHistoryCard(
-                isDarkTheme = isDarkTheme,
-                entries = history,
-                onEditClick = { showEditSavingsPopup = true },
-                onDeleteClick = { historyEntry ->
-                    selectedHistory = historyEntry
-                    selectedGoal = null
-                    showDeleteDialog = true
-                }
-            )
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                SavingsHistoryCard(
+                    isDarkTheme = isDarkTheme,
+                    entries = history,
+                    onEditClick = { showEditSavingsPopup = true },
+                    onDeleteClick = { historyEntry ->
+                        selectedHistory = historyEntry
+                        selectedGoal = null
+                        showDeleteDialog = true
+                    }
+                )
+            }
         }
 
         item {
-            SavingsInsightsCard(isDarkTheme = isDarkTheme)
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                SavingsInsightsCard(isDarkTheme = isDarkTheme)
+            }
         }
     }
 

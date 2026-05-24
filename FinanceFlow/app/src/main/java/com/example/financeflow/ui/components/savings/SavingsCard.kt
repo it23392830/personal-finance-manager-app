@@ -3,15 +3,12 @@ package com.example.financeflow.ui.components.savings
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -20,66 +17,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.financeflow.ui.components.common.FeatureMonthHeader
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HeaderCard(
     isDarkTheme: Boolean = false,
     selectedMonth: String = "May 2026",
     onMonthSelected: (String) -> Unit = {}
 ) {
-    val months = listOf("Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026")
-    var expanded by remember { mutableStateOf(false) }
-    var currentMonth by remember { mutableStateOf(selectedMonth) }
-    val colors = getSavingsColors(isDarkTheme)
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp)),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.cardBg)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(text = "Savings Overview", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = colors.accent)
-                    Text(text = "Track your saving habits & allocations", fontSize = 12.sp, color = colors.muted)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .border(border = BorderStroke(1.5.dp, colors.accent), shape = RoundedCornerShape(12.dp))
-                    .clickable { expanded = true }
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = currentMonth, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = colors.textPrimary)
-                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Expand", tint = colors.accent)
-                }
-
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    months.forEach { month ->
-                        DropdownMenuItem(text = { Text(text = month) }, onClick = {
-                            currentMonth = month; onMonthSelected(month); expanded = false
-                        })
-                    }
-                }
-            }
-        }
-    }
+    val months = listOf("May 2026", "April 2026", "March 2026", "February 2026", "January 2026")
+    FeatureMonthHeader(
+        title = "Savings Overview",
+        subtitle = "Track your saving habits & allocations",
+        selectedMonth = selectedMonth,
+        monthOptions = months,
+        onMonthSelected = onMonthSelected,
+        headerColor = if (isDarkTheme) Color(0xFFB8871E) else Color(0xFFF4C542)
+    )
 }
 
 @Composable

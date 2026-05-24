@@ -33,6 +33,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.financeflow.model.Goal
 import com.example.financeflow.model.GoalAllocation
 import com.example.financeflow.model.GoalBadge
+import com.example.financeflow.ui.components.common.FeatureMonthHeader
 import com.example.financeflow.viewmodel.goal.GoalViewModel
 import java.text.NumberFormat
 import java.util.*
@@ -242,58 +243,32 @@ fun GoalsHeader(
     isDarkTheme: Boolean = false,
     onCreateGoal: () -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
     var selectedMonth by remember { mutableStateOf("May 2026") }
     val months = listOf("May 2026", "April 2026", "March 2026", "February 2026", "January 2026")
-
-    val primaryColor = if (isDarkTheme) Color(0xFF4C1D95) else Color(0xFF6F00FF)
-    val secondaryColor = if (isDarkTheme) Color(0xFF312E81) else Color(0xFF8A2BE2)
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .background(Brush.verticalGradient(listOf(primaryColor, secondaryColor)))
-                .padding(24.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(), 
-                horizontalArrangement = Arrangement.SpaceBetween, 
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text("Financial Goals", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text("Track your progress & stay motivated", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
-                }
-                Surface(
-                    onClick = onCreateGoal,
-                    color = Color.White.copy(alpha = 0.2f),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.6f)),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("+ New Goal", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
-                }
-            }
-            Spacer(modifier = Modifier.height(24.dp))
+    FeatureMonthHeader(
+        title = "Financial Goals",
+        subtitle = "Track your progress & stay motivated",
+        selectedMonth = selectedMonth,
+        monthOptions = months,
+        onMonthSelected = { selectedMonth = it },
+        headerColor = if (isDarkTheme) Color(0xFF4C1D95) else Color(0xFF6F00FF),
+        actionContent = {
             Surface(
-                onClick = { expanded = true },
-                color = Color.White.copy(alpha = 0.2f), 
-                shape = RoundedCornerShape(12.dp), 
-                modifier = Modifier.fillMaxWidth()
+                onClick = onCreateGoal,
+                color = Color.White.copy(alpha = 0.2f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.6f)),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(selectedMonth, color = Color.White, fontWeight = FontWeight.Medium)
-                    Icon(Icons.Default.ArrowDropDown, null, tint = Color.White)
-                }
-            }
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.fillMaxWidth(0.85f).background(Color.White)) {
-                months.forEach { month -> DropdownMenuItem(text = { Text(month, color = Color.Black) }, onClick = { selectedMonth = month; expanded = false }) }
+                Text(
+                    text = "+ New Goal",
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                )
             }
         }
-    }
+    )
 }
 
 @Composable

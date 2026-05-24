@@ -4,6 +4,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -59,6 +66,8 @@ private fun getTransactionCardColors(isDarkTheme: Boolean): TransactionCardColor
 fun TransactionCard(
     isDarkTheme: Boolean = false,
     income: Income,
+    expanded: Boolean = false,
+    onToggleExpand: (String) -> Unit = {},
     onEditClick: (Income) -> Unit,
     onDeleteClick: (Income) -> Unit,
     modifier: Modifier = Modifier
@@ -98,6 +107,17 @@ fun TransactionCard(
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
             color = colors.textDark
         )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // ── Expand / Collapse arrow ───────────────────────────────────────────
+        IconButton(onClick = { onToggleExpand(income.id) }) {
+            Icon(
+                imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = if (expanded) "Collapse" else "Expand",
+                tint = colors.textMuted
+            )
+        }
 
         Spacer(modifier = Modifier.width(4.dp))
 
@@ -157,6 +177,36 @@ fun TransactionCard(
             }
         }
     }
+
+    // Expanded details section
+    val detailsBg = Color(0xFFF3E8FF)
+    AnimatedVisibility(
+        visible = expanded,
+        enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
+        exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+                .background(detailsBg, shape = RoundedCornerShape(12.dp))
+                .padding(12.dp)
+        ) {
+            // Date (dd/MM/yyyy)
+            val shortDate = java.text.SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH).format(income.date.toDate())
+            Text(text = "Date:\n$shortDate", color = colors.textDark)
+            Spacer(modifier = Modifier.height(6.dp))
+            // Description
+            if (income.description.isNotBlank()) {
+                Text(text = "Description:\n${income.description}", color = colors.textDark)
+                Spacer(modifier = Modifier.height(6.dp))
+            }
+            // Additional Notes - not part of model; show createdAt as proxy if available
+            Text(text = "Currency: ${income.currency}", color = colors.textMuted)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(text = "Income Source: ${try { IncomeSource.valueOf(income.source).label } catch (e: Exception) { income.source }}", color = colors.textMuted)
+        }
+    }
 }
 
 // ── Small currency badge ──────────────────────────────────────────────────────
@@ -184,11 +234,18 @@ fun CurrencyBadge(currency: String, modifier: Modifier = Modifier) {
 
 /**
  * Derives a human-readable title from the income entry:
- * uses description if present, otherwise falls back to the source label.
+ * uses description if present, otherwise falls back to the source name.
  */
 private fun transactionTitle(income: Income): String {
-    return if (income.description.isNotBlank()) income.description
-    else runCatching { IncomeSource.valueOf(income.source).label }.getOrDefault(income.source)
+    // Keep the displayed title as the income source label.
+    // Do not use the description as the title so editing description
+    // won't change the name shown in the recent transactions list.
+    return try {
+        IncomeSource.valueOf(income.source).label
+    } catch (e: Exception) {
+        // Fallback to source string or description if source is invalid
+        if (income.source.isNotBlank()) income.source else income.description
+    }
 }
 
 private val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
@@ -214,6 +271,8 @@ private fun TransactionCardPreview() {
             TransactionCard(
                 isDarkTheme = false,
                 income = income,
+                expanded = false,
+                onToggleExpand = {},
                 onEditClick = {},
                 onDeleteClick = {}
             )
