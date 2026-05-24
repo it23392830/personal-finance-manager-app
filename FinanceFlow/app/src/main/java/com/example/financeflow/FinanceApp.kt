@@ -1,6 +1,5 @@
 package com.example.financeflow
 
-import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.example.financeflow.utils.NotificationHelper
@@ -8,7 +7,7 @@ import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 @HiltAndroidApp
-class FinanceApp : Application(), Configuration.Provider {
+class FinanceApp : android.app.Application(), Configuration.Provider {
 	@Inject
 	lateinit var authStateObserver: com.example.financeflow.auth.AuthStateObserver
 

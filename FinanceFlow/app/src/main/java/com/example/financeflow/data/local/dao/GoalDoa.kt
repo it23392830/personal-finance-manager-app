@@ -1,6 +1,7 @@
 package com.example.financeflow.data.local.dao
 
 import androidx.room.*
+import com.example.financeflow.data.local.entity.GoalEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

@@ -1,7 +1,5 @@
 package com.example.financeflow.data.remote
 
-class GoalFirebaseServicepackage com.example.financeflow.data.remote
-
 import com.example.financeflow.model.Goal
 import com.example.financeflow.model.GoalAllocation
 import com.google.firebase.auth.FirebaseAuth
@@ -76,5 +74,4 @@ class GoalFirebaseService @Inject constructor(
     suspend fun updateFcmToken(token: String) {
         firestore.collection("users").document(uid).update("fcmToken", token).await()
     }
-} {
 }

@@ -3,6 +3,7 @@ package com.example.financeflow.repository.goal
 import com.example.financeflow.data.local.dao.GoalAllocationDao
 import com.example.financeflow.data.local.dao.GoalDao
 import com.example.financeflow.data.local.entity.GoalAllocationEntity
+import com.example.financeflow.data.local.entity.GoalEntity
 import com.example.financeflow.data.remote.GoalFirebaseService
 import com.example.financeflow.model.Goal
 import com.example.financeflow.model.GoalAllocation

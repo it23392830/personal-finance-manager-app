@@ -143,10 +143,18 @@ dependencies {
         "com.google.firebase:firebase-firestore-ktx"
     )
 
+    // Firebase Storage
+    implementation("com.google.firebase:firebase-storage-ktx")
+
     // Hilt
     implementation("com.google.dagger:hilt-android:2.52")
     ksp("com.google.dagger:hilt-android-compiler:2.52")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    // WorkManager + Hilt integration
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.hilt:hilt-work:1.2.0")
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
 
     // Coroutines
     implementation(
@@ -192,4 +200,5 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.airbnb.android:lottie-compose:6.4.0")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

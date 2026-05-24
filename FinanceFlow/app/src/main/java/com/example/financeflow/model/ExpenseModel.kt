@@ -47,7 +47,6 @@ data class ExpenseUiState(
     val todayExpenses: List<com.example.financeflow.ui.expenses.ExpenseUiItem> = emptyList(),
     val currentMonthTransactions: List<com.example.financeflow.ui.expenses.ExpenseUiItem> = emptyList(),
     val categoryBreakdown: List<com.example.financeflow.ui.expenses.CategoryBreakdownItem> = emptyList(),
-    val availableMonths: List<String> = emptyList(),
     val fixedPayments: List<Expense> = emptyList(),
     val errorMessage: String? = null
 )
