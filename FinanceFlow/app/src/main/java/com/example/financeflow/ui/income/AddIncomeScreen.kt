@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -14,7 +16,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.AssistChip
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import java.util.Date
+import java.util.Locale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,6 +34,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.example.financeflow.viewmodel.income.IncomeViewModel
+import com.example.financeflow.model.Income
+import com.example.financeflow.model.IncomeSource
+import com.google.firebase.Timestamp
 
 // ─── Theme Colors ────────────────────────────────────────────────────────────
 private val BgPurple    = Color(0xFFF3ECFF)
@@ -37,12 +51,14 @@ private val TextDark    = Color(0xFF1E1B2E)
 private val TextMuted   = Color(0xFF9CA3AF)
 private val FieldBg     = Color(0xFFF9F6FF)
 private val DividerColor = Color(0xFFE9E2FF)
+private val PurpleBtn    = Color(0xFF9B72CF)
 
 data class IncomeFormColors(
     val background: Color,
     val cardBg: Color,
     val primary: Color,
     val success: Color,
+    val secondary: Color,
     val textPrimary: Color,
     val textMuted: Color,
     val fieldBg: Color,
@@ -56,6 +72,7 @@ fun getIncomeFormColors(isDarkTheme: Boolean): IncomeFormColors =
             cardBg = Color(0xFF1F2937),
             primary = Color(0xFFA78BFA),
             success = Color(0xFF22C55E),
+            secondary = Color(0xFF7B1FA2),
             textPrimary = Color(0xFFF9FAFB),
             textMuted = Color(0xFF9CA3AF),
             fieldBg = Color(0xFF0F172A),
@@ -67,6 +84,7 @@ fun getIncomeFormColors(isDarkTheme: Boolean): IncomeFormColors =
             cardBg = CardWhite,
             primary = PrimaryPurple,
             success = IncomeGreen,
+            secondary = PurpleBtn,
             textPrimary = TextDark,
             textMuted = TextMuted,
             fieldBg = FieldBg,
@@ -104,7 +122,7 @@ private val currencyOptions = listOf(
  * @param onNavigateUp Back-navigation callback.
  */
 @Suppress("DEPRECATION")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddIncomeScreen(
     isDarkTheme: Boolean = false,
@@ -118,13 +136,19 @@ fun AddIncomeScreen(
     var selectedCurrency by remember { mutableStateOf(currencyOptions[0]) }
     var selectedSource  by remember { mutableStateOf(incomeSourceOptions[0].first) }
     var description     by remember { mutableStateOf("") }
-    var date            by remember { mutableStateOf("05/05/2026") }
+    val todayStr = java.text.SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH).format(Date())
+    var date            by remember { mutableStateOf(todayStr) }
     var notes           by remember { mutableStateOf("") }
 
     var currencyExpanded by remember { mutableStateOf(false) }
     var sourceExpanded   by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
+    val viewModel: IncomeViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsState()
+    var showAddSourceDialog by remember { mutableStateOf(false) }
+    var newSourceName by remember { mutableStateOf("") }
 
     // ── Root scaffold ─────────────────────────────────────────────────────────
     Scaffold(
@@ -190,11 +214,76 @@ fun AddIncomeScreen(
 
                         HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
+                            // Quick Income Sources
+                            IncomeFieldLabel("Quick Income Sources", isDarkTheme = isDarkTheme)
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                val sources = if (uiState.incomeSources.isNotEmpty()) uiState.incomeSources else incomeSourceOptions.map { it.first }
+                                sources.take(5).forEach { src ->
+                                    AssistChip(
+                                        onClick = { selectedSource = src },
+                                        label = { Text(src) }
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            TextButton(onClick = { showAddSourceDialog = true }) {
+                                Icon(Icons.Default.AddCircle, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("+ Add New Source")
+                            }
+
+                            if (showAddSourceDialog) {
+                                AlertDialog(
+                                    onDismissRequest = { showAddSourceDialog = false },
+                                    confirmButton = {
+                                        TextButton(onClick = {
+                                            if (newSourceName.isNotBlank()) {
+                                                viewModel.addIncomeSource(newSourceName.trim())
+                                                newSourceName = ""
+                                            }
+                                            showAddSourceDialog = false
+                                        }) { Text("Save") }
+                                    },
+                                    dismissButton = { TextButton(onClick = { showAddSourceDialog = false }) { Text("Cancel") } },
+                                    title = { Text("Add New Source") },
+                                    text = {
+                                        OutlinedTextField(
+                                            value = newSourceName,
+                                            onValueChange = { newSourceName = it },
+                                            placeholder = { Text("Enter source name") },
+                                            singleLine = true,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                )
+                            }
+
                         // Income Source
                         IncomeFieldLabel("Income Source", isDarkTheme = isDarkTheme)
+                        val dynamicSourceOptions = (uiState.incomeSources.takeIf { it.isNotEmpty() } ?: incomeSourceOptions.map { it.first })
+                            .map { label ->
+                                val icon = when (label.lowercase()) {
+                                    "salary" -> Icons.Default.Work
+                                    "freelance" -> Icons.Default.Code
+                                    "adsense" -> Icons.Default.AttachMoney
+                                    "crypto" -> Icons.Default.CurrencyBitcoin
+                                    "investment" -> Icons.Default.TrendingUp
+                                    "rental" -> Icons.Default.Home
+                                    "business" -> Icons.Default.Business
+                                    else -> Icons.Default.Category
+                                }
+                                label to icon
+                            }
+
                         IncomeSourceDropdown(
                             selectedSource = selectedSource,
-                            sourceOptions = incomeSourceOptions,
+                            sourceOptions = dynamicSourceOptions,
                             expanded = sourceExpanded,
                             onExpandChange = { sourceExpanded = it },
                             onOptionSelected = { selectedSource = it; sourceExpanded = false },
@@ -245,8 +334,25 @@ fun AddIncomeScreen(
             // ── Add Income Button ─────────────────────────────────────────────
             Button(
                 onClick = {
-                    onAddIncome(selectedSource, amount, selectedCurrency,
-                        description, date, notes)
+                    // Create domain Income and persist via ViewModel, then call callbacks
+                    val amountVal = amount.replace(",", "").toDoubleOrNull() ?: 0.0
+                    val currencyCode = selectedCurrency.split(" ").firstOrNull() ?: "LKR"
+                    val income = Income(
+                        source = selectedSource,
+                        amount = amountVal,
+                        currency = currencyCode,
+                        description = description,
+                        date = Timestamp.now()
+                    )
+
+                    scope.launch {
+                        viewModel.addIncome(income)
+                        // Navigate up once after successful add. Avoid calling both
+                        // onAddIncome and onNavigateUp because they both pop the
+                        // NavController and double-pop can leave the NavHost empty
+                        // (white screen). Keep UI navigation single-responsibility.
+                        onNavigateUp()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
