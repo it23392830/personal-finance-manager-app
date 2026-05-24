@@ -27,7 +27,7 @@ import com.example.financeflow.data.local.entity.FixedExpenseEntity
         ExpenseEntity::class,
         FixedExpenseEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

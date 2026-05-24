@@ -34,9 +34,7 @@ class MainActivity : ComponentActivity() {
             FinanceFlowTheme(darkTheme = isDarkTheme) {
                 AppNavGraph(
                     isDarkTheme = isDarkTheme,
-                    onThemeToggle = { isDarkTheme = !isDarkTheme },
-                    openStreakOnLaunch = openStreakFromWidget.value,
-                    onStreakLaunchHandled = { openStreakFromWidget.value = false }
+                    onThemeToggle = { isDarkTheme = !isDarkTheme }
                 )
             }
         }
