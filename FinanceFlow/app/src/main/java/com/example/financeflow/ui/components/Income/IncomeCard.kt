@@ -15,7 +15,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.financeflow.model.IncomeBySource
-import com.example.financeflow.model.IncomeSource
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 private val LightTextDark   = Color(0xFF1F2937)
@@ -83,7 +82,7 @@ fun IncomeCard(
             // ── Name + transaction count ──────────────────────────────────────
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = data.source.label,
+                    text = data.source,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp
@@ -121,15 +120,15 @@ fun IncomeCard(
  * Circular icon badge whose background colour is derived from the [source].
  */
 @Composable
-private fun SourceIconBadge(source: IncomeSource) {
-    val (bgColor, emoji) = when (source) {
-        IncomeSource.SALARY     -> Color(0xFFDBEAFE) to "💼"
-        IncomeSource.FREELANCE  -> Color(0xFFE0E7FF) to "<>"
-        IncomeSource.ADSENSE    -> Color(0xFFDCFCE7) to "$"
-        IncomeSource.CRYPTO     -> Color(0xFFFFEDD5) to "₿"
-        IncomeSource.INVESTMENT -> Color(0xFFFEF9C3) to "📈"
-        IncomeSource.RENTAL     -> Color(0xFFFFE4E6) to "🏠"
-        IncomeSource.OTHER      -> Color(0xFFF3F4F6) to "+"
+private fun SourceIconBadge(source: String) {
+    val (bgColor, emoji) = when (source.lowercase()) {
+        "salary"     -> Color(0xFFDBEAFE) to "💼"
+        "freelance"  -> Color(0xFFE0E7FF) to "<>"
+        "adsense"    -> Color(0xFFDCFCE7) to "$"
+        "crypto"     -> Color(0xFFFFEDD5) to "₿"
+        "investment" -> Color(0xFFFEF9C3) to "📈"
+        "rental"     -> Color(0xFFFFE4E6) to "🏠"
+        else         -> Color(0xFFF3F4F6) to "💰"
     }
 
     Box(
@@ -163,10 +162,10 @@ private fun IncomeCardPreview() {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         listOf(
-            IncomeBySource(IncomeSource.SALARY,    135_000.0, 1, 62.6),
-            IncomeBySource(IncomeSource.FREELANCE,  73_500.0, 2, 33.9),
-            IncomeBySource(IncomeSource.ADSENSE,     5_200.0, 1,  2.4),
-            IncomeBySource(IncomeSource.CRYPTO,      2_300.0, 1,  1.1),
+            IncomeBySource("Salary",    135_000.0, 1, 62.6),
+            IncomeBySource("Freelance",  73_500.0, 2, 33.9),
+            IncomeBySource("AdSense",     5_200.0, 1,  2.4),
+            IncomeBySource("Crypto",      2_300.0, 1,  1.1),
         ).forEach { IncomeCard(isDarkTheme = false, data = it) }
     }
 }

@@ -23,7 +23,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.financeflow.model.Currency
 import com.example.financeflow.model.Income
-import com.example.financeflow.model.IncomeSource
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
@@ -88,9 +87,11 @@ fun AddIncomeDialog(
     // ── Local form state ──────────────────────────────────────────────────────
     var amountText       by remember { mutableStateOf("") }
     var selectedCurrency by remember { mutableStateOf(Currency.LKR) }
-    var selectedSource   by remember { mutableStateOf(IncomeSource.SALARY) }
+    var selectedSource   by remember { mutableStateOf("Salary") }
     var description      by remember { mutableStateOf("") }
     var selectedDate     by remember { mutableStateOf(Date()) }
+
+    val sourceOptions = listOf("Salary", "Freelance", "AdSense", "Crypto", "Investment", "Rental", "Other")
 
     var currencyExpanded by remember { mutableStateOf(false) }
     var sourceExpanded   by remember { mutableStateOf(false) }
@@ -189,7 +190,7 @@ fun AddIncomeDialog(
                     onExpandedChange = { sourceExpanded = !sourceExpanded }
                 ) {
                     OutlinedTextField(
-                        value = selectedSource.label,
+                        value = selectedSource,
                         onValueChange = {},
                         readOnly = true,
                         leadingIcon = { Text(sourceEmoji(selectedSource), fontSize = 18.sp) },
@@ -204,9 +205,9 @@ fun AddIncomeDialog(
                         expanded = sourceExpanded,
                         onDismissRequest = { sourceExpanded = false }
                     ) {
-                        IncomeSource.entries.forEach { source ->
+                        sourceOptions.forEach { source ->
                             DropdownMenuItem(
-                                text = { Text("${sourceEmoji(source)}  ${source.label}") },
+                                text = { Text("${sourceEmoji(source)}  $source") },
                                 onClick = { selectedSource = source; sourceExpanded = false }
                             )
                         }
@@ -227,7 +228,7 @@ fun AddIncomeDialog(
                 // ── Date ──────────────────────────────────────────────────────
                 AddIncomeDialogLabel("Date", colors)
                 OutlinedTextField(
-                    value = SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH).format(selectedDate),
+                    value = SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH).format(selectedDate),
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = {
@@ -256,7 +257,7 @@ fun AddIncomeDialog(
                             Income(
                                 amount      = amount,
                                 currency    = selectedCurrency.code,
-                                source      = selectedSource.name,
+                                source      = selectedSource,
                                 description = description.trim(),
                                 date        = Timestamp(selectedDate)
                             )
@@ -300,14 +301,14 @@ private fun addIncomeFieldColors(colors: AddIncomeDialogColors) = OutlinedTextFi
     unfocusedContainerColor  = colors.fieldBg
 )
 
-internal fun sourceEmoji(source: IncomeSource) = when (source) {
-    IncomeSource.SALARY     -> "💼"
-    IncomeSource.FREELANCE  -> "<>"
-    IncomeSource.ADSENSE    -> "$"
-    IncomeSource.CRYPTO     -> "₿"
-    IncomeSource.INVESTMENT -> "📈"
-    IncomeSource.RENTAL     -> "🏠"
-    IncomeSource.OTHER      -> "+"
+internal fun sourceEmoji(source: String) = when (source.lowercase()) {
+    "salary"     -> "💼"
+    "freelance"  -> "<>"
+    "adsense"    -> "$"
+    "crypto"     -> "₿"
+    "investment" -> "📈"
+    "rental"     -> "🏠"
+    else         -> "💰"
 }
 
 // ── Preview ───────────────────────────────────────────────────────────────────

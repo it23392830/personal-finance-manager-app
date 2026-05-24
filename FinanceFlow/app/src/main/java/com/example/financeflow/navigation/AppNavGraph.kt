@@ -132,8 +132,10 @@ fun AppNavGraph(
         composable(
             route = Routes.EDIT_INCOME,
             arguments = listOf(navArgument("incomeId") { type = NavType.StringType })
-        ) {
+        ) { backStackEntry ->
+            val incomeId = backStackEntry.arguments?.getString("incomeId") ?: ""
             EditIncomeScreen(
+                incomeId = incomeId,
                 isDarkTheme = isDarkTheme,
                 onCancel = { navController.popBackStack() },
                 onSaveChanges = { _, _, _, _, _, _ -> navController.popBackStack() }
@@ -143,8 +145,10 @@ fun AppNavGraph(
         composable(
             route = Routes.DELETE_INCOME,
             arguments = listOf(navArgument("incomeId") { type = NavType.StringType })
-        ) {
+        ) { backStackEntry ->
+            val incomeId = backStackEntry.arguments?.getString("incomeId") ?: ""
             DeleteIncomeScreen(
+                incomeId = incomeId,
                 isDarkTheme = isDarkTheme,
                 onCancel = { navController.popBackStack() },
                 onConfirmDelete = { navController.popBackStack() }

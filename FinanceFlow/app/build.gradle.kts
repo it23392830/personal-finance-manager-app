@@ -10,6 +10,8 @@ plugins {
 
     id("com.google.dagger.hilt.android")
 
+    id("com.google.devtools.ksp")
+
     kotlin("kapt")
 }
 
@@ -159,6 +161,11 @@ dependencies {
     implementation(
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
     )
+
+    // Room (local persistence)
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
 
     // Testing
     testImplementation(
