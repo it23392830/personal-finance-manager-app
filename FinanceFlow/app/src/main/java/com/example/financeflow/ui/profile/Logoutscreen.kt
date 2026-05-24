@@ -1,7 +1,6 @@
 package com.example.financeflow.ui.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,8 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -83,8 +80,6 @@ fun LogoutScreen(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         LogoutHeaderCard(
-            isDarkTheme = isDarkTheme,
-            onThemeToggle = onThemeToggle,
             palette = palette
         )
 
@@ -192,6 +187,7 @@ fun LogoutScreen(
 
     if (showDeleteDialog) {
         DeleteAccountDialog(
+            isDarkTheme = isDarkTheme,
             onDismiss = { showDeleteDialog = false }
         )
     }
@@ -199,8 +195,6 @@ fun LogoutScreen(
 
 @Composable
 private fun LogoutHeaderCard(
-    isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit,
     palette: LogoutPalette
 ) {
     Card(
@@ -231,15 +225,6 @@ private fun LogoutHeaderCard(
                 color = palette.titleColor,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f)
-            )
-
-            Icon(
-                imageVector = if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
-                contentDescription = if (isDarkTheme) "Dark Mode" else "Light Mode",
-                tint = palette.secondaryTextColor,
-                modifier = Modifier
-                    .size(26.dp)
-                    .clickable { onThemeToggle() }
             )
         }
     }

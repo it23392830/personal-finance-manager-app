@@ -14,8 +14,11 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private val openStreakFromWidget = mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        openStreakFromWidget.value = intent?.getBooleanExtra(EXTRA_OPEN_STREAK_WIDGET, false) == true
         enableEdgeToEdge()
         setContent {
             var isDarkTheme by rememberSaveable { mutableStateOf(false) }
@@ -23,12 +26,19 @@ class MainActivity : ComponentActivity() {
             FinanceFlowTheme(darkTheme = isDarkTheme) {
                 AppNavGraph(
                     isDarkTheme = isDarkTheme,
-                    onThemeToggle = { isDarkTheme = !isDarkTheme }
+                    onThemeToggle = { isDarkTheme = !isDarkTheme },
+                    openStreakOnLaunch = openStreakFromWidget.value,
+                    onStreakLaunchHandled = { openStreakFromWidget.value = false }
                 )
             }
         }
     }
 
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        openStreakFromWidget.value = intent.getBooleanExtra(EXTRA_OPEN_STREAK_WIDGET, false)
+    }
     companion object {
         const val EXTRA_OPEN_STREAK_WIDGET = "extra_open_streak_widget"
     }
