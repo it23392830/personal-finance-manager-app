@@ -139,6 +139,7 @@ fun HomeScreen(
     onExpensesClick: () -> Unit = {},
     onSavingsClick: () -> Unit = {},
     onGoalCardClick: () -> Unit = {},
+    onStreakClick: () -> Unit = {},
     onThemeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {}
@@ -174,6 +175,7 @@ fun HomeScreen(
                 BalanceCard(
                     isDarkTheme = isDarkTheme,
                     data = sampleBalanceData,
+                    onStreakClick = onStreakClick,
                     onThemeClick = onThemeClick,
                     onProfileClick = onProfileClick
                 )

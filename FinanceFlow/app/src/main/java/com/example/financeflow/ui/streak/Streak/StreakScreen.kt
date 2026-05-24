@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.screens.streak
+package com.example.financeflow.ui.streak.Streak
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

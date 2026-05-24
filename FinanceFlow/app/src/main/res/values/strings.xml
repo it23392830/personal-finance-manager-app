@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">Penny-Pilot</string>
+    <string name="streak_widget_title">Daily Streak</string>
+    <string name="streak_widget_motivation">Keep the momentum going!</string>
+    <string name="streak_widget_footer">Tap to view details</string>
+    <string name="streak_widget_current_label">Current Streak</string>
+    <string name="streak_widget_current_value">0 Days</string>
+    <string name="streak_widget_freeze_label">Streak Freezes</string>
+    <string name="streak_widget_freeze_value">0</string>
+    <string name="streak_widget_best_label">Best Streak</string>
+    <string name="streak_widget_best_value">0 Days</string>
+    <string name="streak_widget_consistency_label">Consistency</string>
+    <string name="streak_widget_consistency_value">0%</string>
 </resources>
