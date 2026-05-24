@@ -1,0 +1,44 @@
+package com.example.financeflow.model
+
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.PropertyName
+
+/**
+ * Domain model for an expense record stored under users/{uid}/expenses/{expenseId}
+ */
+data class Expense(
+    val id: String = "",
+    val userId: String = "",
+    val amount: Double = 0.0,
+    val currency: String = "LKR",
+    val category: String = "",
+    val description: String = "",
+    val paymentMethod: String = "",
+    val notes: String = "",
+    @get:PropertyName("fixed") @set:PropertyName("fixed") var isFixed: Boolean = false,
+    @get:PropertyName("paid") @set:PropertyName("paid") var isPaid: Boolean = false,
+    val date: Timestamp = Timestamp.now(),
+    val createdAt: Timestamp = Timestamp.now()
+)
+
+data class FixedExpense(
+    val id: String = "",
+    val userId: String = "",
+    val name: String = "",
+    val amount: Double = 0.0,
+    val category: String = "",
+    val isPaid: Boolean = false,
+    val createdAt: Timestamp = Timestamp.now()
+)
+
+data class ExpenseUiState(
+    val isLoading: Boolean = false,
+    val selectedMonth: String = "",
+    val totalExpense: Double = 0.0,
+    val todayExpenses: List<com.example.financeflow.ui.expenses.ExpenseUiItem> = emptyList(),
+    val currentMonthTransactions: List<com.example.financeflow.ui.expenses.ExpenseUiItem> = emptyList(),
+    val categoryBreakdown: List<com.example.financeflow.ui.expenses.CategoryBreakdownItem> = emptyList(),
+    val availableMonths: List<String> = emptyList(),
+    val fixedPayments: List<Expense> = emptyList(),
+    val errorMessage: String? = null
+)

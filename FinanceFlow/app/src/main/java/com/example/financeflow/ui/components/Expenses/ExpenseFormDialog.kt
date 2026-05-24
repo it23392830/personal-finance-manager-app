@@ -58,6 +58,8 @@ fun ExpenseFormDialog(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(20.dp)
+                    .navigationBarsPadding()
+                    .imePadding()
             ) {
                 Text(
                     text = if (isEditMode) "Edit Expense" else "Add New Expense",

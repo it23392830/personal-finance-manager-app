@@ -9,10 +9,7 @@ plugins {
     id("com.google.gms.google-services")
 
     id("com.google.dagger.hilt.android")
-
     id("com.google.devtools.ksp")
-
-    kotlin("kapt")
 }
 
 android {
@@ -62,17 +59,19 @@ android {
     }
 
     buildFeatures {
-
         compose = true
     }
 }
 
-kapt {
-    correctErrorTypes = true
-}
-
 kotlin {
     jvmToolchain(17)
+}
+
+// Workaround: force Kotlin language/api version to 1.9 to avoid KAPT issues with Kotlin 2.0
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
@@ -145,17 +144,9 @@ dependencies {
     )
 
     // Hilt
-    implementation(
-        "com.google.dagger:hilt-android:2.51.1"
-    )
-
-    kapt(
-        "com.google.dagger:hilt-android-compiler:2.51.1"
-    )
-
-    implementation(
-        "androidx.hilt:hilt-navigation-compose:1.2.0"
-    )
+    implementation("com.google.dagger:hilt-android:2.52")
+    ksp("com.google.dagger:hilt-android-compiler:2.52")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // Coroutines
     implementation(

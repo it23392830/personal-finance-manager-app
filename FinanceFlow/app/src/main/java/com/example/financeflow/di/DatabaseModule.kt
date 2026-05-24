@@ -37,4 +37,12 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideFixedExpenseDao(db: AppDatabase): com.example.financeflow.data.local.dao.FixedExpenseDao = db.fixedExpenseDao()
+
+    @Provides
+    @Singleton
+    fun provideGoalDao(db: AppDatabase): com.example.financeflow.data.local.dao.GoalDao = db.goalDao()
+
+    @Provides
+    @Singleton
+    fun provideGoalAllocationDao(db: AppDatabase): com.example.financeflow.data.local.dao.GoalAllocationDao = db.goalAllocationDao()
 }
