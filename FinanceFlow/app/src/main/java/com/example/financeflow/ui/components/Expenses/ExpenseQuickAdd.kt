@@ -21,7 +21,6 @@ fun ExpenseQuickAdd(
     isDarkTheme: Boolean = false,
     recentCategoryIds: List<String>,
     onCategoryClick: (categoryId: String) -> Unit,
-    onCustomClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = getExpensesColors(isDarkTheme)
@@ -44,15 +43,6 @@ fun ExpenseQuickAdd(
                     fontWeight = FontWeight.Bold,
                     color = colors.TextPrimary
                 )
-                Button(
-                    onClick = onCustomClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = colors.HeaderRed),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                    modifier = Modifier.height(32.dp)
-                ) {
-                    Text("+ Add Expenses", fontSize = 12.sp, color = androidx.compose.ui.graphics.Color.White)
-                }
             }
 
             Spacer(Modifier.height(12.dp))
@@ -154,7 +144,6 @@ fun ExpenseQuickAddPreview() {
         ExpenseQuickAdd(
             recentCategoryIds = listOf("food_coffee", "transport_ride", "food_dining"),
             onCategoryClick = {},
-            onCustomClick = {},
             modifier = Modifier.padding(16.dp)
         )
     }

@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,13 +20,15 @@ import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.expenses.ExpenseColors
 import com.example.financeflow.ui.theme.FinanceFlowTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseHeader(
     selectedMonth: String,
     onMonthChange: (String) -> Unit,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
-    colors: ExpensesColors = getExpensesColors(false)
+    colors: ExpensesColors = getExpensesColors(false),
+    availableMonths: List<String> = emptyList()
 ) {
     Column(
         modifier = modifier
@@ -52,54 +54,53 @@ fun ExpenseHeader(
                     fontSize = 12.sp
                 )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.Outlined.LightMode,
-                        contentDescription = "Theme",
-                            tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.Outlined.Person,
-                        contentDescription = "Profile",
-                            tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
+            Spacer(Modifier.width(8.dp))
         }
 
         Spacer(Modifier.height(16.dp))
 
         // Month Selector Box
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(44.dp)
-                .clip(RoundedCornerShape(12.dp)),
-            color = colors.CardBg
+        // Month Selector Box (simple dropdown)
+        var expanded by remember { mutableStateOf(false) }
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
         ) {
-            Row(
+            Surface(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .fillMaxWidth()
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                color = colors.CardBg
             ) {
-                Text(
-                    text = "May 2026",
-                    color = colors.TextPrimary,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    tint = colors.TextMuted
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = selectedMonth.ifBlank { "" },
+                        color = colors.TextPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null,
+                        tint = colors.TextMuted
+                    )
+                }
+            }
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(colors.CardBg)
+            ) {
+                availableMonths.forEach { m ->
+                    DropdownMenuItem(text = { Text(m) }, onClick = { expanded = false; onMonthChange(m) })
+                }
             }
         }
     }

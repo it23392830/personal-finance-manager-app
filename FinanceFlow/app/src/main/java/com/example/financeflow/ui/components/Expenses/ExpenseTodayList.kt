@@ -22,7 +22,7 @@ fun ExpenseTodayList(
     openMenuId: Int?,
     onMenuToggle: (Int) -> Unit,
     onEdit: (ExpenseUiItem) -> Unit,
-    onDelete: (Int) -> Unit,
+    onDelete: (ExpenseUiItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = getExpensesColors(isDarkTheme)
@@ -81,7 +81,7 @@ fun ExpenseTodayList(
                             isMenuOpen = openMenuId == exp.id,
                             onMenuToggle = { onMenuToggle(exp.id) },
                             onEdit = { onEdit(exp) },
-                            onDelete = { onDelete(exp.id) },
+                            onDelete = { onDelete(exp) },
                             colors = colors
                         )
                     }
