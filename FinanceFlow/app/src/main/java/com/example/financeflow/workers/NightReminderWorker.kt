@@ -32,12 +32,11 @@ class NightReminderWorker @AssistedInject constructor(
         if (auth.currentUser == null) return Result.success()
 
         return runCatching {
-            val hasIncomeToday = dailyActivityRepository.hasIncomeToday()
             val hasExpenseToday = dailyActivityRepository.hasExpenseToday()
 
-            if (!hasIncomeToday || !hasExpenseToday) {
-                val title = "Still missing today's update \uD83C\uDF19"
-                val message = "You haven't added today's income or expenses yet."
+            if (!hasExpenseToday) {
+                val title = "Expense Streak Reminder"
+                val message = "You forgot to log today's expenses. Keep your streak alive!"
                 val notification = FinanceNotification(
                     id = UUID.randomUUID().toString(),
                     title = title,

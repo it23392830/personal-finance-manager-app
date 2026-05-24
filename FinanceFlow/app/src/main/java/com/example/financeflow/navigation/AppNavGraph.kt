@@ -30,7 +30,9 @@ import com.example.financeflow.ui.savings.GoalDetailsScreen
 @Composable
 fun AppNavGraph(
     isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit
+    onThemeToggle: () -> Unit,
+    openStreakOnLaunch: Boolean = false,
+    onStreakLaunchHandled: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val topPadding = WindowInsets.systemBars.asPaddingValues().calculateTopPadding()
@@ -114,7 +116,9 @@ fun AppNavGraph(
             DashboardScreen(
                 rootNavController = navController,
                 isDarkTheme = isDarkTheme,
-                onThemeToggle = onThemeToggle
+                onThemeToggle = onThemeToggle,
+                openStreakOnLaunch = openStreakOnLaunch,
+                onStreakLaunchHandled = onStreakLaunchHandled
             )
         }
 

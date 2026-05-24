@@ -9,6 +9,6 @@
     <string name="streak_widget_freeze_value">0</string>
     <string name="streak_widget_best_label">Best Streak</string>
     <string name="streak_widget_best_value">0 Days</string>
-    <string name="streak_widget_consistency_label">Consistency</string>
-    <string name="streak_widget_consistency_value">0%</string>
+    <string name="streak_widget_status_label">Status</string>
+    <string name="streak_widget_status_value">BROKEN</string>
 </resources>
