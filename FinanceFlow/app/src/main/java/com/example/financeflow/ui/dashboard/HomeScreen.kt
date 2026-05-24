@@ -3,6 +3,7 @@ package com.example.financeflow.ui.dashboard
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -135,7 +136,8 @@ fun HomeScreen(
     onStreakClick: () -> Unit = {},
     onThemeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {}
+    onNotificationClick: () -> Unit = {},
+    unreadNotificationCount: Int = 0
 ) {
     val colors = getHomeScreenColors(isDarkTheme)
     val listState = rememberLazyListState()
@@ -258,12 +260,37 @@ fun HomeScreen(
                             tint = colors.textPrimary
                         )
                     }
-                    IconButton(onClick = onNotificationClick) {
-                        Icon(
-                            imageVector = Icons.Outlined.Notifications,
-                            contentDescription = "Notifications",
-                            tint = colors.textPrimary
-                        )
+                    Box {
+                        IconButton(onClick = onNotificationClick) {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = "Notifications",
+                                tint = colors.textPrimary
+                            )
+                        }
+
+                        if (unreadNotificationCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = (-2).dp, y = 2.dp)
+                                    .size(18.dp)
+                                    .background(Color(0xFFFF5E4D), RoundedCornerShape(99.dp))
+                                    .border(
+                                        width = 1.5.dp,
+                                        color = if (isDarkTheme) Color(0xFF1A1A2E) else Color(0xFFF5F3FF),
+                                        shape = RoundedCornerShape(99.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (unreadNotificationCount > 9) "9+" else unreadNotificationCount.toString(),
+                                    color = Color.White,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
                 }
             }

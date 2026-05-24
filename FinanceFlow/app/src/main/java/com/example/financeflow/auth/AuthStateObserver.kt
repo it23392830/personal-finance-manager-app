@@ -2,6 +2,7 @@ package com.example.financeflow.auth
 
 import android.util.Log
 import com.example.financeflow.repository.income.IncomeRepository
+import com.example.financeflow.workers.NotificationScheduler
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +17,8 @@ import javax.inject.Singleton
 @Singleton
 class AuthStateObserver @Inject constructor(
     private val auth: FirebaseAuth,
-    private val repository: IncomeRepository
+    private val repository: IncomeRepository,
+    private val notificationScheduler: NotificationScheduler
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -24,6 +26,9 @@ class AuthStateObserver @Inject constructor(
         val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
             if (user != null) {
+                notificationScheduler.scheduleDailyReminders()
+                notificationScheduler.scheduleDebugNotificationTest()
+
                 // User signed in: sync remote incomes for this user into Room
                 scope.launch {
                     try {

@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -25,11 +27,14 @@ import com.example.financeflow.ui.insights.DailyReportScreen
 import com.example.financeflow.ui.insights.InsightsScreen
 import com.example.financeflow.ui.insights.MonthlyReportScreen
 import com.example.financeflow.ui.insights.WeeklyReportScreen
+import com.example.financeflow.ui.notifications.NotificationScreen
 import com.example.financeflow.ui.profile.LogoutScreen
 import com.example.financeflow.ui.profile.ProfileScreen
 import com.example.financeflow.ui.savings.AddSavingScreen
 import com.example.financeflow.ui.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.SavingsScreen
+import com.example.financeflow.ui.streak.Streak.StreakScreen
+import com.example.financeflow.viewmodel.notification.NotificationViewModel
 
 @Composable
 fun DashboardScreen(
@@ -38,6 +43,8 @@ fun DashboardScreen(
     onThemeToggle: () -> Unit
 ) {
     val navController = rememberNavController()
+    val notificationViewModel: NotificationViewModel = hiltViewModel()
+    val unreadNotificationCount by notificationViewModel.unreadCount.collectAsState()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
@@ -76,7 +83,9 @@ fun DashboardScreen(
                     onSavingsClick = { navController.navigate(Routes.SAVINGS) },
                     onGoalCardClick = { navController.navigate(Routes.GOALS) },
                     onThemeClick = onThemeToggle,
-                    onProfileClick = { navController.navigate(Routes.PROFILE) }
+                    onProfileClick = { navController.navigate(Routes.PROFILE) },
+                    onNotificationClick = { navController.navigate(Routes.NOTIFICATIONS) },
+                    unreadNotificationCount = unreadNotificationCount
                 )
             }
 
@@ -111,6 +120,18 @@ fun DashboardScreen(
                 )
             }
 
+            composable(Routes.STREAK) {
+                StreakScreen(isDarkTheme = isDarkTheme)
+            }
+
+            composable(Routes.NOTIFICATIONS) {
+                NotificationScreen(
+                    isDarkTheme = isDarkTheme,
+                    onNavigateBack = { navController.popBackStack() },
+                    viewModel = notificationViewModel
+                )
+            }
+
             composable(Routes.PROFILE) {
                 ProfileScreen(
                     isDarkTheme = isDarkTheme,
@@ -124,7 +145,13 @@ fun DashboardScreen(
                 LogoutScreen(
                     isDarkTheme = isDarkTheme,
                     onThemeToggle = onThemeToggle,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onAccountDeleted = {
+                        rootNavController.navigate(Routes.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
 

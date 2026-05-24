@@ -101,7 +101,8 @@ data class SavingGoal(
     val savedAmount: String,
     val targetAmount: String,
     val progressPercent: Float,   // 0f – 1f
-    val progressLabel: String     // e.g. "40.1% complete"
+    val progressLabel: String,    // e.g. "40.1% complete"
+    val id: String = ""
 )
 
 fun goalProgressSample() = GoalProgressData()

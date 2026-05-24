@@ -1,6 +1,5 @@
 package com.example.financeflow.ui.profile
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,9 +33,9 @@ private val DeletePurpleBtn = Color(0xFF9B72CF)
 @Composable
 fun DeleteAccountDialog(
     isDarkTheme: Boolean = false,
+    onConfirmDelete: () -> Unit = {},
     onDismiss: () -> Unit = {}
 ) {
-    val context = LocalContext.current
     val cardColor = if (isDarkTheme) Color(0xFF241F30) else Color(0xFFFFFFFF)
     val titleColor = if (isDarkTheme) Color(0xFFF4EEFF) else Color(0xFF1A1A1A)
     val bodyColor = if (isDarkTheme) Color(0xFFCDBFDD) else Color(0xFF555555)
@@ -91,7 +89,7 @@ fun DeleteAccountDialog(
 
                     Button(
                         onClick = {
-                            Toast.makeText(context, "Account Deleted", Toast.LENGTH_SHORT).show()
+                            onConfirmDelete()
                             onDismiss()
                         },
                         modifier = Modifier

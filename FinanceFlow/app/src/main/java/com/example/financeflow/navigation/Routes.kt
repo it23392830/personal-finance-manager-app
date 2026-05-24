@@ -13,6 +13,8 @@ object Routes {
     const val SAVINGS = "savings"
     const val GOALS = "goals"
     const val INSIGHTS = "insights"
+    const val STREAK = "streak"
+    const val NOTIFICATIONS = "notifications"
     const val DASHBOARD = "dashboard"
 
     const val ADD_EXPENSE = "add_expense"

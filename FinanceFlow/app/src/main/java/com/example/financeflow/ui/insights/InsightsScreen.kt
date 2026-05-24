@@ -1,4 +1,4 @@
-package com.example.financeflow.ui.insights
+           package com.example.financeflow.ui.insights
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

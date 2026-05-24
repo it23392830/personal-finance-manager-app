@@ -23,7 +23,8 @@ data class SavingHistoryEntry(
     val date: String,
     val savingRate: String,
     val income: String,
-    val saved: String
+    val saved: String,
+    val id: String = ""
 )
 
 val dummyHistory = listOf(
@@ -36,7 +37,7 @@ val dummyHistory = listOf(
 fun SavingsHistoryCard(
     isDarkTheme: Boolean = false,
     entries: List<SavingHistoryEntry> = dummyHistory,
-    onEditClick: () -> Unit = {},
+    onEditClick: (SavingHistoryEntry) -> Unit = {},
     onDeleteClick: (SavingHistoryEntry) -> Unit = {}
 ) {
     val colors = getSavingsColors(isDarkTheme)
@@ -53,7 +54,7 @@ fun SavingsHistoryCard(
             HistoryItem(
                 isDarkTheme = isDarkTheme,
                 entry = entry,
-                onEditClick = onEditClick,
+                onEditClick = { onEditClick(entry) },
                 onDeleteClick = { onDeleteClick(entry) }
             )
             Spacer(modifier = Modifier.height(10.dp))

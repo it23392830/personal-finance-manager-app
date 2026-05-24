@@ -31,6 +31,15 @@ interface IncomeDao {
     @Query("SELECT * FROM income WHERE userId = :userId AND date BETWEEN :start AND :end ORDER BY date DESC")
     fun getIncomesBetweenFlowForUser(start: Long, end: Long, userId: String): Flow<List<IncomeEntity>>
 
+    /**
+     * Counts income records in a date range for the current user.
+     *
+     * Notification workers use this to decide whether the 9 PM missed activity
+     * reminder should be created.
+     */
+    @Query("SELECT COUNT(*) FROM income WHERE userId = :userId AND date BETWEEN :start AND :end")
+    suspend fun countIncomeForUserBetween(userId: String, start: Long, end: Long): Int
+
     @Query("SELECT * FROM income WHERE id = :id LIMIT 1")
     suspend fun getIncomeById(id: String): IncomeEntity?
 

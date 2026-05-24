@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -17,8 +19,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.financeflow.model.Saving
+import com.example.financeflow.model.SavingGoal
 import com.example.financeflow.ui.components.savings.ContributionHistoryList
-import com.example.financeflow.ui.components.savings.dummyContributions
+import com.example.financeflow.ui.components.savings.ContributionEntry
+import com.example.financeflow.viewmodel.savings.SavingsViewModel
 
 // Uses shared savings theme tokens via getSavingsColors
 
@@ -37,9 +43,17 @@ import com.example.financeflow.ui.components.savings.dummyContributions
 @Composable
 fun GoalDetailsScreen(
     isDarkTheme: Boolean = false,
-    onAddContribution: () -> Unit = {}
+    onAddContribution: () -> Unit = {},
+    viewModel: SavingsViewModel = hiltViewModel()
 ) {
     val colors = getSavingsColors(isDarkTheme)
+    val goals by viewModel.goals.collectAsState()
+    val savings by viewModel.savings.collectAsState()
+    val selectedGoal = goals.firstOrNull()
+    val goalSavings = selectedGoal?.let { goal ->
+        savings.filter { it.goalName == goal.goalName }
+    }.orEmpty()
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -55,10 +69,10 @@ fun GoalDetailsScreen(
         item {
             GoalInfoCard(
                 isDarkTheme = isDarkTheme,
-                goalName = "Vacation",
-                currentAmount = "LKR 19,620.00",
-                savedAmount = "LKR 6,53500.31",
-                progress = 0.40f
+                goalName = selectedGoal?.goalName ?: "No goal selected",
+                currentAmount = (selectedGoal?.currentAmount ?: 0.0).toLkr(),
+                savedAmount = goalSavings.sumOf { it.amountSaved }.toLkr(),
+                progress = selectedGoal?.safeProgress() ?: 0f
             )
         }
 
@@ -76,9 +90,36 @@ fun GoalDetailsScreen(
             )
         }
 
-        item { ContributionHistoryList(isDarkTheme = isDarkTheme, entries = dummyContributions) }
+        item {
+            ContributionHistoryList(
+                isDarkTheme = isDarkTheme,
+                entries = goalSavings.map { it.toContributionEntry() }
+            )
+        }
     }
 }
+
+/** Calculates a display-safe goal progress fraction. */
+private fun SavingGoal.safeProgress(): Float {
+    return if (targetAmount > 0.0) {
+        (currentAmount / targetAmount).toFloat().coerceIn(0f, 1f)
+    } else {
+        progress.coerceIn(0f, 1f)
+    }
+}
+
+/** Maps one saving record into the contribution history card. */
+private fun Saving.toContributionEntry(): ContributionEntry {
+    return ContributionEntry(
+        month = month,
+        date = date,
+        title = goalName,
+        amount = amountSaved.toLkr()
+    )
+}
+
+/** Formats a number as LKR for the savings UI. */
+private fun Double.toLkr(): String = "LKR ${"%,.2f".format(this)}"
 
 // GoalDetailsHeaderCard
 //

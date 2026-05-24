@@ -31,6 +31,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -42,15 +46,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.financeflow.model.Saving
 
 // Colors are provided by SavingsTheme.getSavingsColors(isDarkTheme)
 
 @Composable
 fun EditSavingsRecordScreen(
     isDarkTheme: Boolean = false,
+    saving: Saving? = null,
+    onSave: (Saving) -> Unit = {},
     onDismiss: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    var month by remember(saving) { mutableStateOf(saving?.month ?: "May 2026") }
+    var totalIncome by remember(saving) { mutableStateOf(saving?.totalIncome?.toPlainAmount() ?: "") }
+    var amountSaved by remember(saving) { mutableStateOf(saving?.amountSaved?.toPlainAmount() ?: "") }
+    var date by remember(saving) { mutableStateOf(saving?.date ?: "") }
+    val savingRate = calculateSavingRate(amountSaved.toMoneyDouble(), totalIncome.toMoneyDouble())
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -99,7 +111,8 @@ fun EditSavingsRecordScreen(
 
                     EditRecordField(
                         label = "Month Label",
-                        value = "May 2026",
+                        value = month,
+                        onValueChange = { month = it },
                         trailingIcon = {
                             Icon(Icons.Default.KeyboardArrowDown, null)
                         },
@@ -108,7 +121,8 @@ fun EditSavingsRecordScreen(
 
                     EditRecordField(
                         label = "Total Income",
-                        value = "LKR 196,400",
+                        value = totalIncome,
+                        onValueChange = { totalIncome = it },
                         trailingIcon = {
                             Icon(Icons.Default.KeyboardArrowDown, null)
                         },
@@ -117,7 +131,8 @@ fun EditSavingsRecordScreen(
 
                     EditRecordField(
                         label = "Amount Saved",
-                        value = "LKR 53,200",
+                        value = amountSaved,
+                        onValueChange = { amountSaved = it },
                         trailingIcon = {
                             Icon(Icons.Default.KeyboardArrowDown, null)
                         },
@@ -130,7 +145,7 @@ fun EditSavingsRecordScreen(
                         colors = CardDefaults.cardColors(containerColor = colors.accent)
                     ) {
                         Text(
-                            text = "Saving Rate 28%",
+                            text = "Saving Rate ${savingRate.toInt()}%",
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                             color = Color.White,
                             fontSize = 14.sp,
@@ -140,7 +155,8 @@ fun EditSavingsRecordScreen(
 
                     EditRecordField(
                         label = "Date",
-                        value = "05/05/2026",
+                        value = date,
+                        onValueChange = { date = it },
                         trailingIcon = {
                             Icon(Icons.Default.CalendarToday, null)
                         },
@@ -157,7 +173,17 @@ fun EditSavingsRecordScreen(
                             text = "Save Changes",
                             backgroundColor = colors.success,
                             modifier = Modifier.weight(1f),
-                            onClick = onDismiss
+                            onClick = {
+                                onSave(
+                                    (saving ?: Saving()).copy(
+                                        month = month,
+                                        totalIncome = totalIncome.toMoneyDouble(),
+                                        amountSaved = amountSaved.toMoneyDouble(),
+                                        savingRate = savingRate,
+                                        date = date
+                                    )
+                                )
+                            }
                         )
                         EditRecordActionButton(
                             text = "Cancel",
@@ -176,6 +202,7 @@ fun EditSavingsRecordScreen(
 private fun EditRecordField(
     label: String,
     value: String,
+    onValueChange: (String) -> Unit = {},
     trailingIcon: @Composable (() -> Unit)? = null,
     colors: SavingsColors
 ) {
@@ -189,9 +216,9 @@ private fun EditRecordField(
 
         OutlinedTextField(
             value = value,
-            onValueChange = {},
+            onValueChange = onValueChange,
             singleLine = true,
-            readOnly = true,
+            readOnly = false,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             trailingIcon = trailingIcon,
@@ -205,6 +232,22 @@ private fun EditRecordField(
             )
         )
     }
+}
+
+/** Converts user-visible currency text into a Double. */
+private fun String.toMoneyDouble(): Double {
+    return replace(",", "")
+        .replace("LKR", "", ignoreCase = true)
+        .trim()
+        .toDoubleOrNull() ?: 0.0
+}
+
+/** Formats a Firestore amount for editing without a currency prefix. */
+private fun Double.toPlainAmount(): String = "%.0f".format(this)
+
+/** Calculates saving rate as a percentage. */
+private fun calculateSavingRate(amountSaved: Double, totalIncome: Double): Double {
+    return if (totalIncome > 0.0) (amountSaved / totalIncome) * 100.0 else 0.0
 }
 
 @Composable
