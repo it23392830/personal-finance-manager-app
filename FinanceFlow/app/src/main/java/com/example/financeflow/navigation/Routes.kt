@@ -17,6 +17,7 @@ object Routes {
     const val NOTIFICATIONS = "notifications"
     const val DASHBOARD = "dashboard"
 
+    const val ADD_EXPENSE = "add_expense"
     const val ADD_SAVING = "add_saving"
     const val GOAL_DETAILS = "goal_details"
     const val PROFILE = "profile"

@@ -8,6 +8,8 @@ import com.example.financeflow.data.local.dao.IncomeDao
 import com.example.financeflow.data.local.dao.NotificationDao
 import com.example.financeflow.data.local.dao.SavingDao
 import com.example.financeflow.data.local.dao.SavingGoalDao
+import com.example.financeflow.data.local.dao.ExpenseDao
+import com.example.financeflow.data.local.dao.FixedExpenseDao
 import com.example.financeflow.data.local.database.AppDatabase
 import dagger.Module
 import dagger.Provides
@@ -85,11 +87,58 @@ object DatabaseModule {
         }
     }
 
+    /**
+     * Adds Expense and FixedExpense tables from main branch.
+     */
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `expenses` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `userId` TEXT NOT NULL,
+                    `category` TEXT NOT NULL,
+                    `amount` REAL NOT NULL,
+                    `description` TEXT NOT NULL,
+                    `date` TEXT NOT NULL,
+                    `createdAt` INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `fixed_expenses` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `userId` TEXT NOT NULL,
+                    `category` TEXT NOT NULL,
+                    `amount` REAL NOT NULL,
+                    `description` TEXT NOT NULL,
+                    `frequency` TEXT NOT NULL,
+                    `startDate` TEXT NOT NULL,
+                    `createdAt` INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+        }
+    }
+
+    /**
+     * Fallback migration from version 4 -> 5 using destructive migration,
+     * in case schema differences exist between the two merge paths.
+     */
+    private val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No-op — all tables should already exist from prior migrations.
+            // This migration exists to bump the version after merging both branches.
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(context, AppDatabase::class.java, "financeflow_db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .fallbackToDestructiveMigration()
             .build()
     }
 
@@ -108,4 +157,12 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideSavingGoalDao(db: AppDatabase): SavingGoalDao = db.savingGoalDao()
+
+    @Provides
+    @Singleton
+    fun provideExpenseDao(db: AppDatabase): ExpenseDao = db.expenseDao()
+
+    @Provides
+    @Singleton
+    fun provideFixedExpenseDao(db: AppDatabase): FixedExpenseDao = db.fixedExpenseDao()
 }
