@@ -88,6 +88,7 @@ fun DashboardScreen(
                     onExpensesClick = { navController.navigate(Routes.EXPENSES) },
                     onSavingsClick = { navController.navigate(Routes.SAVINGS) },
                     onGoalCardClick = { navController.navigate(Routes.GOALS) },
+                    onViewInsightsClick = { navController.navigate(Routes.INSIGHTS) },
                     onStreakClick = { navController.navigate(Routes.STREAK) },
                     onThemeClick = onThemeToggle,
                     onProfileClick = { navController.navigate(Routes.PROFILE) }
