@@ -43,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +57,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.financeflow.model.FinanceNotification
+import com.example.financeflow.model.FinanceNotificationType
+import com.example.financeflow.viewmodel.notification.NotificationViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 enum class NotificationFilter(val label: String) {
     ALL("All"),
@@ -64,76 +72,15 @@ enum class NotificationFilter(val label: String) {
     MISSED_ACTIVITY("Missed Activity")
 }
 
-enum class NotificationType(val emoji: String) {
-    MORNING_REMINDER("\u2600\ufe0f"),
-    NIGHT_MISSED("\ud83c\udf19"),
-    INCOME("\ud83d\udcb0"),
-    EXPENSE("\ud83d\udcb3"),
-    STREAK("\ud83d\udd25"),
-    SAVINGS("\ud83d\udcb0")
-}
-
 data class NotificationUiItem(
-    val id: Int,
-    val type: NotificationType,
+    val id: String,
+    val type: String,
+    val emoji: String,
     val title: String,
     val message: String,
     val time: String,
     val isRead: Boolean
 )
-
-val SAMPLE_NOTIFICATIONS = listOf(
-    NotificationUiItem(
-        id = 6,
-        type = NotificationType.NIGHT_MISSED,
-        title = "Still missing today's update \ud83c\udf19",
-        message = "You haven't added today's income or expenses yet.",
-        time = "9:00 PM",
-        isRead = false
-    ),
-    NotificationUiItem(
-        id = 5,
-        type = NotificationType.STREAK,
-        title = "Keep your streak alive \ud83d\udd25",
-        message = "You're one step away from maintaining your streak.",
-        time = "8:30 PM",
-        isRead = false
-    ),
-    NotificationUiItem(
-        id = 4,
-        type = NotificationType.EXPENSE,
-        title = "Expense logged \ud83d\udcb3",
-        message = "Great! Your lunch expense was added for today.",
-        time = "6:40 PM",
-        isRead = true
-    ),
-    NotificationUiItem(
-        id = 3,
-        type = NotificationType.SAVINGS,
-        title = "Savings Goal Progress \ud83d\udcb0",
-        message = "You're getting closer to your monthly savings target.",
-        time = "2:15 PM",
-        isRead = false
-    ),
-    NotificationUiItem(
-        id = 2,
-        type = NotificationType.INCOME,
-        title = "Income added \ud83d\udcb0",
-        message = "Today's freelance income was recorded successfully.",
-        time = "12:05 PM",
-        isRead = true
-    ),
-    NotificationUiItem(
-        id = 1,
-        type = NotificationType.MORNING_REMINDER,
-        title = "Good Morning \ud83c\udf1e",
-        message = "Don't forget to add today's income and expenses.",
-        time = "9:00 AM",
-        isRead = false
-    )
-)
-
-val SAMPLE_UNREAD_NOTIFICATION_COUNT = SAMPLE_NOTIFICATIONS.count { !it.isRead }
 
 private data class NotificationPalette(
     val screenBg: Color,
@@ -196,24 +143,51 @@ private fun notificationPalette(isDarkTheme: Boolean): NotificationPalette {
     }
 }
 
-private fun isReminderType(type: NotificationType): Boolean {
-    return type == NotificationType.MORNING_REMINDER || type == NotificationType.STREAK
+private fun isReminderType(type: String): Boolean {
+    return type == FinanceNotificationType.MORNING ||
+        type == FinanceNotificationType.STREAK ||
+        type == FinanceNotificationType.SAVINGS
 }
 
-private fun isMissedActivityType(type: NotificationType): Boolean {
-    return type == NotificationType.NIGHT_MISSED
+private fun isMissedActivityType(type: String): Boolean {
+    return type == FinanceNotificationType.MISSED
+}
+
+private fun notificationEmoji(type: String): String {
+    return when (type) {
+        FinanceNotificationType.MORNING -> "\u2600\ufe0f"
+        FinanceNotificationType.MISSED -> "\ud83c\udf19"
+        FinanceNotificationType.STREAK -> "\ud83d\udd25"
+        FinanceNotificationType.SAVINGS -> "\ud83d\udcb0"
+        else -> "\ud83d\udd14"
+    }
+}
+
+private fun FinanceNotification.toUiItem(): NotificationUiItem {
+    val formatter = SimpleDateFormat("h:mm a", Locale.US)
+    return NotificationUiItem(
+        id = id,
+        type = type,
+        emoji = notificationEmoji(type),
+        title = title,
+        message = message,
+        time = formatter.format(Date(timestamp)),
+        isRead = isRead
+    )
 }
 
 @Composable
 fun NotificationScreen(
     isDarkTheme: Boolean = false,
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    viewModel: NotificationViewModel = hiltViewModel()
 ) {
     val palette = notificationPalette(isDarkTheme)
-    var notifications by remember { mutableStateOf(SAMPLE_NOTIFICATIONS) }
+    val notificationModels by viewModel.notifications.collectAsState()
+    val unreadCount by viewModel.unreadCount.collectAsState()
+    val notifications = remember(notificationModels) { notificationModels.map { it.toUiItem() } }
     var selectedFilter by remember { mutableStateOf(NotificationFilter.ALL) }
 
-    val unreadCount = notifications.count { !it.isRead }
     val filteredNotifications = when (selectedFilter) {
         NotificationFilter.ALL -> notifications
         NotificationFilter.UNREAD -> notifications.filter { !it.isRead }
@@ -266,12 +240,8 @@ fun NotificationScreen(
                             NotificationCard(
                                 item = item,
                                 palette = palette,
-                                onDelete = { id -> notifications = notifications.filterNot { it.id == id } },
-                                onMarkRead = { id ->
-                                    notifications = notifications.map {
-                                        if (it.id == id) it.copy(isRead = true) else it
-                                    }
-                                }
+                                onDelete = viewModel::deleteNotification,
+                                onMarkRead = viewModel::markAsRead
                             )
                         }
                     }
@@ -407,8 +377,8 @@ private fun NotificationFilterChips(
 private fun NotificationCard(
     item: NotificationUiItem,
     palette: NotificationPalette,
-    onDelete: (Int) -> Unit,
-    onMarkRead: (Int) -> Unit
+    onDelete: (String) -> Unit,
+    onMarkRead: (String) -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { target ->
@@ -493,7 +463,7 @@ private fun NotificationCard(
                         .background(palette.iconBg, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = item.type.emoji, fontSize = 20.sp)
+                    Text(text = item.emoji, fontSize = 20.sp)
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))

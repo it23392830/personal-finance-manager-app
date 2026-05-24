@@ -22,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.financeflow.ui.notifications.SAMPLE_UNREAD_NOTIFICATION_COUNT
 import com.example.financeflow.ui.components.Home.BalanceCard
 import com.example.financeflow.ui.components.Home.BalanceCardData
 import com.example.financeflow.ui.components.Home.ExpenseBreakdownSection
@@ -138,7 +137,7 @@ fun HomeScreen(
     onThemeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
-    unreadNotificationCount: Int = SAMPLE_UNREAD_NOTIFICATION_COUNT
+    unreadNotificationCount: Int = 0
 ) {
     val colors = getHomeScreenColors(isDarkTheme)
     val listState = rememberLazyListState()

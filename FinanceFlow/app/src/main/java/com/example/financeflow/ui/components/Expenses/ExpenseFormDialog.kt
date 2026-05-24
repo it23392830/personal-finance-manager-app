@@ -121,12 +121,12 @@ fun ExpenseFormDialog(
                                 .border(1.dp, colors.MustBorder, RoundedCornerShape(12.dp))
                                 .padding(12.dp)
                         ) {
-                                    Text(
-                                        text = "⚡ This expense delays your MacBook Pro goal by ~${"%.1f".format(goalImpactDays)} days",
-                                        fontSize = 12.sp,
-                                        color = colors.MustText,
-                                        fontWeight = FontWeight.Medium
-                                    )
+                            Text(
+                                text = "⚡ This expense delays your MacBook Pro goal by ~${"%.1f".format(goalImpactDays)} days",
+                                fontSize = 12.sp,
+                                color = colors.MustText,
+                                fontWeight = FontWeight.Medium
+                            )
                         }
                     }
 
@@ -227,8 +227,8 @@ fun ExpenseFormDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Recurring Expense", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = colors.TextPrimary)
-                            Text("Automatically log this every month", fontSize = 11.sp, color = colors.TextMuted)
+                            Text("Fixed Expense", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = colors.TextPrimary)
+                            Text("Save as a fixed monthly payment", fontSize = 11.sp, color = colors.TextMuted)
                         }
                         Switch(
                             checked = isRecurring,
@@ -268,7 +268,7 @@ fun ExpenseFormDialog(
 }
 
 @Composable
-private fun TypeToggleButton(
+fun TypeToggleButton(
     label: String,
     emoji: String,
     selected: Boolean,

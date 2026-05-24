@@ -1,6 +1,5 @@
 package com.example.financeflow.ui.components.profile
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,11 +67,13 @@ private fun editProfileDialogPalette(isDarkTheme: Boolean): EditProfileDialogPal
 @Composable
 fun EditProfileDialog(
     isDarkTheme: Boolean = false,
+    initialFullName: String = "",
+    initialEmail: String = "",
+    onSave: (String, String) -> Unit = { _, _ -> },
     onDismiss: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    var fullName by remember { mutableStateOf("Kavindu Silva") }
-    var email by remember { mutableStateOf("kavindusilva123@gmail.com") }
+    var fullName by remember(initialFullName) { mutableStateOf(initialFullName) }
+    var email by remember(initialEmail) { mutableStateOf(initialEmail) }
     val palette = editProfileDialogPalette(isDarkTheme)
 
     Dialog(
@@ -124,7 +124,7 @@ fun EditProfileDialog(
                     ) {
                         Button(
                             onClick = {
-                                Toast.makeText(context, "Profile Updated", Toast.LENGTH_SHORT).show()
+                                onSave(fullName.trim(), email.trim())
                                 onDismiss()
                             },
                             modifier = Modifier

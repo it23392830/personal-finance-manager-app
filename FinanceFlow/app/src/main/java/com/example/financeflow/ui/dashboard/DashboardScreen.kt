@@ -1,6 +1,5 @@
 package com.example.financeflow.ui.dashboard
 
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
@@ -9,8 +8,10 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -33,33 +34,24 @@ import com.example.financeflow.ui.savings.AddSavingScreen
 import com.example.financeflow.ui.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.SavingsScreen
 import com.example.financeflow.ui.streak.Streak.StreakScreen
+import com.example.financeflow.viewmodel.notification.NotificationViewModel
 
 @Composable
 fun DashboardScreen(
     rootNavController: NavHostController,
     isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit,
-    openStreakOnLaunch: Boolean = false,
-    onStreakLaunchHandled: () -> Unit = {}
+    onThemeToggle: () -> Unit
 ) {
     val navController = rememberNavController()
+    val notificationViewModel: NotificationViewModel = hiltViewModel()
+    val unreadNotificationCount by notificationViewModel.unreadCount.collectAsState()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-
-    LaunchedEffect(openStreakOnLaunch) {
-        if (openStreakOnLaunch) {
-            navController.navigate(Routes.STREAK) {
-                launchSingleTop = true
-            }
-            onStreakLaunchHandled()
-        }
-    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             BottomNavigationBar(
-                isDarkTheme = isDarkTheme,
                 currentDestination = currentDestination,
                 onItemClick = { item ->
                     navController.navigate(item.route) {
@@ -90,11 +82,10 @@ fun DashboardScreen(
                     onExpensesClick = { navController.navigate(Routes.EXPENSES) },
                     onSavingsClick = { navController.navigate(Routes.SAVINGS) },
                     onGoalCardClick = { navController.navigate(Routes.GOALS) },
-                    onViewInsightsClick = { navController.navigate(Routes.INSIGHTS) },
-                    onStreakClick = { navController.navigate(Routes.STREAK) },
                     onThemeClick = onThemeToggle,
                     onProfileClick = { navController.navigate(Routes.PROFILE) },
-                    onNotificationClick = { navController.navigate(Routes.NOTIFICATIONS) }
+                    onNotificationClick = { navController.navigate(Routes.NOTIFICATIONS) },
+                    unreadNotificationCount = unreadNotificationCount
                 )
             }
 
@@ -105,7 +96,7 @@ fun DashboardScreen(
             composable(Routes.EXPENSES) {
                 ExpensesScreen(
                     isDarkTheme = isDarkTheme,
-                    onAddExpenseClick = { navController.navigate(Routes.EXPENSES) }
+                    onAddExpenseClick = { rootNavController.navigate(Routes.ADD_EXPENSE) }
                 )
             }
 
@@ -136,7 +127,8 @@ fun DashboardScreen(
             composable(Routes.NOTIFICATIONS) {
                 NotificationScreen(
                     isDarkTheme = isDarkTheme,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    viewModel = notificationViewModel
                 )
             }
 
@@ -153,7 +145,13 @@ fun DashboardScreen(
                 LogoutScreen(
                     isDarkTheme = isDarkTheme,
                     onThemeToggle = onThemeToggle,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onAccountDeleted = {
+                        rootNavController.navigate(Routes.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
 
