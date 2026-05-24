@@ -26,6 +26,7 @@ import com.example.financeflow.ui.insights.DailyReportScreen
 import com.example.financeflow.ui.insights.InsightsScreen
 import com.example.financeflow.ui.insights.MonthlyReportScreen
 import com.example.financeflow.ui.insights.WeeklyReportScreen
+import com.example.financeflow.ui.notifications.NotificationScreen
 import com.example.financeflow.ui.profile.LogoutScreen
 import com.example.financeflow.ui.profile.ProfileScreen
 import com.example.financeflow.ui.savings.AddSavingScreen
@@ -92,7 +93,8 @@ fun DashboardScreen(
                     onViewInsightsClick = { navController.navigate(Routes.INSIGHTS) },
                     onStreakClick = { navController.navigate(Routes.STREAK) },
                     onThemeClick = onThemeToggle,
-                    onProfileClick = { navController.navigate(Routes.PROFILE) }
+                    onProfileClick = { navController.navigate(Routes.PROFILE) },
+                    onNotificationClick = { navController.navigate(Routes.NOTIFICATIONS) }
                 )
             }
 
@@ -129,6 +131,13 @@ fun DashboardScreen(
 
             composable(Routes.STREAK) {
                 StreakScreen(isDarkTheme = isDarkTheme)
+            }
+
+            composable(Routes.NOTIFICATIONS) {
+                NotificationScreen(
+                    isDarkTheme = isDarkTheme,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
 
             composable(Routes.PROFILE) {
