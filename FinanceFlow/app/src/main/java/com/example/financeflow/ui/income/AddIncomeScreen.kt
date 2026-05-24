@@ -233,7 +233,10 @@ fun AddIncomeScreen(
 
                     scope.launch {
                         viewModel.addIncome(income)
-                        onAddIncome(selectedSource, amount, selectedCurrency, description, date, notes)
+                        // Navigate up once after successful add. Avoid calling both
+                        // onAddIncome and onNavigateUp because they both pop the
+                        // NavController and double-pop can leave the NavHost empty
+                        // (white screen). Keep UI navigation single-responsibility.
                         onNavigateUp()
                     }
                 },
