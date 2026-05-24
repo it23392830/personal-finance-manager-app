@@ -7,6 +7,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.financeflow.viewmodel.expense.ExpenseViewModel
+import kotlinx.coroutines.flow.collect
+import com.google.firebase.Timestamp
+import java.text.SimpleDateFormat
+import java.util.Locale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,6 +20,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import com.example.financeflow.ui.components.Expenses.*
 import com.example.financeflow.ui.components.Expenses.getExpensesColors
 import com.example.financeflow.ui.theme.FinanceFlowTheme
@@ -40,7 +50,9 @@ data class ExpenseUiItem(
     val date: String,
     val type: ExpenseType,
     val isRecurring: Boolean,
+    val isPaid: Boolean = false,
     val notes: String = ""
+    , val domainId: String = ""
 )
 
 data class RecurringUiItem(
@@ -158,17 +170,19 @@ fun getCat(id: String): CategoryDef =
 fun getCatDisplayLabel(id: String): String {
     val cat = getCat(id)
     return if (cat.parentLabel != null) "${cat.parentLabel} › ${cat.label}"
-           else cat.label
+    else cat.label
 }
 
 fun fmtLKR(amount: Int): String = "LKR ${"%,d".format(amount)}"
+
+val TODAY: String get() = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(java.util.Date())
 
 fun relativeDate(dateStr: String, today: String): String {
     return when (dateStr) {
         today -> "Today"
         else  -> {
             val months = listOf("Jan","Feb","Mar","Apr","May","Jun",
-                                "Jul","Aug","Sep","Oct","Nov","Dec")
+                "Jul","Aug","Sep","Oct","Nov","Dec")
             val parts = dateStr.split("-")
             val month = months.getOrNull((parts.getOrNull(1)?.toIntOrNull() ?: 1) - 1) ?: ""
             val day   = parts.getOrNull(2)?.toIntOrNull() ?: 0
@@ -177,7 +191,6 @@ fun relativeDate(dateStr: String, today: String): String {
     }
 }
 
-const val TODAY               = "2026-05-21"
 const val DISCRETIONARY_BUDGET = 82300
 const val DAILY_SAVINGS_RATE  = 1637
 
@@ -259,17 +272,29 @@ fun ExpensesScreen(
     isDarkTheme: Boolean = false,
     onAddExpenseClick: () -> Unit = {}
 ) {
-    // ── Month ─────────────────────────────────────────────────
-    var selectedMonth by remember { mutableStateOf("2026-05") }
-
-    // ── Expense lists ─────────────────────────────────────────
-    var expenses     by remember { mutableStateOf(HARDCODED_EXPENSES) }
-    var recurringList by remember { mutableStateOf(HARDCODED_RECURRING) }
+    val viewModel: ExpenseViewModel = hiltViewModel()
+    val state by viewModel.uiState.collectAsState()
+    // use ViewModel state directly
+    val selectedMonth = state.selectedMonth.ifBlank { SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(java.util.Date()) }
+    val expenses = state.currentMonthTransactions
+    val recurringList = state.fixedPayments.map {
+        RecurringUiItem(
+            id = it.id.hashCode(),
+            name = it.description.ifBlank { getCat(it.category).label },
+            amount = it.amount.toInt(),
+            categoryId = it.category,
+            frequency = "Monthly",
+            nextDue = "",
+            lastPaid = "",
+            isActive = true,
+            missed = false
+        )
+    }
 
     // ── Form dialog ───────────────────────────────────────────
     var showFormDialog  by remember { mutableStateOf(false) }
     var isEditMode      by remember { mutableStateOf(false) }
-    var editingId       by remember { mutableStateOf<Int?>(null) }
+    var editingDomainId       by remember { mutableStateOf<String?>(null) }
     var formAmount      by remember { mutableStateOf("") }
     var formDescription by remember { mutableStateOf("") }
     var formCategory    by remember { mutableStateOf("food_dining") }
@@ -281,7 +306,8 @@ fun ExpensesScreen(
 
     // ── Delete dialog ─────────────────────────────────────────
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var deletingId       by remember { mutableStateOf<Int?>(null) }
+    var deletingDomainId  by remember { mutableStateOf<String?>(null) }
+    var showPastDialog by remember { mutableStateOf(false) }
 
     // ── Row context menu ──────────────────────────────────────
     var openMenuId by remember { mutableStateOf<Int?>(null) }
@@ -304,11 +330,7 @@ fun ExpensesScreen(
     // ── Helper lambdas (defined here, passed to components) ───
 
     fun openAddForm(prefillCategoryId: String = "food_dining") {
-        formAmount = ""; formDescription = ""; formCategory = prefillCategoryId
-        formType = ExpenseType.DISCRETIONARY; formPayment = PaymentMethod.CARD
-        formDate = TODAY; formNotes = ""; formIsRecurring = false
-        isEditMode = false; editingId = null
-        showFormDialog = true
+        onAddExpenseClick()
     }
 
     fun openEditForm(exp: ExpenseUiItem) {
@@ -316,46 +338,71 @@ fun ExpensesScreen(
         formCategory = exp.categoryId; formType = exp.type
         formPayment = exp.paymentMethod; formDate = exp.date
         formNotes = exp.notes; formIsRecurring = exp.isRecurring
-        isEditMode = true; editingId = exp.id
+        isEditMode = true; editingDomainId = exp.domainId
         showFormDialog = true
     }
 
     fun confirmSave() {
-        val amt = formAmount.toIntOrNull() ?: return
+        val amt = formAmount.toDoubleOrNull() ?: return
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dateObj = try { sdf.parse(formDate) } catch (_: Exception) { null }
+        val ts = if (dateObj != null) Timestamp(dateObj) else Timestamp.now()
         if (isEditMode) {
-            expenses = expenses.map { e ->
-                if (e.id == editingId) e.copy(
-                    categoryId = formCategory, description = formDescription.ifBlank { getCat(formCategory).label },
-                    amount = amt, paymentMethod = formPayment, date = formDate,
-                    type = formType, isRecurring = formIsRecurring, notes = formNotes
-                ) else e
+            // update existing using stored domain id
+            val idStr = editingDomainId ?: ""
+            if (formIsRecurring) {
+                val fixed = com.example.financeflow.model.FixedExpense(
+                    id = idStr,
+                    name = formDescription.ifBlank { getCat(formCategory).label },
+                    amount = amt,
+                    category = formCategory
+                )
+                viewModel.addFixedExpense(fixed)
+            } else {
+                val exp = com.example.financeflow.model.Expense(
+                    id = idStr,
+                    amount = amt,
+                    currency = "LKR",
+                    category = formCategory,
+                    description = formDescription,
+                    notes = formNotes,
+                    isFixed = formIsRecurring,
+                    date = ts
+                )
+                viewModel.updateExpense(exp)
             }
         } else {
-            val newId = (expenses.maxOfOrNull { it.id } ?: 0) + 1
-            expenses = listOf(
-                ExpenseUiItem(newId, formCategory,
-                    formDescription.ifBlank { getCat(formCategory).label },
-                    amt, formPayment, formDate, formType, formIsRecurring, formNotes)
-            ) + expenses
+            if (formIsRecurring) {
+                val fixed = com.example.financeflow.model.FixedExpense(
+                    name = formDescription.ifBlank { getCat(formCategory).label },
+                    amount = amt,
+                    category = formCategory
+                )
+                viewModel.addFixedExpense(fixed)
+            } else {
+                val exp = com.example.financeflow.model.Expense(
+                    amount = amt,
+                    currency = "LKR",
+                    category = formCategory,
+                    description = formDescription,
+                    notes = formNotes,
+                    isFixed = formIsRecurring,
+                    date = ts
+                )
+                viewModel.addExpense(exp)
+            }
         }
         showFormDialog = false
     }
 
     fun confirmDelete() {
-        expenses = expenses.filter { it.id != deletingId }
-        showDeleteDialog = false; deletingId = null
+        // call viewModel to delete by domain id
+        deletingDomainId?.let { idStr -> viewModel.deleteExpense(idStr) }
+        showDeleteDialog = false; deletingDomainId = null
     }
 
     // ── Scaffold ──────────────────────────────────────────────
     val colors = getExpensesColors(isDarkTheme)
-    val monthOptions = listOf(
-        "2026-05" to "May 2026",
-        "2026-04" to "April 2026",
-        "2026-03" to "March 2026",
-        "2026-02" to "February 2026",
-        "2026-01" to "January 2026"
-    )
-    val selectedMonthLabel = monthOptions.firstOrNull { it.first == selectedMonth }?.second ?: "May 2026"
 
     Scaffold { innerPadding ->
         Column(
@@ -367,12 +414,17 @@ fun ExpensesScreen(
         ) {
             // ── Header ─────────────────────────────────────────
             ExpenseHeader(
-                selectedMonth = selectedMonthLabel,
-                onMonthChange = { monthLabel ->
-                    selectedMonth = monthOptions.firstOrNull { it.second == monthLabel }?.first ?: selectedMonth
+                selectedMonth = selectedMonth,
+                onMonthChange = { m ->
+                    // parse yyyy-MM -> set in viewmodel
+                    val parts = m.split("-")
+                    val y = parts.getOrNull(0)?.toIntOrNull() ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                    val mo = parts.getOrNull(1)?.toIntOrNull() ?: (java.util.Calendar.getInstance().get(java.util.Calendar.MONTH) + 1)
+                    viewModel.setSelectedMonth(y, mo)
                 },
                 onAddClick    = { openAddForm() },
-                colors = colors
+                colors = colors,
+                availableMonths = state.availableMonths
             )
 
             // ── Warning banner ──────────────────────────────────
@@ -389,37 +441,48 @@ fun ExpensesScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                ExpenseBudgetCard(
-                    remaining       = remaining,
-                    todayTotal      = todayTotal,
-                    essentialTotal  = essentialTotal,
-                    colors = colors
-                )
+                // Total Expenses This Month card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = colors.ExpenseBg)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Text("Total Expenses This Month", fontWeight = FontWeight.Bold, color = colors.TextPrimary)
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "LKR ${"%,.0f".format(state.totalExpense)}",
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = colors.ExpenseRed
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Button(onClick = { onAddExpenseClick() }, colors = ButtonDefaults.buttonColors(containerColor = colors.HeaderRed)) {
+                            Text("+ Add Expense", color = Color.White)
+                        }
+                    }
+                }
                 ExpenseQuickAdd(
                     isDarkTheme = isDarkTheme,
                     recentCategoryIds = recentCategoryIds,
-                    onCategoryClick   = { catId -> openAddForm(catId) },
-                    onCustomClick     = { openAddForm() }
+                    onCategoryClick   = { catId -> openAddForm(catId) }
                 )
-                ExpenseSmartSuggestions(
-                    isDarkTheme = isDarkTheme,
-                    suggestions       = HARDCODED_SUGGESTIONS,
-                    onSuggestionClick = { s ->
-                        formDescription = s.description; formAmount = s.amount.toString()
-                        formCategory = s.categoryId; formPayment = s.paymentMethod
-                        formType = ExpenseType.DISCRETIONARY; isEditMode = false
-                        showFormDialog = true
-                    }
-                )
+                // Smart Suggestions removed per requirements
                 ExpenseTodayList(
                     isDarkTheme = isDarkTheme,
-                    todayExpenses = todayExpenses,
+                    todayExpenses = state.todayExpenses,
                     openMenuId    = openMenuId,
                     onMenuToggle  = { id -> openMenuId = if (openMenuId == id) null else id },
                     onEdit        = { exp -> openEditForm(exp) },
-                    onDelete      = { id -> deletingId = id; showDeleteDialog = true }
+                    onDelete      = { exp -> deletingDomainId = exp.domainId; showDeleteDialog = true }
                 )
-                ExpenseReminderCard(isDarkTheme = isDarkTheme)
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // View Past Expenses button
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Button(onClick = { showPastDialog = true }) { Text("View Past Expenses") }
             }
 
             Spacer(Modifier.height(24.dp))
@@ -430,32 +493,26 @@ fun ExpensesScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Recurring Expenses",
+                    text = "Fixed Payments",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = colors.TextPrimary
                     )
                 )
-
-                ExpenseMissedAlert(
-                    isDarkTheme = isDarkTheme,
-                    missedItems = missedRecurring,
-                    onMarkPaid  = { id ->
-                        recurringList = recurringList.map {
-                            if (it.id == id) it.copy(missed = false, lastPaid = TODAY)
-                            else it
+                // Fixed payments list
+                state.fixedPayments.forEach { fe ->
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Column {
+                            Text(fe.description.ifBlank { getCat(fe.category).label }, fontWeight = FontWeight.Bold, color = colors.TextPrimary)
+                            Text(fmtLKR(fe.amount.toInt()), color = colors.TextMuted)
                         }
+                        Switch(checked = fe.isPaid, onCheckedChange = { checked -> viewModel.toggleFixedPaid(fe, checked) })
                     }
-                )
-                ExpenseRecurringList(
-                    isDarkTheme = isDarkTheme,
-                    recurringList  = recurringList,
-                    onToggleActive = { id ->
-                        recurringList = recurringList.map {
-                            if (it.id == id) it.copy(isActive = !it.isActive) else it
-                        }
-                    }
-                )
+                    Spacer(Modifier.height(8.dp))
+                }
+                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = { /* open add fixed expense dialog - simplified to reuse add form */ openAddForm() }) { Text("+ Add") }
+                }
                 Spacer(Modifier.height(80.dp))
             }
         }
@@ -484,8 +541,125 @@ fun ExpensesScreen(
             ExpenseDeleteDialog(
                 isDarkTheme = isDarkTheme,
                 onConfirm = { confirmDelete() },
-                onDismiss = { showDeleteDialog = false; deletingId = null }
+                onDismiss = { showDeleteDialog = false; deletingDomainId = null }
             )
+        }
+
+        if (showPastDialog) {
+            val dateOptions = state.currentMonthTransactions.map { it.date }.distinct().sortedDescending()
+            var selectedPastDate by remember { mutableStateOf(dateOptions.firstOrNull() ?: "") }
+
+            Dialog(
+                onDismissRequest = { showPastDialog = false },
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = colors.AppBg
+                ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        // Header
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(colors.HeaderRed)
+                                .padding(top = 40.dp, bottom = 24.dp, start = 16.dp, end = 16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Past Expenses",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                IconButton(onClick = { showPastDialog = false }) {
+                                    Icon(
+                                        imageVector = androidx.compose.material.icons.Icons.Default.Close,
+                                        contentDescription = "Close",
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+                        }
+
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            if (dateOptions.isNotEmpty()) {
+                                Text(
+                                    "Select Date",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = colors.TextMuted,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+
+                                var expanded by remember { mutableStateOf(false) }
+                                ExposedDropdownMenuBox(
+                                    expanded = expanded,
+                                    onExpandedChange = { expanded = !expanded }
+                                ) {
+                                    OutlinedTextField(
+                                        value = selectedPastDate,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                        shape = RoundedCornerShape(12.dp),
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = colors.Primary,
+                                            unfocusedBorderColor = colors.Border
+                                        )
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false },
+                                        modifier = Modifier.background(colors.CardBg)
+                                    ) {
+                                        dateOptions.forEach { d ->
+                                            DropdownMenuItem(
+                                                text = { Text(d, fontSize = 14.sp) },
+                                                onClick = { selectedPastDate = d; expanded = false }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(Modifier.height(24.dp))
+
+                                val items = state.currentMonthTransactions.filter { it.date == selectedPastDate }
+                                if (items.isEmpty()) {
+                                    Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                                        Text("No expenses for this date", color = colors.TextMuted)
+                                    }
+                                } else {
+                                    Column(
+                                        modifier = Modifier.verticalScroll(rememberScrollState()),
+                                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        items.forEach { item ->
+                                            ExpenseItemRow(
+                                                item = item,
+                                                isMenuOpen = false,
+                                                onMenuToggle = {},
+                                                onEdit = {},
+                                                onDelete = {},
+                                                colors = colors
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Text("No expenses found in this month", color = colors.TextMuted)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -21,10 +21,20 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        return Room.databaseBuilder(context, AppDatabase::class.java, "financeflow_db").build()
+        return Room.databaseBuilder(context, AppDatabase::class.java, "financeflow_db")
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
     @Singleton
     fun provideIncomeDao(db: AppDatabase): IncomeDao = db.incomeDao()
+
+    @Provides
+    @Singleton
+    fun provideExpenseDao(db: AppDatabase): com.example.financeflow.data.local.dao.ExpenseDao = db.expenseDao()
+
+    @Provides
+    @Singleton
+    fun provideFixedExpenseDao(db: AppDatabase): com.example.financeflow.data.local.dao.FixedExpenseDao = db.fixedExpenseDao()
 }

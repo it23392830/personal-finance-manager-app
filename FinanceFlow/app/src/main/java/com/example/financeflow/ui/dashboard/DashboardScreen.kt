@@ -1,6 +1,5 @@
 package com.example.financeflow.ui.dashboard
 
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
@@ -31,34 +30,21 @@ import com.example.financeflow.ui.profile.ProfileScreen
 import com.example.financeflow.ui.savings.AddSavingScreen
 import com.example.financeflow.ui.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.SavingsScreen
-import com.example.financeflow.ui.streak.Streak.StreakScreen
 
 @Composable
 fun DashboardScreen(
     rootNavController: NavHostController,
     isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit,
-    openStreakOnLaunch: Boolean = false,
-    onStreakLaunchHandled: () -> Unit = {}
+    onThemeToggle: () -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    LaunchedEffect(openStreakOnLaunch) {
-        if (openStreakOnLaunch) {
-            navController.navigate(Routes.STREAK) {
-                launchSingleTop = true
-            }
-            onStreakLaunchHandled()
-        }
-    }
-
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             BottomNavigationBar(
-                isDarkTheme = isDarkTheme,
                 currentDestination = currentDestination,
                 onItemClick = { item ->
                     navController.navigate(item.route) {
@@ -89,8 +75,6 @@ fun DashboardScreen(
                     onExpensesClick = { navController.navigate(Routes.EXPENSES) },
                     onSavingsClick = { navController.navigate(Routes.SAVINGS) },
                     onGoalCardClick = { navController.navigate(Routes.GOALS) },
-                    onViewInsightsClick = { navController.navigate(Routes.INSIGHTS) },
-                    onStreakClick = { navController.navigate(Routes.STREAK) },
                     onThemeClick = onThemeToggle,
                     onProfileClick = { navController.navigate(Routes.PROFILE) }
                 )
@@ -103,7 +87,7 @@ fun DashboardScreen(
             composable(Routes.EXPENSES) {
                 ExpensesScreen(
                     isDarkTheme = isDarkTheme,
-                    onAddExpenseClick = { navController.navigate(Routes.EXPENSES) }
+                    onAddExpenseClick = { rootNavController.navigate(Routes.ADD_EXPENSE) }
                 )
             }
 
@@ -125,10 +109,6 @@ fun DashboardScreen(
                     isDarkTheme = isDarkTheme,
                     onViewReports = { navController.navigate(Routes.DAILY_REPORT) }
                 )
-            }
-
-            composable(Routes.STREAK) {
-                StreakScreen(isDarkTheme = isDarkTheme)
             }
 
             composable(Routes.PROFILE) {
