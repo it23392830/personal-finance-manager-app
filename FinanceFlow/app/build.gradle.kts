@@ -193,4 +193,5 @@ dependencies {
 
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.airbnb.android:lottie-compose:6.4.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 }

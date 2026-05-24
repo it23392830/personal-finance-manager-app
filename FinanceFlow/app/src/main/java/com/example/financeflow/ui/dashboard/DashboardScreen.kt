@@ -25,6 +25,7 @@ import com.example.financeflow.ui.insights.DailyReportScreen
 import com.example.financeflow.ui.insights.InsightsScreen
 import com.example.financeflow.ui.insights.MonthlyReportScreen
 import com.example.financeflow.ui.insights.WeeklyReportScreen
+import com.example.financeflow.ui.profile.LogoutScreen
 import com.example.financeflow.ui.profile.ProfileScreen
 import com.example.financeflow.ui.savings.AddSavingScreen
 import com.example.financeflow.ui.savings.GoalDetailsScreen
@@ -112,6 +113,15 @@ fun DashboardScreen(
 
             composable(Routes.PROFILE) {
                 ProfileScreen(
+                    isDarkTheme = isDarkTheme,
+                    onThemeToggle = onThemeToggle,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToLogout = { navController.navigate(Routes.LOGOUT) }
+                )
+            }
+
+            composable(Routes.LOGOUT) {
+                LogoutScreen(
                     isDarkTheme = isDarkTheme,
                     onThemeToggle = onThemeToggle,
                     onNavigateBack = { navController.popBackStack() }
