@@ -3,9 +3,10 @@ package com.example.financeflow.model
 import com.example.financeflow.ui.expenses.CategoryBreakdownItem
 import com.example.financeflow.ui.expenses.ExpenseUiItem
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.PropertyName
 
 /**
- * Core expense record stored in Firestore.
+ * Domain model for an expense record stored under users/{uid}/expenses/{expenseId}
  */
 data class Expense(
     val id: String = "",
@@ -14,10 +15,10 @@ data class Expense(
     val currency: String = "LKR",
     val category: String = "",
     val description: String = "",
-    val paymentMethod: String = "CASH",
+    val paymentMethod: String = "",
     val notes: String = "",
-    val isFixed: Boolean = false,
-    val isPaid: Boolean = false,
+    @get:PropertyName("fixed") @set:PropertyName("fixed") var isFixed: Boolean = false,
+    @get:PropertyName("paid") @set:PropertyName("paid") var isPaid: Boolean = false,
     val date: Timestamp = Timestamp.now(),
     val createdAt: Timestamp = Timestamp.now()
 )
@@ -43,9 +44,10 @@ data class ExpenseUiState(
     val selectedMonth: String = "",
     val availableMonths: List<String> = emptyList(),
     val totalExpense: Double = 0.0,
-    val todayExpenses: List<ExpenseUiItem> = emptyList(),
-    val currentMonthTransactions: List<ExpenseUiItem> = emptyList(),
-    val categoryBreakdown: List<CategoryBreakdownItem> = emptyList(),
+    val todayExpenses: List<com.example.financeflow.ui.expenses.ExpenseUiItem> = emptyList(),
+    val currentMonthTransactions: List<com.example.financeflow.ui.expenses.ExpenseUiItem> = emptyList(),
+    val categoryBreakdown: List<com.example.financeflow.ui.expenses.CategoryBreakdownItem> = emptyList(),
+    val availableMonths: List<String> = emptyList(),
     val fixedPayments: List<Expense> = emptyList(),
     val errorMessage: String? = null
 )

@@ -4,6 +4,8 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,7 +35,6 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.financeflow.model.Goal
 import com.example.financeflow.model.GoalAllocation
 import com.example.financeflow.model.GoalBadge
-import com.example.financeflow.ui.components.common.FeatureMonthHeader
 import com.example.financeflow.viewmodel.goal.GoalViewModel
 import java.text.NumberFormat
 import java.util.*
@@ -41,8 +42,8 @@ import java.util.*
 // ─── Formatters ──────────────────────────────────────────────────────────────
 
 fun formatCurrency(amount: Double, currency: String = "LKR"): String {
-    val formatter = NumberFormat.getNumberInstance(Locale.US).apply { 
-        maximumFractionDigits = 0 
+    val formatter = NumberFormat.getNumberInstance(Locale.US).apply {
+        maximumFractionDigits = 0
     }
     val formatted = formatter.format(amount)
     return if (currency == "LKR") "LKR $formatted" else "$currency $formatted"
@@ -70,7 +71,7 @@ fun getCategoryIcon(category: String): ImageVector = when (category) {
     "Lifestyle"  -> Icons.Default.Flight
     "Vehicle"    -> Icons.Default.DirectionsCar
     "Home"       -> Icons.Default.Home
-    "Education"  -> Icons.Default.School
+    "Home"       -> Icons.Default.Home
     "Health"     -> Icons.Default.Favorite
     else         -> Icons.Default.Star
 }
@@ -142,7 +143,7 @@ fun GoalCard(
     val formatter = NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 0 }
     var showMenu by remember { mutableStateOf(false) }
     val palette = goalPalette(isDarkTheme)
-    
+
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -167,7 +168,7 @@ fun GoalCard(
                     Text(goal.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = palette.textPrimary)
                     Text("${goal.category}  ${goal.daysRemaining}d left", style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
                 }
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     StatusChip(goal.isOnTrack, isDarkTheme = isDarkTheme)
                     if (isSelected) {
@@ -181,29 +182,29 @@ fun GoalCard(
                                 modifier = Modifier.background(palette.menuBg)
                             ) {
                                 DropdownMenuItem(
-                                    text = { 
+                                    text = {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFF2196F3), modifier = Modifier.size(20.dp))
                                             Spacer(Modifier.width(8.dp))
                                             Text("Edit Goal", fontWeight = FontWeight.Bold, color = palette.textPrimary)
                                         }
                                     },
-                                    onClick = { 
+                                    onClick = {
                                         showMenu = false
-                                        onEdit() 
+                                        onEdit()
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { 
+                                    text = {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red, modifier = Modifier.size(20.dp))
                                             Spacer(Modifier.width(8.dp))
                                             Text("Delete Goal", fontWeight = FontWeight.Bold, color = palette.textPrimary)
                                         }
                                     },
-                                    onClick = { 
+                                    onClick = {
                                         showMenu = false
-                                        onDelete() 
+                                        onDelete()
                                     }
                                 )
                             }
@@ -211,9 +212,9 @@ fun GoalCard(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             LinearProgressIndicator(
                 progress = { (goal.progressPercentage / 100).toFloat() },
                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
@@ -221,9 +222,9 @@ fun GoalCard(
                 trackColor = palette.fieldBg,
                 strokeCap = StrokeCap.Round
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -243,32 +244,58 @@ fun GoalsHeader(
     isDarkTheme: Boolean = false,
     onCreateGoal: () -> Unit
 ) {
+    var expanded by remember { mutableStateOf(false) }
     var selectedMonth by remember { mutableStateOf("May 2026") }
     val months = listOf("May 2026", "April 2026", "March 2026", "February 2026", "January 2026")
-    FeatureMonthHeader(
-        title = "Financial Goals",
-        subtitle = "Track your progress & stay motivated",
-        selectedMonth = selectedMonth,
-        monthOptions = months,
-        onMonthSelected = { selectedMonth = it },
-        headerColor = if (isDarkTheme) Color(0xFF4C1D95) else Color(0xFF6F00FF),
-        actionContent = {
-            Surface(
-                onClick = onCreateGoal,
-                color = Color.White.copy(alpha = 0.2f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.6f)),
-                shape = RoundedCornerShape(12.dp)
+
+    val primaryColor = if (isDarkTheme) Color(0xFF4C1D95) else Color(0xFF6F00FF)
+    val secondaryColor = if (isDarkTheme) Color(0xFF312E81) else Color(0xFF8A2BE2)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(Brush.verticalGradient(listOf(primaryColor, secondaryColor)))
+                .padding(24.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "+ New Goal",
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                )
+                Column {
+                    Text("Financial Goals", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Track your progress & stay motivated", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
+                }
+                Surface(
+                    onClick = onCreateGoal,
+                    color = Color.White.copy(alpha = 0.2f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.6f)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("+ New Goal", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Surface(
+                onClick = { expanded = true },
+                color = Color.White.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(selectedMonth, color = Color.White, fontWeight = FontWeight.Medium)
+                    Icon(Icons.Default.ArrowDropDown, null, tint = Color.White)
+                }
+            }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.fillMaxWidth(0.85f).background(Color.White)) {
+                months.forEach { month -> DropdownMenuItem(text = { Text(month, color = Color.Black) }, onClick = { selectedMonth = month; expanded = false }) }
             }
         }
-    )
+    }
 }
 
 @Composable
@@ -472,12 +499,17 @@ fun AddContributionDialog(goalId: String, onDismiss: () -> Unit, viewModel: Goal
     LaunchedEffect(uiState.isSuccess) { if (uiState.isSuccess) { viewModel.resetAllocationState(); onDismiss() } }
     Dialog(onDismissRequest = onDismiss) {
         Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = palette.cardBg)) {
-            Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .navigationBarsPadding().imePadding(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 Text("Add Contribution", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = palette.textPrimary)
                 AddContributionField("Month", uiState.monthYear, viewModel::onAllocationMonthYearChanged, isDarkTheme = isDarkTheme)
                 AddContributionField("Amount (LKR)", uiState.amount, viewModel::onAllocationAmountChanged, KeyboardType.Decimal, isDarkTheme = isDarkTheme)
                 AddContributionField("Target (LKR)", uiState.monthlyTarget, viewModel::onAllocationMonthlyTargetChanged, KeyboardType.Decimal, isDarkTheme = isDarkTheme)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     TextButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Cancel", color = palette.textSecondary) }
                     Button(onClick = { viewModel.submitAllocation(goalId) }, modifier = Modifier.weight(1.5f), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))) { Text("Add") }
                 }
@@ -508,11 +540,11 @@ fun CreateGoalDialog(
     val categories = listOf("Technology", "Security", "Lifestyle", "Vehicle", "Home", "Education", "Health", "Other")
     val colors = listOf("Purple", "Blue", "Green", "Yellow", "Orange", "Red", "Pink", "Black")
 
-    LaunchedEffect(uiState.isSuccess) { 
-        if (uiState.isSuccess) { 
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
             viewModel.resetCreateGoalState()
-            onDismiss() 
-        } 
+            onDismiss()
+        }
     }
 
     Dialog(
@@ -529,6 +561,7 @@ fun CreateGoalDialog(
             Column(
                 modifier = Modifier
                     .padding(24.dp)
+                    .navigationBarsPadding().imePadding()
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -600,7 +633,7 @@ fun CreateGoalDialog(
                 Spacer(Modifier.height(8.dp))
 
                 // Buttons
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f).height(48.dp),
@@ -726,8 +759,8 @@ fun CreateGoalDropdown(
                         modifier = Modifier.weight(1f)
                     )
                     Icon(
-                        Icons.Default.KeyboardArrowDown, 
-                        null, 
+                        Icons.Default.KeyboardArrowDown,
+                        null,
                         tint = palette.textSecondary,
                         modifier = Modifier.size(14.dp)
                     )
@@ -742,7 +775,7 @@ fun CreateGoalDropdown(
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(
-                        text = { 
+                        text = {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.padding(horizontal = 8.dp)
@@ -782,7 +815,9 @@ fun DeleteGoalConfirmationDialog(
             colors = CardDefaults.cardColors(containerColor = palette.cardBg)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier
+                    .padding(24.dp)
+                    .navigationBarsPadding().imePadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -801,14 +836,14 @@ fun DeleteGoalConfirmationDialog(
                         Icon(Icons.Default.Close, contentDescription = "Close", tint = palette.textPrimary)
                     }
                 }
-                
+
                 Text(
                     text = "This will permanently delete the goal and all its contribution history. This action cannot be undone.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.textPrimary,
                     textAlign = TextAlign.Start
                 )
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
