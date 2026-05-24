@@ -204,13 +204,6 @@ fun HomeScreen(
             }
 
             item {
-                MonthlySummaryCard(
-                    isDarkTheme = isDarkTheme,
-                    onViewInsightsClick = onViewInsightsClick
-                )
-            }
-
-            item {
                 IncomeSourcesCard(isDarkTheme = isDarkTheme, sources = sampleIncomeSources)
             }
 
@@ -225,6 +218,13 @@ fun HomeScreen(
                     remainingAmount  = OPTIONAL_BUDGET_REMAINING
                 )
             }
+
+            item {
+                MonthlySummaryCard(
+                    isDarkTheme = isDarkTheme,
+                    onViewInsightsClick = onViewInsightsClick
+                )
+            }
         }
         if (showHeaderIcons) {
             // Theme icon at top-left
@@ -237,8 +237,8 @@ fun HomeScreen(
                 ) {
                     IconButton(onClick = onThemeClick) {
                         Icon(
-                            imageVector = Icons.Outlined.LightMode,
-                            contentDescription = "Theme",
+                            imageVector = if (isDarkTheme) Icons.Outlined.DarkMode else Icons.Outlined.LightMode,
+                            contentDescription = if (isDarkTheme) "Dark Mode" else "Light Mode",
                             tint = colors.textPrimary
                         )
                     }

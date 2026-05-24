@@ -33,19 +33,24 @@ import com.example.financeflow.navigation.BottomNavItem
 // ─────────────────────────────────────────────
 //  Design Tokens — Fintech Palette
 // ─────────────────────────────────────────────
-private val NavBarBackground   = Color(0xFFFFFFFF)
-private val SelectedBubble     = Color(0xFFEDE7FF)
-private val SelectedIconTint   = Color(0xFF7C4DFF)
-private val UnselectedIconTint = Color(0xFFB0B0C3)
-private val SelectedLabelColor = Color(0xFF7C4DFF)
+private val LightNavBarBackground   = Color(0xFFFFFFFF)
+private val LightSelectedBubble     = Color(0xFFEDE7FF)
+private val LightSelectedIconTint   = Color(0xFF7C4DFF)
+private val LightUnselectedIconTint = Color(0xFFB0B0C3)
+private val LightSelectedLabelColor = Color(0xFF7C4DFF)
+
+private val DarkNavBarBackground   = Color(0xFF232334)
+private val DarkSelectedBubble     = Color(0xFF3B315A)
+private val DarkSelectedIconTint   = Color(0xFFD6C4FF)
+private val DarkUnselectedIconTint = Color(0xFF8E8CA3)
+private val DarkSelectedLabelColor = Color(0xFFF2ECFF)
 
 private val bottomNavItems = listOf(
     BottomNavItem.Home,
     BottomNavItem.Income,
     BottomNavItem.Expenses,
     BottomNavItem.Savings,
-    BottomNavItem.Goals,
-    BottomNavItem.Insights
+    BottomNavItem.Goals
 )
 
 /**
@@ -56,6 +61,7 @@ private val bottomNavItems = listOf(
  */
 @Composable
 fun BottomNavigationBar(
+    isDarkTheme: Boolean = false,
     currentDestination: NavDestination?,
     onItemClick: (BottomNavItem) -> Unit
 ) {
@@ -64,18 +70,20 @@ fun BottomNavigationBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(horizontal = 24.dp, vertical = 8.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp), // More compact height
-            color = NavBarBackground,
+            color = if (isDarkTheme) DarkNavBarBackground else LightNavBarBackground,
             shape = RoundedCornerShape(32.dp),
             shadowElevation = 12.dp
         ) {
             Row(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -85,9 +93,10 @@ fun BottomNavigationBar(
                         ?.any { it.route == item.route } == true
 
                     BottomNavTab(
-                        item       = item,
+                        item = item,
+                        isDarkTheme = isDarkTheme,
                         isSelected = isSelected,
-                        onClick    = { onItemClick(item) }
+                        onClick = { onItemClick(item) }
                     )
                 }
             }
@@ -98,6 +107,7 @@ fun BottomNavigationBar(
 @Composable
 private fun RowScope.BottomNavTab(
     item: BottomNavItem,
+    isDarkTheme: Boolean,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -110,7 +120,11 @@ private fun RowScope.BottomNavTab(
     )
 
     val iconTint by animateColorAsState(
-        targetValue   = if (isSelected) SelectedIconTint else UnselectedIconTint,
+        targetValue = if (isSelected) {
+            if (isDarkTheme) DarkSelectedIconTint else LightSelectedIconTint
+        } else {
+            if (isDarkTheme) DarkUnselectedIconTint else LightUnselectedIconTint
+        },
         label         = "icon_tint"
     )
 
@@ -138,7 +152,7 @@ private fun RowScope.BottomNavTab(
                     modifier = Modifier
                         .size(bubbleSize)
                         .clip(CircleShape)
-                        .background(SelectedBubble)
+                        .background(if (isDarkTheme) DarkSelectedBubble else LightSelectedBubble)
                 )
             }
             Icon(
@@ -157,7 +171,7 @@ private fun RowScope.BottomNavTab(
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 8.sp,
                     fontWeight = FontWeight.Bold,
-                    color = SelectedLabelColor
+                    color = if (isDarkTheme) DarkSelectedLabelColor else LightSelectedLabelColor
                 )
             )
         }
