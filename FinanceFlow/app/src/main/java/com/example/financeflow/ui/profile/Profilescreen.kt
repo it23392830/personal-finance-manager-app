@@ -22,10 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
@@ -114,7 +112,6 @@ fun ProfileScreen(
         item {
             ProfileHeaderCard(
                 isDarkTheme = isDarkTheme,
-                onThemeToggle = onThemeToggle,
                 palette = palette
             )
         }
@@ -177,12 +174,14 @@ fun ProfileScreen(
 
     if (showChangePasswordDialog) {
         ChangePasswordDialog(
+            isDarkTheme = isDarkTheme,
             onDismiss = { showChangePasswordDialog = false }
         )
     }
 
     if (showEditProfilePopup) {
         EditProfileDialog(
+            isDarkTheme = isDarkTheme,
             onDismiss = { showEditProfilePopup = false }
         )
     }
@@ -191,7 +190,6 @@ fun ProfileScreen(
 @Composable
 private fun ProfileHeaderCard(
     isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit,
     palette: ProfilePalette
 ) {
     Card(
@@ -231,14 +229,6 @@ private fun ProfileHeaderCard(
                     color = palette.secondaryTextColor
                 )
             }
-            Icon(
-                imageVector = if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
-                contentDescription = if (isDarkTheme) "Dark Mode" else "Light Mode",
-                tint = palette.secondaryTextColor,
-                modifier = Modifier
-                    .size(26.dp)
-                    .clickable { onThemeToggle() }
-            )
         }
     }
 }

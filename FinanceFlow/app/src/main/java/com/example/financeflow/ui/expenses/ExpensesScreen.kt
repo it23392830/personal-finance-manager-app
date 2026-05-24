@@ -348,6 +348,14 @@ fun ExpensesScreen(
 
     // ── Scaffold ──────────────────────────────────────────────
     val colors = getExpensesColors(isDarkTheme)
+    val monthOptions = listOf(
+        "2026-05" to "May 2026",
+        "2026-04" to "April 2026",
+        "2026-03" to "March 2026",
+        "2026-02" to "February 2026",
+        "2026-01" to "January 2026"
+    )
+    val selectedMonthLabel = monthOptions.firstOrNull { it.first == selectedMonth }?.second ?: "May 2026"
 
     Scaffold { innerPadding ->
         Column(
@@ -359,8 +367,10 @@ fun ExpensesScreen(
         ) {
             // ── Header ─────────────────────────────────────────
             ExpenseHeader(
-                selectedMonth = selectedMonth,
-                onMonthChange = { selectedMonth = it },
+                selectedMonth = selectedMonthLabel,
+                onMonthChange = { monthLabel ->
+                    selectedMonth = monthOptions.firstOrNull { it.second == monthLabel }?.first ?: selectedMonth
+                },
                 onAddClick    = { openAddForm() },
                 colors = colors
             )
