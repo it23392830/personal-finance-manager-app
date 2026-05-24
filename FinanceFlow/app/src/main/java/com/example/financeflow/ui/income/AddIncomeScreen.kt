@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -14,7 +16,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.AssistChip
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import java.util.Date
+import java.util.Locale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -115,7 +122,7 @@ private val currencyOptions = listOf(
  * @param onNavigateUp Back-navigation callback.
  */
 @Suppress("DEPRECATION")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddIncomeScreen(
     isDarkTheme: Boolean = false,
@@ -129,7 +136,8 @@ fun AddIncomeScreen(
     var selectedCurrency by remember { mutableStateOf(currencyOptions[0]) }
     var selectedSource  by remember { mutableStateOf(incomeSourceOptions[0].first) }
     var description     by remember { mutableStateOf("") }
-    var date            by remember { mutableStateOf("05/05/2026") }
+    val todayStr = java.text.SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH).format(Date())
+    var date            by remember { mutableStateOf(todayStr) }
     var notes           by remember { mutableStateOf("") }
 
     var currencyExpanded by remember { mutableStateOf(false) }
@@ -138,6 +146,9 @@ fun AddIncomeScreen(
     val scrollState = rememberScrollState()
     val viewModel: IncomeViewModel = hiltViewModel()
     val scope = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsState()
+    var showAddSourceDialog by remember { mutableStateOf(false) }
+    var newSourceName by remember { mutableStateOf("") }
 
     // ── Root scaffold ─────────────────────────────────────────────────────────
     Scaffold(
@@ -203,11 +214,76 @@ fun AddIncomeScreen(
 
                         HorizontalDivider(color = colors.divider, thickness = 1.dp)
 
+                            // Quick Income Sources
+                            IncomeFieldLabel("Quick Income Sources", isDarkTheme = isDarkTheme)
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                val sources = if (uiState.incomeSources.isNotEmpty()) uiState.incomeSources else incomeSourceOptions.map { it.first }
+                                sources.take(5).forEach { src ->
+                                    AssistChip(
+                                        onClick = { selectedSource = src },
+                                        label = { Text(src) }
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            TextButton(onClick = { showAddSourceDialog = true }) {
+                                Icon(Icons.Default.AddCircle, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("+ Add New Source")
+                            }
+
+                            if (showAddSourceDialog) {
+                                AlertDialog(
+                                    onDismissRequest = { showAddSourceDialog = false },
+                                    confirmButton = {
+                                        TextButton(onClick = {
+                                            if (newSourceName.isNotBlank()) {
+                                                viewModel.addIncomeSource(newSourceName.trim())
+                                                newSourceName = ""
+                                            }
+                                            showAddSourceDialog = false
+                                        }) { Text("Save") }
+                                    },
+                                    dismissButton = { TextButton(onClick = { showAddSourceDialog = false }) { Text("Cancel") } },
+                                    title = { Text("Add New Source") },
+                                    text = {
+                                        OutlinedTextField(
+                                            value = newSourceName,
+                                            onValueChange = { newSourceName = it },
+                                            placeholder = { Text("Enter source name") },
+                                            singleLine = true,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                )
+                            }
+
                         // Income Source
                         IncomeFieldLabel("Income Source", isDarkTheme = isDarkTheme)
+                        val dynamicSourceOptions = (uiState.incomeSources.takeIf { it.isNotEmpty() } ?: incomeSourceOptions.map { it.first })
+                            .map { label ->
+                                val icon = when (label.lowercase()) {
+                                    "salary" -> Icons.Default.Work
+                                    "freelance" -> Icons.Default.Code
+                                    "adsense" -> Icons.Default.AttachMoney
+                                    "crypto" -> Icons.Default.CurrencyBitcoin
+                                    "investment" -> Icons.Default.TrendingUp
+                                    "rental" -> Icons.Default.Home
+                                    "business" -> Icons.Default.Business
+                                    else -> Icons.Default.Category
+                                }
+                                label to icon
+                            }
+
                         IncomeSourceDropdown(
                             selectedSource = selectedSource,
-                            sourceOptions = incomeSourceOptions,
+                            sourceOptions = dynamicSourceOptions,
                             expanded = sourceExpanded,
                             onExpandChange = { sourceExpanded = it },
                             onOptionSelected = { selectedSource = it; sourceExpanded = false },
@@ -261,18 +337,8 @@ fun AddIncomeScreen(
                     // Create domain Income and persist via ViewModel, then call callbacks
                     val amountVal = amount.replace(",", "").toDoubleOrNull() ?: 0.0
                     val currencyCode = selectedCurrency.split(" ").firstOrNull() ?: "LKR"
-                    val sourceEnum = when (selectedSource.lowercase()) {
-                        "salary" -> IncomeSource.SALARY
-                        "freelance" -> IncomeSource.FREELANCE
-                        "adsense" -> IncomeSource.ADSENSE
-                        "crypto" -> IncomeSource.CRYPTO
-                        "investment" -> IncomeSource.INVESTMENT
-                        "rental" -> IncomeSource.RENTAL
-                        else -> IncomeSource.OTHER
-                    }
-
                     val income = Income(
-                        source = sourceEnum.name,
+                        source = selectedSource,
                         amount = amountVal,
                         currency = currencyCode,
                         description = description,

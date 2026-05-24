@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -128,24 +129,29 @@ fun IncomeScreenContent(
 ) {
     val colors = getIncomeScreenColors(isDarkTheme)
 
-    val monthOptions = remember {
-        generateMonthOptions(
-            uiState.selectedYear,
-            uiState.selectedMonth
-        )
+    val todayCal = java.util.Calendar.getInstance()
+    val todayYear = todayCal.get(java.util.Calendar.YEAR)
+    val todayMonth = todayCal.get(java.util.Calendar.MONTH) + 1
+
+    val monthOptions = remember(uiState.availableMonths) {
+        if (uiState.availableMonths.isNotEmpty()) uiState.availableMonths
+        else generateMonthOptions(todayYear, todayMonth, count = 6)
     }
 
-    val currentMonthYear =
-        MonthYear(
-            uiState.selectedYear,
-            uiState.selectedMonth
-        )
+    val currentMonthYear = if (uiState.availableMonths.isNotEmpty()) monthOptions.first()
+    else MonthYear(todayYear, todayMonth)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.screenBg)
     ) {
+
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -465,21 +471,8 @@ private val previewUiState = IncomeUiState(
         previewTransactions,
 
     incomeBySource = listOf(
-
-        IncomeBySource(
-            IncomeSource.SALARY,
-            135000.0,
-            1,
-            62.6
-        ),
-
-        IncomeBySource(
-            IncomeSource.FREELANCE,
-            73500.0,
-            2,
-            33.9
-        )
-
+        IncomeBySource("Salary", 135000.0, 1, 62.6),
+        IncomeBySource("Freelance", 73500.0, 2, 33.9)
     ),
 
     daysUntilNextSalary = 20

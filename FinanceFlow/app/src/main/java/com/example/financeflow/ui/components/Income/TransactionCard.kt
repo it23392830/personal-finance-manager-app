@@ -184,11 +184,16 @@ fun CurrencyBadge(currency: String, modifier: Modifier = Modifier) {
 
 /**
  * Derives a human-readable title from the income entry:
- * uses description if present, otherwise falls back to the source label.
+ * uses description if present, otherwise falls back to the source name.
  */
 private fun transactionTitle(income: Income): String {
-    return if (income.description.isNotBlank()) income.description
-    else runCatching { IncomeSource.valueOf(income.source).label }.getOrDefault(income.source)
+    if (income.description.isNotBlank()) return income.description
+    
+    return try {
+        IncomeSource.valueOf(income.source).label
+    } catch (e: Exception) {
+        income.source
+    }
 }
 
 private val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
