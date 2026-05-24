@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import java.util.Date
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import androidx.compose.runtime.getValue
@@ -98,9 +99,14 @@ class IncomeViewModel @Inject constructor(
     }
 
     private fun updateUiStateWithTransactions(list: List<Income>) {
-        val total = list.sumOf { convertToLKR(it.amount, it.currency) }
-        val recent = list.take(10) // Show more in recent if available
-        val grouped = list.groupBy { it.source }.map { (sourceStr, items) ->
+        // Exclude future-dated transactions from totals and aggregations, but
+        // keep them in the list so newly-added items appear immediately.
+        val now = Date().time
+        val visibleForCalculation = list.filter { it.date.toDate().time <= now }
+
+        val total = visibleForCalculation.sumOf { convertToLKR(it.amount, it.currency) }
+        val recent = visibleForCalculation.take(10)
+        val grouped = visibleForCalculation.groupBy { it.source }.map { (sourceStr, items) ->
             val sourceTotalLKR = items.sumOf { convertToLKR(it.amount, it.currency) }
             IncomeBySource(
                 source = sourceStr,

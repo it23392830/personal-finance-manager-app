@@ -1,259 +1,162 @@
 package com.example.financeflow.repository.income
 
+import com.example.financeflow.data.local.dao.IncomeDao
+import com.example.financeflow.data.local.entity.IncomeEntity
+import com.example.financeflow.data.remote.IncomeFirebaseService
 import com.example.financeflow.model.Income
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import kotlinx.coroutines.channels.awaitClose
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import java.util.Calendar
+import java.util.Date
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Repository that handles all Firestore CRUD operations for Income entries.
- *
- * Collection path: users/{uid}/income
+ * Repository that synchronizes Income records between local Room database and
+ * Firebase Firestore. Local data (Room) is used as the source of truth for
+ * UI flows and is synchronized with Firestore in the background.
  */
 @Singleton
 class IncomeRepository @Inject constructor(
-    private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val incomeDao: IncomeDao,
+    private val firebaseService: IncomeFirebaseService
 ) {
 
-    private val uid get() = auth.currentUser?.uid ?: error("User not logged in")
+    // --- Mapping helpers -------------------------------------------------
+    private fun entityToDomain(e: IncomeEntity): Income = Income(
+        id = e.id,
+        userId = e.userId,
+        amount = e.amount,
+        currency = e.currency,
+        source = e.source,
+        description = e.description,
+        date = Timestamp(Date(e.date)),
+        createdAt = Timestamp(Date(e.createdAt))
+    )
 
-    /** Returns a real-time [Flow] of all incomes for the authenticated user. */
-    fun getIncomesFlow(): Flow<List<Income>> = callbackFlow {
-        // Listen to all incomes ordered by date; filter out future-dated
-        // transactions client-side so newly-added documents appear immediately
-        val listener = firestore
-            .collection("users").document(uid)
-            .collection("income")
-            .orderBy("date", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                val now = java.util.Date()
-                val list = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Income::class.java)?.copy(id = doc.id)
-                }?.filter { inc ->
-                    // Exclude future-dated transactions
-                    inc.date.toDate().before(now) || inc.date.toDate().time == now.time
-                } ?: emptyList()
-                trySend(list)
-            }
-        awaitClose { listener.remove() }
+    private fun domainToEntity(i: Income): IncomeEntity = IncomeEntity(
+        id = i.id,
+        userId = i.userId,
+        source = i.source,
+        amount = i.amount,
+        currency = i.currency,
+        description = i.description,
+        notes = "",
+        date = i.date.toDate().time,
+        createdAt = i.createdAt.toDate().time
+    )
+
+    // --- Public APIs -----------------------------------------------------
+
+    /**
+     * Returns a Flow backed by Room. The UI should collect this for fast local
+     * updates. Callers can invoke [syncFromFirestore] to refresh local cache.
+     */
+    fun getIncomesFlow(): Flow<List<Income>> {
+        val uid = firebaseService.currentUserId() ?: error("No authenticated user")
+        return incomeDao.getAllIncomeFlowForUser(uid).map { list -> list.map { entityToDomain(it) } }
     }
 
-    /** Returns a real-time [Flow] of incomes filtered by [year] and [month] (1-based). */
-    fun getIncomesForMonthFlow(year: Int, month: Int): Flow<List<Income>> = callbackFlow {
-        // Build start/end timestamps for the given month
-        val start = Calendar.getInstance().apply {
-            set(year, month - 1, 1, 0, 0, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.time
-
-        var end = Calendar.getInstance().apply {
-            set(year, month - 1, 1, 23, 59, 59)
-            set(Calendar.MILLISECOND, 999)
-            add(Calendar.MONTH, 1)
-            add(Calendar.DAY_OF_MONTH, -1)
-        }.time
-
-        // Do not include future dates
-        val today = java.util.Date()
-        if (end.after(today)) end = today
-
-        val listener = firestore
-            .collection("users").document(uid)
-            .collection("income")
-            .whereGreaterThanOrEqualTo("date", com.google.firebase.Timestamp(start))
-            .whereLessThanOrEqualTo("date", com.google.firebase.Timestamp(end))
-            .orderBy("date", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                val list = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Income::class.java)?.copy(id = doc.id)
-                } ?: emptyList()
-                trySend(list)
-            }
-        awaitClose { listener.remove() }
+    /** Returns incomes for a month using local DB (start/end are month boundaries). */
+    fun getIncomesForMonthFlow(year: Int, month: Int): Flow<List<Income>> {
+        val start = Calendar.getInstance().apply { set(year, month - 1, 1, 0, 0, 0); set(Calendar.MILLISECOND, 0) }.timeInMillis
+        val endCal = Calendar.getInstance().apply { set(year, month - 1, 1, 23, 59, 59); set(Calendar.MILLISECOND, 999); add(Calendar.MONTH, 1); add(Calendar.DAY_OF_MONTH, -1) }
+        val end = endCal.timeInMillis
+        val uid = firebaseService.currentUserId() ?: error("No authenticated user")
+        return incomeDao.getIncomesBetweenFlowForUser(start, end, uid).map { list -> list.map { entityToDomain(it) } }
     }
 
-    /** Real-time list of transactions for a specific month. Includes everything up to the end of that month. */
-    fun getCurrentMonthTransactionsFlow(year: Int, month: Int): Flow<List<Income>> = callbackFlow {
-        val start = Calendar.getInstance().apply {
-            set(year, month - 1, 1, 0, 0, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.time
+    /** Returns current-month transactions flow (local DB). */
+    fun getCurrentMonthTransactionsFlow(year: Int, month: Int): Flow<List<Income>> = getIncomesForMonthFlow(year, month)
 
-        val end = Calendar.getInstance().apply {
-            set(year, month - 1, 1, 23, 59, 59)
-            set(Calendar.MILLISECOND, 999)
-            add(Calendar.MONTH, 1)
-            add(Calendar.DAY_OF_MONTH, -1)
-        }.time
+    /** Real-time list of custom income sources (proxied to firebase service). */
+    fun getIncomeSourcesFlow(): Flow<List<String>> = firebaseService.getIncomeSourcesFlow()
 
-        val listener = firestore
-            .collection("users").document(uid)
-            .collection("income")
-            .whereGreaterThanOrEqualTo("date", com.google.firebase.Timestamp(start))
-            .whereLessThanOrEqualTo("date", com.google.firebase.Timestamp(end))
-            .orderBy("date", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                // Filter out future dates on the client side to handle items added exactly "now"
-                val now = java.util.Date()
-                val list = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Income::class.java)?.copy(id = doc.id)
-                }?.filter { it.date.toDate().before(now) || it.date.toDate().time == now.time } ?: emptyList()
-                trySend(list)
-            }
-        awaitClose { listener.remove() }
-    }
+    /** Adds a custom income source to Firestore. */
+    suspend fun addIncomeSource(name: String): String = firebaseService.addIncomeSource(name)
 
-    /** Real-time list of custom income sources for the user. */
-    fun getIncomeSourcesFlow(): Flow<List<String>> = callbackFlow {
-        val listener = firestore
-            .collection("users").document(uid)
-            .collection("incomeSources")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                val list = snapshot?.documents?.mapNotNull { doc ->
-                    doc.getString("sourceName") ?: doc.id
-                } ?: emptyList()
-                trySend(list)
-            }
-        awaitClose { listener.remove() }
-    }
+    /** Fetch exchange rates from remote config (fallbacks used when missing). */
+    suspend fun getExchangeRates(): Map<String, Double> = firebaseService.getExchangeRates()
 
-    /** Adds a new custom income source under users/{uid}/incomeSources. Returns generated id. */
-    suspend fun addIncomeSource(sourceName: String): String {
-        val data = mapOf("sourceName" to sourceName)
-        val ref = firestore
-            .collection("users").document(uid)
-            .collection("incomeSources")
-            .add(data)
-            .await()
-        return ref.id
-    }
-
-    /** Returns available months (year, month) derived from existing income documents up to today. */
-    suspend fun getAvailableMonths(): List<Pair<Int, Int>> {
-        val today = java.util.Date()
-        val snapshot = firestore
-            .collection("users").document(uid)
-            .collection("income")
-            .whereLessThanOrEqualTo("date", com.google.firebase.Timestamp(today))
-            .get()
-            .await()
-
-        val set = mutableSetOf<Pair<Int, Int>>()
-        snapshot.documents.forEach { doc ->
-            val inc = doc.toObject(Income::class.java) ?: return@forEach
-            val cal = Calendar.getInstance().apply { time = inc.date.toDate() }
-            val pair = cal.get(Calendar.YEAR) to (cal.get(Calendar.MONTH) + 1)
-            set.add(pair)
-        }
-
-        val list = set.toList().sortedWith(compareByDescending<Pair<Int, Int>> { it.first }.thenByDescending { it.second })
-
-        // If empty, return current month only
-        if (list.isEmpty()) {
-            val c = Calendar.getInstance()
-            return listOf(c.get(Calendar.YEAR) to (c.get(Calendar.MONTH) + 1))
-        }
-
-        return list
-    }
-
-    /** Adds a new income entry to Firestore. Returns the generated document ID. */
+    /** Adds a new income: insert locally, then ensure it exists in Firestore. */
     suspend fun addIncome(income: Income): String {
-        val ref = firestore
-            .collection("users").document(uid)
-            .collection("income")
-            .add(income.copy(userId = uid))
-            .await()
-        return ref.id
+        val id = if (income.id.isBlank()) UUID.randomUUID().toString() else income.id
+
+        val uid = firebaseService.currentUserId() ?: error("No authenticated user")
+        // Ensure the domain object carries the agreed id and userId
+        val withId = income.copy(id = id, userId = uid)
+
+        // Persist locally first (fast)
+        val entity = domainToEntity(withId)
+        incomeDao.insertIncome(entity)
+
+        // Persist remotely (ensures remote id matches local id)
+        firebaseService.addIncome(withId, id)
+
+        return id
     }
 
-    /** Updates an existing income entry (matched by [income.id]). */
+    /** Update income locally and remotely. */
     suspend fun updateIncome(income: Income) {
-        // Use update() with explicit fields to avoid replacing metadata unintentionally
-        val data = mapOf(
-            "amount" to income.amount,
-            "currency" to income.currency,
-            "source" to income.source,
-            "description" to income.description,
-            "date" to income.date,
-            // Do not overwrite userId or createdAt unless explicitly intended
-        )
+        // update local DB
+        val uid = firebaseService.currentUserId() ?: error("No authenticated user")
+        val withUser = income.copy(userId = uid)
+        val entity = domainToEntity(withUser)
+        incomeDao.insertIncome(entity)
 
-        firestore
-            .collection("users").document(uid)
-            .collection("income")
-            .document(income.id)
-            .update(data)
-            .await()
+        // update remote
+        firebaseService.updateIncome(withUser)
     }
 
-    /** Permanently deletes the income entry with the given [incomeId]. */
+    /** Delete income locally and remotely. */
     suspend fun deleteIncome(incomeId: String) {
-        firestore
-            .collection("users").document(uid)
-            .collection("income")
-            .document(incomeId)
-            .delete()
-            .await()
+        val uid = firebaseService.currentUserId() ?: error("No authenticated user")
+        // Ensure we only delete the current user's record locally
+        val local = incomeDao.getIncomeByIdForUser(incomeId, uid)
+        if (local != null) {
+            incomeDao.deleteIncomeById(incomeId)
+            firebaseService.deleteIncome(incomeId)
+        }
     }
 
-    /** Fetches a single Income by id (one-shot). */
+    /** Get a single income (prefer local DB). */
     suspend fun getIncomeById(incomeId: String): Income? {
-        val doc = firestore
-            .collection("users").document(uid)
-            .collection("income")
-            .document(incomeId)
-            .get()
-            .await()
-
-        return doc?.toObject(Income::class.java)?.copy(id = doc.id)
+        val uid = firebaseService.currentUserId() ?: error("No authenticated user")
+        val e = incomeDao.getIncomeByIdForUser(incomeId, uid)
+        return e?.let { entityToDomain(it) }
     }
 
     /**
-     * Fetches exchange rates to convert various currencies to LKR.
-     * Expected storage (optional): collection `config` document `exchangeRates` with fields USD, EUR, GBP as numbers.
-     * Falls back to sensible defaults when not available.
+     * Synchronize local Room database with the latest data from Firestore.
+     * This will overwrite local records with remote values (upsert semantics).
      */
-    suspend fun getExchangeRates(): Map<String, Double> {
-        // Defaults
-        val defaults = mapOf("LKR" to 1.0, "USD" to 300.0, "EUR" to 320.0, "GBP" to 370.0)
-
-        return try {
-            val doc = firestore.collection("config").document("exchangeRates").get().await()
-            if (doc.exists()) {
-                val usd = doc.getDouble("USD") ?: defaults["USD"]!!
-                val eur = doc.getDouble("EUR") ?: defaults["EUR"]!!
-                val gbp = doc.getDouble("GBP") ?: defaults["GBP"]!!
-                mapOf("LKR" to 1.0, "USD" to usd, "EUR" to eur, "GBP" to gbp)
-            } else {
-                defaults
-            }
-        } catch (e: Exception) {
-            defaults
+    suspend fun syncFromFirestore() {
+        val uid = firebaseService.currentUserId() ?: error("No authenticated user")
+        val remote = firebaseService.getAllIncomes()
+        // Replace local records for this user with remote snapshot
+        incomeDao.deleteIncomesForUser(uid)
+        remote.forEach { inc ->
+            val entity = domainToEntity(inc)
+            incomeDao.insertIncome(entity)
         }
+    }
+
+    /** Returns available months computed from local data. */
+    suspend fun getAvailableMonths(): List<Pair<Int, Int>> {
+        val uid = firebaseService.currentUserId() ?: error("No authenticated user")
+        val list = incomeDao.getAllIncomeFlowForUser(uid).first()
+        val set = mutableSetOf<Pair<Int, Int>>()
+        list.forEach { e ->
+            val cal = Calendar.getInstance().apply { timeInMillis = e.date }
+            set.add(cal.get(Calendar.YEAR) to (cal.get(Calendar.MONTH) + 1))
+        }
+        if (set.isEmpty()) {
+            val c = Calendar.getInstance()
+            return listOf(c.get(Calendar.YEAR) to (c.get(Calendar.MONTH) + 1))
+        }
+        return set.toList().sortedWith(compareByDescending<Pair<Int, Int>> { it.first }.thenByDescending { it.second })
     }
 }
