@@ -108,7 +108,9 @@ fun IncomeScreen(
             navController.navigate(Routes.DELETE_INCOME.replace("{incomeId}", income.id))
         },
 
-        onDismissDelete = { viewModel.dismissDeleteDialog() }
+        onDismissDelete = { viewModel.dismissDeleteDialog() },
+        expandedTransactionId = viewModel.expandedTransactionId,
+        onToggleExpand = { id -> viewModel.toggleExpandedTransaction(id) }
     )
 }
 
@@ -126,6 +128,9 @@ fun IncomeScreenContent(
     onDismissEdit: () -> Unit,
     onShowDeleteDialog: (Income) -> Unit,
     onDismissDelete: () -> Unit
+    ,
+    expandedTransactionId: String?,
+    onToggleExpand: (String) -> Unit
 ) {
     val colors = getIncomeScreenColors(isDarkTheme)
 
@@ -235,14 +240,11 @@ fun IncomeScreenContent(
 
                 RecentTransactionsCard(
                     isDarkTheme = isDarkTheme,
-                    transactions =
-                        uiState.recentTransactions,
-
-                    onEditClick =
-                        onShowEditDialog,
-
-                    onDeleteClick =
-                        onShowDeleteDialog
+                    transactions = uiState.recentTransactions,
+                    expandedTransactionId = expandedTransactionId,
+                    onToggleExpand = onToggleExpand,
+                    onEditClick = onShowEditDialog,
+                    onDeleteClick = onShowDeleteDialog
                 )
 
             }
@@ -383,6 +385,8 @@ private fun SectionTitle(
 private fun RecentTransactionsCard(
     isDarkTheme: Boolean = false,
     transactions: List<Income>,
+    expandedTransactionId: String?,
+    onToggleExpand: (String) -> Unit,
     onEditClick: (Income) -> Unit,
     onDeleteClick: (Income) -> Unit
 ) {
@@ -411,24 +415,15 @@ private fun RecentTransactionsCard(
                 )
         ) {
 
-            transactions.forEach {
-
-                    income ->
-
+            transactions.forEach { income ->
                 TransactionCard(
                     isDarkTheme = isDarkTheme,
-
-                    income =
-                        income,
-
-                    onEditClick =
-                        onEditClick,
-
-                    onDeleteClick =
-                        onDeleteClick
-
+                    income = income,
+                    expanded = (expandedTransactionId == income.id),
+                    onToggleExpand = onToggleExpand,
+                    onEditClick = onEditClick,
+                    onDeleteClick = onDeleteClick
                 )
-
             }
 
         }
@@ -496,6 +491,8 @@ fun IncomePreview() {
         onShowEditDialog = {},
         onDismissEdit = {},
         onShowDeleteDialog = {},
-        onDismissDelete = {}
+        onDismissDelete = {},
+        expandedTransactionId = null,
+        onToggleExpand = {}
     )
 }

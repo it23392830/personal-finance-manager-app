@@ -14,6 +14,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 @HiltViewModel
 class IncomeViewModel @Inject constructor(
@@ -26,6 +29,14 @@ class IncomeViewModel @Inject constructor(
     // Exchange rates map (currency -> to LKR multiplier)
     private val exchangeRatesMutex = Mutex()
     private var exchangeRates: Map<String, Double> = mapOf("LKR" to 1.0, "USD" to 300.0, "EUR" to 320.0, "GBP" to 370.0)
+
+    // Expanded transaction id for Recent Transactions UI. Only one may be expanded.
+    var expandedTransactionId by mutableStateOf<String?>(null)
+        private set
+
+    fun toggleExpandedTransaction(id: String) {
+        expandedTransactionId = if (expandedTransactionId == id) null else id
+    }
 
     private suspend fun loadExchangeRates() {
         try {
