@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -17,6 +18,11 @@ import com.example.financeflow.model.*
 import com.google.firebase.Timestamp
 
 import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import com.example.financeflow.navigation.Routes
+import com.example.financeflow.viewmodel.income.IncomeViewModel
 import com.example.financeflow.ui.components.Income.AddIncomeDialog
 import com.example.financeflow.ui.components.Income.DeleteIncomeDialog
 import com.example.financeflow.ui.components.Income.EditIncomeDialog
@@ -58,42 +64,53 @@ private fun getIncomeScreenColors(isDarkTheme: Boolean): IncomeScreenColors =
 @Composable
 fun IncomeScreen(
     isDarkTheme: Boolean = false,
-    navController: NavController
+    navController: NavController,
+    viewModel: IncomeViewModel = hiltViewModel()
 ) {
-    val colors = getIncomeScreenColors(isDarkTheme)
+    val uiState by viewModel.uiState.collectAsState()
+
     IncomeScreenContent(
         isDarkTheme = isDarkTheme,
-        uiState = previewUiState,
+        uiState = uiState,
 
-        onMonthSelected = {},
+        onMonthSelected = { monthYear ->
+            viewModel.setSelectedMonth(monthYear.year, monthYear.month)
+        },
 
-        onAddIncome = {},
+        onAddIncome = { income ->
+            viewModel.addIncome(income)
+            navController.popBackStack()
+        },
 
-        onUpdateIncome = {},
+        onUpdateIncome = { income ->
+            viewModel.updateIncome(income)
+            navController.popBackStack()
+        },
 
-        onDeleteIncome = {},
+        onDeleteIncome = { income ->
+            viewModel.deleteIncome(income.id)
+            navController.popBackStack()
+        },
 
         onShowAddDialog = {
-            navController.navigate(com.example.financeflow.navigation.Routes.ADD_INCOME)
+            navController.navigate(Routes.ADD_INCOME)
         },
 
-        onDismissAdd = {},
+        onDismissAdd = { viewModel.dismissAddDialog() },
 
         onShowEditDialog = { income ->
-            navController.navigate(
-                com.example.financeflow.navigation.Routes.EDIT_INCOME.replace("{incomeId}", income.id)
-            )
+            navController.navigate(Routes.EDIT_INCOME.replace("{incomeId}", income.id))
         },
 
-        onDismissEdit = {},
+        onDismissEdit = { viewModel.dismissEditDialog() },
 
         onShowDeleteDialog = { income ->
-            navController.navigate(
-                com.example.financeflow.navigation.Routes.DELETE_INCOME.replace("{incomeId}", income.id)
-            )
+            navController.navigate(Routes.DELETE_INCOME.replace("{incomeId}", income.id))
         },
 
-        onDismissDelete = {}
+        onDismissDelete = { viewModel.dismissDeleteDialog() },
+        expandedTransactionId = viewModel.expandedTransactionId,
+        onToggleExpand = { id -> viewModel.toggleExpandedTransaction(id) }
     )
 }
 
@@ -111,27 +128,35 @@ fun IncomeScreenContent(
     onDismissEdit: () -> Unit,
     onShowDeleteDialog: (Income) -> Unit,
     onDismissDelete: () -> Unit
+    ,
+    expandedTransactionId: String?,
+    onToggleExpand: (String) -> Unit
 ) {
     val colors = getIncomeScreenColors(isDarkTheme)
 
-    val monthOptions = remember {
-        generateMonthOptions(
-            uiState.selectedYear,
-            uiState.selectedMonth
-        )
+    val todayCal = java.util.Calendar.getInstance()
+    val todayYear = todayCal.get(java.util.Calendar.YEAR)
+    val todayMonth = todayCal.get(java.util.Calendar.MONTH) + 1
+
+    val monthOptions = remember(uiState.availableMonths) {
+        if (uiState.availableMonths.isNotEmpty()) uiState.availableMonths
+        else generateMonthOptions(todayYear, todayMonth, count = 6)
     }
 
-    val currentMonthYear =
-        MonthYear(
-            uiState.selectedYear,
-            uiState.selectedMonth
-        )
+    val currentMonthYear = if (uiState.availableMonths.isNotEmpty()) monthOptions.first()
+    else MonthYear(todayYear, todayMonth)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.screenBg)
     ) {
+
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -215,14 +240,11 @@ fun IncomeScreenContent(
 
                 RecentTransactionsCard(
                     isDarkTheme = isDarkTheme,
-                    transactions =
-                        uiState.recentTransactions,
-
-                    onEditClick =
-                        onShowEditDialog,
-
-                    onDeleteClick =
-                        onShowDeleteDialog
+                    transactions = uiState.recentTransactions,
+                    expandedTransactionId = expandedTransactionId,
+                    onToggleExpand = onToggleExpand,
+                    onEditClick = onShowEditDialog,
+                    onDeleteClick = onShowDeleteDialog
                 )
 
             }
@@ -363,6 +385,8 @@ private fun SectionTitle(
 private fun RecentTransactionsCard(
     isDarkTheme: Boolean = false,
     transactions: List<Income>,
+    expandedTransactionId: String?,
+    onToggleExpand: (String) -> Unit,
     onEditClick: (Income) -> Unit,
     onDeleteClick: (Income) -> Unit
 ) {
@@ -391,24 +415,15 @@ private fun RecentTransactionsCard(
                 )
         ) {
 
-            transactions.forEach {
-
-                    income ->
-
+            transactions.forEach { income ->
                 TransactionCard(
                     isDarkTheme = isDarkTheme,
-
-                    income =
-                        income,
-
-                    onEditClick =
-                        onEditClick,
-
-                    onDeleteClick =
-                        onDeleteClick
-
+                    income = income,
+                    expanded = (expandedTransactionId == income.id),
+                    onToggleExpand = onToggleExpand,
+                    onEditClick = onEditClick,
+                    onDeleteClick = onDeleteClick
                 )
-
             }
 
         }
@@ -451,21 +466,8 @@ private val previewUiState = IncomeUiState(
         previewTransactions,
 
     incomeBySource = listOf(
-
-        IncomeBySource(
-            IncomeSource.SALARY,
-            135000.0,
-            1,
-            62.6
-        ),
-
-        IncomeBySource(
-            IncomeSource.FREELANCE,
-            73500.0,
-            2,
-            33.9
-        )
-
+        IncomeBySource("Salary", 135000.0, 1, 62.6),
+        IncomeBySource("Freelance", 73500.0, 2, 33.9)
     ),
 
     daysUntilNextSalary = 20
@@ -478,5 +480,19 @@ private val previewUiState = IncomeUiState(
 )
 @Composable
 fun IncomePreview() {
-    IncomeScreen(navController = androidx.navigation.compose.rememberNavController())
+    IncomeScreenContent(
+        uiState = previewUiState,
+        onMonthSelected = {},
+        onAddIncome = {},
+        onUpdateIncome = {},
+        onDeleteIncome = {},
+        onShowAddDialog = {},
+        onDismissAdd = {},
+        onShowEditDialog = {},
+        onDismissEdit = {},
+        onShowDeleteDialog = {},
+        onDismissDelete = {},
+        expandedTransactionId = null,
+        onToggleExpand = {}
+    )
 }

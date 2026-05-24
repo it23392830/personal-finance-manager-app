@@ -23,7 +23,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.financeflow.model.Currency
 import com.example.financeflow.model.Income
-import com.example.financeflow.model.IncomeSource
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
@@ -99,13 +98,11 @@ fun EditIncomeDialog(
             Currency.entries.firstOrNull { it.code == existingIncome.currency } ?: Currency.LKR
         )
     }
-    var selectedSource   by remember {
-        mutableStateOf(
-            runCatching { IncomeSource.valueOf(existingIncome.source) }.getOrDefault(IncomeSource.SALARY)
-        )
-    }
+    var selectedSource   by remember { mutableStateOf(existingIncome.source) }
     var description      by remember { mutableStateOf(existingIncome.description) }
     var selectedDate     by remember { mutableStateOf(existingIncome.date.toDate()) }
+
+    val sourceOptions = listOf("Salary", "Freelance", "AdSense", "Crypto", "Investment", "Rental", "Other")
 
     var currencyExpanded by remember { mutableStateOf(false) }
     var sourceExpanded   by remember { mutableStateOf(false) }
@@ -201,7 +198,7 @@ fun EditIncomeDialog(
                     onExpandedChange = { sourceExpanded = !sourceExpanded }
                 ) {
                     OutlinedTextField(
-                        value = selectedSource.label,
+                        value = selectedSource,
                         onValueChange = {},
                         readOnly = true,
                         leadingIcon = { Text(sourceEmoji(selectedSource), fontSize = 18.sp) },
@@ -216,9 +213,9 @@ fun EditIncomeDialog(
                         expanded = sourceExpanded,
                         onDismissRequest = { sourceExpanded = false }
                     ) {
-                        IncomeSource.entries.forEach { source ->
+                        sourceOptions.forEach { source ->
                             DropdownMenuItem(
-                                text = { Text("${sourceEmoji(source)}  ${source.label}") },
+                                text = { Text("${sourceEmoji(source)}  $source") },
                                 onClick = { selectedSource = source; sourceExpanded = false }
                             )
                         }
@@ -269,7 +266,7 @@ fun EditIncomeDialog(
                                 existingIncome.copy(
                                     amount      = amount,
                                     currency    = selectedCurrency.code,
-                                    source      = selectedSource.name,
+                                    source      = selectedSource,
                                     description = description.trim(),
                                     date        = Timestamp(selectedDate)
                                 )
