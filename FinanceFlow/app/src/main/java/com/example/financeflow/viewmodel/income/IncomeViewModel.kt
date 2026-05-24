@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 @HiltViewModel
@@ -21,10 +23,31 @@ class IncomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(IncomeUiState())
     val uiState: StateFlow<IncomeUiState> = _uiState.asStateFlow()
 
+    // Exchange rates map (currency -> to LKR multiplier)
+    private val exchangeRatesMutex = Mutex()
+    private var exchangeRates: Map<String, Double> = mapOf("LKR" to 1.0, "USD" to 300.0, "EUR" to 320.0, "GBP" to 370.0)
+
+    private suspend fun loadExchangeRates() {
+        try {
+            val rates = repository.getExchangeRates()
+            exchangeRatesMutex.withLock { exchangeRates = rates }
+        } catch (_: Exception) {
+            // keep defaults
+        }
+    }
+
+    private fun convertToLKR(amount: Double, currency: String): Double {
+        val rate = exchangeRates[currency] ?: exchangeRates["USD"] ?: 300.0
+        return if (currency == "LKR") amount else amount * rate
+    }
+
     init {
         // Start loading and observe income sources and available months
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
+
+            // Load exchange rates once at startup
+            launch { loadExchangeRates() }
 
             // income sources
             launch {
@@ -64,14 +87,15 @@ class IncomeViewModel @Inject constructor(
     }
 
     private fun updateUiStateWithTransactions(list: List<Income>) {
-        val total = list.sumOf { it.amount }
+        val total = list.sumOf { convertToLKR(it.amount, it.currency) }
         val recent = list.take(10) // Show more in recent if available
         val grouped = list.groupBy { it.source }.map { (sourceStr, items) ->
+            val sourceTotalLKR = items.sumOf { convertToLKR(it.amount, it.currency) }
             IncomeBySource(
                 source = sourceStr,
-                totalAmount = items.sumOf { it.amount },
+                totalAmount = sourceTotalLKR,
                 transactionCount = items.size,
-                percentage = if (total > 0) (items.sumOf { it.amount } / total) * 100 else 0.0
+                percentage = if (total > 0) (sourceTotalLKR / total) * 100 else 0.0
             )
         }.sortedByDescending { it.totalAmount }
 

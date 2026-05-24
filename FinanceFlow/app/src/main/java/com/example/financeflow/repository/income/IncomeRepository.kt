@@ -232,4 +232,28 @@ class IncomeRepository @Inject constructor(
 
         return doc?.toObject(Income::class.java)?.copy(id = doc.id)
     }
+
+    /**
+     * Fetches exchange rates to convert various currencies to LKR.
+     * Expected storage (optional): collection `config` document `exchangeRates` with fields USD, EUR, GBP as numbers.
+     * Falls back to sensible defaults when not available.
+     */
+    suspend fun getExchangeRates(): Map<String, Double> {
+        // Defaults
+        val defaults = mapOf("LKR" to 1.0, "USD" to 300.0, "EUR" to 320.0, "GBP" to 370.0)
+
+        return try {
+            val doc = firestore.collection("config").document("exchangeRates").get().await()
+            if (doc.exists()) {
+                val usd = doc.getDouble("USD") ?: defaults["USD"]!!
+                val eur = doc.getDouble("EUR") ?: defaults["EUR"]!!
+                val gbp = doc.getDouble("GBP") ?: defaults["GBP"]!!
+                mapOf("LKR" to 1.0, "USD" to usd, "EUR" to eur, "GBP" to gbp)
+            } else {
+                defaults
+            }
+        } catch (e: Exception) {
+            defaults
+        }
+    }
 }
