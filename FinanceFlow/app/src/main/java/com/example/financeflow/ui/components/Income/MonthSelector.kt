@@ -14,6 +14,33 @@ import java.time.Month
 import java.time.format.TextStyle
 import java.util.*
 
+private val LightTextDark = Color(0xFF1F2937)
+private val LightMuted = Color(0xFF6B7280)
+private val LightFieldBg = Color.White
+private val LightBorder = Color(0xFFD1D5DB)
+private val LightAccent = Color(0xFF22C55E)
+
+private val DarkTextDark = Color(0xFFE8E8E8)
+private val DarkMuted = Color(0xFFB0B0B0)
+private val DarkFieldBg = Color(0xFF2A2A3E)
+private val DarkBorder = Color(0xFF3A3A4E)
+private val DarkAccent = Color(0xFF2DBD6E)
+
+private data class MonthSelectorColors(
+    val textDark: Color,
+    val muted: Color,
+    val fieldBg: Color,
+    val border: Color,
+    val accent: Color
+)
+
+private fun getMonthSelectorColors(isDarkTheme: Boolean): MonthSelectorColors =
+    if (isDarkTheme) {
+        MonthSelectorColors(DarkTextDark, DarkMuted, DarkFieldBg, DarkBorder, DarkAccent)
+    } else {
+        MonthSelectorColors(LightTextDark, LightMuted, LightFieldBg, LightBorder, LightAccent)
+    }
+
 /**
  * Month + Year pair passed to [MonthSelector].
  */
@@ -57,11 +84,13 @@ fun generateMonthOptions(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MonthSelector(
+    isDarkTheme: Boolean = false,
     selected: MonthYear,
     options: List<MonthYear>,
     onSelected: (MonthYear) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = getMonthSelectorColors(isDarkTheme)
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
@@ -78,16 +107,16 @@ fun MonthSelector(
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = "Expand month selector",
-                    tint = Color(0xFF22C55E)
+                    tint = colors.accent
                 )
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF22C55E),
-                unfocusedBorderColor = Color(0xFFD1D5DB),
-                focusedTextColor = Color(0xFF1F2937),
-                unfocusedTextColor = Color(0xFF1F2937),
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White
+                focusedBorderColor = colors.accent,
+                unfocusedBorderColor = colors.border,
+                focusedTextColor = colors.textDark,
+                unfocusedTextColor = colors.textDark,
+                focusedContainerColor = colors.fieldBg,
+                unfocusedContainerColor = colors.fieldBg
             ),
             textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
             shape = MaterialTheme.shapes.medium,
@@ -109,7 +138,7 @@ fun MonthSelector(
                             text = monthYear.toString(),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (monthYear == selected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (monthYear == selected) Color(0xFF22C55E) else Color(0xFF1F2937)
+                            color = if (monthYear == selected) colors.accent else colors.textDark
                         )
                     },
                     onClick = {
@@ -129,6 +158,7 @@ fun MonthSelector(
 private fun MonthSelectorPreview() {
     val options = generateMonthOptions(2026, 5)
     MonthSelector(
+        isDarkTheme = false,
         selected = options.first(),
         options = options,
         onSelected = {},

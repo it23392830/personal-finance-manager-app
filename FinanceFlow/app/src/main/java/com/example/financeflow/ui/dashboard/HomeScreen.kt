@@ -33,13 +33,52 @@ import com.example.financeflow.ui.components.savings.GoalProgressCard
 import com.example.financeflow.ui.components.savings.GoalProgressData
 
 // ─────────────────────────────────────────────
-//  Design Tokens
+//  Design Tokens - Light Mode
 // ─────────────────────────────────────────────
-private val ScaffoldBg       = Color(0xFFF5F3FF)
-private val TextPrimary      = Color(0xFF1A1A2E)
-private val TextSecondary    = Color(0xFF6B7280)
-private val CardWhite        = Color.White
-private val ProgressTrackBg  = Color(0xFFFFE0E0)
+private val LightScaffoldBg       = Color(0xFFF5F3FF)
+private val LightTextPrimary      = Color(0xFF1A1A2E)
+private val LightTextSecondary    = Color(0xFF6B7280)
+private val LightCardWhite        = Color.White
+private val LightProgressTrackBg  = Color(0xFFFFE0E0)
+
+// ─────────────────────────────────────────────
+//  Design Tokens - Dark Mode
+// ─────────────────────────────────────────────
+private val DarkScaffoldBg        = Color(0xFF1A1A2E)
+private val DarkTextPrimary       = Color(0xFFE8E8E8)
+private val DarkTextSecondary     = Color(0xFFB0B0B0)
+private val DarkCardBg            = Color(0xFF2A2A3E)
+private val DarkProgressTrackBg   = Color(0xFF3A2A3E)
+
+// ─────────────────────────────────────────────
+//  Color Selection Helper
+// ─────────────────────────────────────────────
+data class HomeScreenColors(
+    val scaffoldBg: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val cardBg: Color,
+    val progressTrackBg: Color
+)
+
+private fun getHomeScreenColors(isDarkTheme: Boolean): HomeScreenColors =
+    if (isDarkTheme) {
+        HomeScreenColors(
+            scaffoldBg = DarkScaffoldBg,
+            textPrimary = DarkTextPrimary,
+            textSecondary = DarkTextSecondary,
+            cardBg = DarkCardBg,
+            progressTrackBg = DarkProgressTrackBg
+        )
+    } else {
+        HomeScreenColors(
+            scaffoldBg = LightScaffoldBg,
+            textPrimary = LightTextPrimary,
+            textSecondary = LightTextSecondary,
+            cardBg = LightCardWhite,
+            progressTrackBg = LightProgressTrackBg
+        )
+    }
 
 // ─────────────────────────────────────────────
 //  Hardcoded sample data
@@ -92,6 +131,7 @@ private val OPTIONAL_BUDGET_REMAINING          = 13_900L
  */
 @Composable
 fun HomeScreen(
+    isDarkTheme: Boolean = false,
     onAddIncomeClick: () -> Unit = {},
     onAddExpenseClick: () -> Unit = {},
     onIncomeClick: () -> Unit = {},
@@ -103,6 +143,7 @@ fun HomeScreen(
     onProfileClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {}
 ) {
+    val colors = getHomeScreenColors(isDarkTheme)
     val listState = rememberLazyListState()
     val showHeaderIcons by remember {
         derivedStateOf {
@@ -113,7 +154,7 @@ fun HomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ScaffoldBg)
+            .background(colors.scaffoldBg)
     ) {
         LazyColumn(
             state          = listState,
@@ -131,6 +172,7 @@ fun HomeScreen(
 
             item {
                 BalanceCard(
+                    isDarkTheme = isDarkTheme,
                     data = sampleBalanceData,
                     onThemeClick = onThemeClick,
                     onProfileClick = onProfileClick
@@ -139,6 +181,7 @@ fun HomeScreen(
 
             item {
                 QuickActionRow(
+                    isDarkTheme = isDarkTheme,
                     onAddIncomeClick = onAddIncomeClick,
                     onAddExpenseClick = onAddExpenseClick
                 )
@@ -146,6 +189,7 @@ fun HomeScreen(
 
             item {
                 MoneyFlowSection(
+                    isDarkTheme = isDarkTheme,
                     items = moneyFlowSampleData(),
                     onIncomeClick = onIncomeClick,
                     onGoalsClick = onGoalsClick,
@@ -155,28 +199,30 @@ fun HomeScreen(
             }
 
             item {
-                SectionHeader(title = "Savings Goal")
+                SectionHeader(isDarkTheme = isDarkTheme, title = "Savings Goal")
                 Spacer(modifier = Modifier.height(10.dp))
                 GoalProgressCard(
+                    isDarkTheme = isDarkTheme,
                     data = sampleGoalData,
                     onClick = onGoalCardClick
                 )
             }
 
             item {
-                MonthlySummarySection(data = sampleMonthlySummary)
+                MonthlySummarySection(isDarkTheme = isDarkTheme, data = sampleMonthlySummary)
             }
 
             item {
-                IncomeSourcesCard(sources = sampleIncomeSources)
+                IncomeSourcesCard(isDarkTheme = isDarkTheme, sources = sampleIncomeSources)
             }
 
             item {
-                ExpenseBreakdownSection(sections = expenseSampleData())
+                ExpenseBreakdownSection(isDarkTheme = isDarkTheme, sections = expenseSampleData())
             }
 
             item {
                 BudgetUsageBar(
+                    isDarkTheme = isDarkTheme,
                     usedPercent      = OPTIONAL_BUDGET_USED_PERCENT,
                     remainingAmount  = OPTIONAL_BUDGET_REMAINING
                 )
@@ -195,7 +241,7 @@ fun HomeScreen(
                         Icon(
                             imageVector = Icons.Outlined.LightMode,
                             contentDescription = "Theme",
-                            tint = TextPrimary
+                            tint = colors.textPrimary
                         )
                     }
                 }
@@ -211,14 +257,14 @@ fun HomeScreen(
                         Icon(
                             imageVector = Icons.Outlined.Person,
                             contentDescription = "Profile",
-                            tint = TextPrimary
+                            tint = colors.textPrimary
                         )
                     }
                     IconButton(onClick = onNotificationClick) {
                         Icon(
                             imageVector = Icons.Outlined.Notifications,
                             contentDescription = "Notifications",
-                            tint = TextPrimary
+                            tint = colors.textPrimary
                         )
                     }
                 }
@@ -229,24 +275,26 @@ fun HomeScreen(
 
 @Composable
 private fun SectionHeader(
+    isDarkTheme: Boolean = false,
     title: String,
     modifier: Modifier = Modifier
 ) {
+    val colors = getHomeScreenColors(isDarkTheme)
     Text(
         text     = title,
         modifier = modifier,
         style    = MaterialTheme.typography.titleLarge.copy(
             fontWeight = FontWeight.Bold,
-            color      = TextPrimary,
+            color      = colors.textPrimary,
             fontSize   = 18.sp
         )
     )
 }
 
 @Composable
-private fun MonthlySummarySection(data: MonthlySummaryData) {
+private fun MonthlySummarySection(isDarkTheme: Boolean = false, data: MonthlySummaryData) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        SectionHeader(title = "${data.month} Summary")
+        SectionHeader(isDarkTheme = isDarkTheme, title = "${data.month} Summary")
 
         Row(
             modifier              = Modifier.fillMaxWidth(),
@@ -254,20 +302,22 @@ private fun MonthlySummarySection(data: MonthlySummaryData) {
             verticalAlignment     = Alignment.CenterVertically
         ) {
             SummaryStatTile(
+                isDarkTheme = isDarkTheme,
                 label      = "Savings Rate",
                 value      = "${data.savingsRatePercent}%",
                 icon       = Icons.Outlined.Savings,
-                background = Color(0xFFE8F5E9),
+                background = if (isDarkTheme) Color(0xFF1B3E1B) else Color(0xFFE8F5E9),
                 iconTint   = Color(0xFF2DBD6E),
                 textColor  = Color(0xFF2DBD6E),
                 modifier   = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(12.dp))
             SummaryStatTile(
+                isDarkTheme = isDarkTheme,
                 label      = "Optional Budget",
                 value      = "${data.optionalBudgetPercent}%",
                 icon       = Icons.Outlined.AttachMoney,
-                background = Color(0xFFFFEBEE),
+                background = if (isDarkTheme) Color(0xFF3E1B1B) else Color(0xFFFFEBEE),
                 iconTint   = Color(0xFFFF5252),
                 textColor  = Color(0xFFFF5252),
                 modifier   = Modifier.weight(1f)
@@ -278,6 +328,7 @@ private fun MonthlySummarySection(data: MonthlySummaryData) {
 
 @Composable
 private fun SummaryStatTile(
+    isDarkTheme: Boolean = false,
     label: String,
     value: String,
     icon: ImageVector,
@@ -286,6 +337,7 @@ private fun SummaryStatTile(
     textColor: Color,
     modifier: Modifier = Modifier
 ) {
+    val colors = getHomeScreenColors(isDarkTheme)
     Box(
         modifier = modifier
             .shadow(
@@ -319,7 +371,7 @@ private fun SummaryStatTile(
             Text(
                 text  = label,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color    = TextSecondary,
+                    color    = colors.textSecondary,
                     fontSize = 12.sp
                 )
             )
@@ -328,7 +380,8 @@ private fun SummaryStatTile(
 }
 
 @Composable
-private fun IncomeSourcesCard(sources: List<IncomeSourceItem>) {
+private fun IncomeSourcesCard(isDarkTheme: Boolean = false, sources: List<IncomeSourceItem>) {
+    val colors = getHomeScreenColors(isDarkTheme)
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -338,7 +391,7 @@ private fun IncomeSourcesCard(sources: List<IncomeSourceItem>) {
                 ambientColor = Color(0xFF7C4DFF).copy(alpha = 0.07f)
             )
             .clip(RoundedCornerShape(16.dp))
-            .background(CardWhite)
+            .background(colors.cardBg)
             .padding(horizontal = 16.dp, vertical = 16.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -346,7 +399,7 @@ private fun IncomeSourcesCard(sources: List<IncomeSourceItem>) {
                 text  = "Income Sources",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color      = TextPrimary,
+                    color      = colors.textPrimary,
                     fontSize   = 15.sp
                 )
             )
@@ -363,7 +416,7 @@ private fun IncomeSourcesCard(sources: List<IncomeSourceItem>) {
                     Text(
                         text  = source.source,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            color    = TextSecondary,
+                            color    = colors.textSecondary,
                             fontSize = 13.sp
                         )
                     )
@@ -373,7 +426,7 @@ private fun IncomeSourcesCard(sources: List<IncomeSourceItem>) {
                         else
                             "+LKR ${"%,d".format(source.amount)}",
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            color      = if (source.isPositive) TextPrimary
+                            color      = if (source.isPositive) colors.textPrimary
                             else Color(0xFF2DBD6E),
                             fontWeight = FontWeight.SemiBold,
                             fontSize   = 13.sp
@@ -383,7 +436,7 @@ private fun IncomeSourcesCard(sources: List<IncomeSourceItem>) {
                 if (index < sources.lastIndex) {
                     HorizontalDivider(
                         thickness = 0.5.dp,
-                        color     = Color(0xFFF0EBF8)
+                        color     = if (isDarkTheme) Color(0xFF3A3A4E) else Color(0xFFF0EBF8)
                     )
                 }
             }
@@ -393,10 +446,12 @@ private fun IncomeSourcesCard(sources: List<IncomeSourceItem>) {
 
 @Composable
 private fun BudgetUsageBar(
+    isDarkTheme: Boolean = false,
     usedPercent: Int,
     remainingAmount: Long,
     currencySymbol: String = "LKR"
 ) {
+    val colors = getHomeScreenColors(isDarkTheme)
     var animationPlayed by remember { mutableStateOf(false) }
     val animatedProgress by animateFloatAsState(
         targetValue   = if (animationPlayed) usedPercent / 100f else 0f,
@@ -414,7 +469,7 @@ private fun BudgetUsageBar(
                 ambientColor = Color(0xFFFF5252).copy(alpha = 0.08f)
             )
             .clip(RoundedCornerShape(16.dp))
-            .background(CardWhite)
+            .background(colors.cardBg)
             .padding(horizontal = 16.dp, vertical = 16.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -427,14 +482,14 @@ private fun BudgetUsageBar(
                     text  = "$usedPercent% Optional Budget Used",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.SemiBold,
-                        color      = TextPrimary,
+                        color      = colors.textPrimary,
                         fontSize   = 13.sp
                     )
                 )
                 Text(
                     text  = "$currencySymbol ${"%,d".format(remainingAmount)} remaining",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color    = TextSecondary,
+                        color    = colors.textSecondary,
                         fontSize = 12.sp
                     )
                 )
@@ -445,7 +500,7 @@ private fun BudgetUsageBar(
                     .fillMaxWidth()
                     .height(10.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(ProgressTrackBg)
+                    .background(colors.progressTrackBg)
             ) {
                 Box(
                     modifier = Modifier

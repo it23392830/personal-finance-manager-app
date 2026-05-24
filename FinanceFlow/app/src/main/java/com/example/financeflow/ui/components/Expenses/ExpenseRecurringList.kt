@@ -18,17 +18,19 @@ import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseRecurringList(
+    isDarkTheme: Boolean = false,
     recurringList: List<RecurringUiItem>,
     onToggleActive: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val activeItems = recurringList.filter { it.isActive }
     val monthlyTotal = activeItems.sumOf { it.amount }
+    val colors = getExpensesColors(isDarkTheme)
 
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = ExpenseColors.CardBg),
+        colors = CardDefaults.cardColors(containerColor = colors.CardBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -40,17 +42,17 @@ fun ExpenseRecurringList(
                     "🕐 Upcoming Payments",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ExpenseColors.TextPrimary
+                    color = colors.TextPrimary
                 )
                 Surface(
-                    color = ExpenseColors.PrimaryLight,
+                    color = colors.PrimaryLight,
                     shape = RoundedCornerShape(99.dp)
                 ) {
                     Text(
                         text = activeItems.size.toString(),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = ExpenseColors.PrimaryText,
+                        color = colors.PrimaryText,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
@@ -65,6 +67,7 @@ fun ExpenseRecurringList(
                     .forEach { item ->
                         RecurringItemRow(
                             item = item,
+                            isDarkTheme = isDarkTheme,
                             onToggleActive = { onToggleActive(item.id) }
                         )
                     }
@@ -76,7 +79,7 @@ fun ExpenseRecurringList(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(ExpenseColors.SurfaceGrey, RoundedCornerShape(12.dp))
+                    .background(colors.SurfaceGrey, RoundedCornerShape(12.dp))
                     .padding(12.dp)
             ) {
                 Row(
@@ -87,14 +90,14 @@ fun ExpenseRecurringList(
                     Text(
                         "Monthly Recurring Total",
                         fontSize = 13.sp,
-                        color = ExpenseColors.TextMuted,
+                        color = colors.TextMuted,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
                         fmtLKR(monthlyTotal),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = ExpenseColors.TextPrimary
+                        color = colors.TextPrimary
                     )
                 }
             }
@@ -105,9 +108,11 @@ fun ExpenseRecurringList(
 @Composable
 private fun RecurringItemRow(
     item: RecurringUiItem,
+    isDarkTheme: Boolean = false,
     onToggleActive: () -> Unit
 ) {
     val category = getCat(item.categoryId)
+    val colors = getExpensesColors(isDarkTheme)
     // Simplified days calculation (string based for UI layer only)
     val daysUntil = calculateDaysUntil(item.nextDue, TODAY)
 
@@ -129,37 +134,37 @@ private fun RecurringItemRow(
         Spacer(Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                item.name,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = ExpenseColors.TextPrimary
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(item.frequency, fontSize = 11.sp, color = ExpenseColors.TextMuted)
-                Spacer(Modifier.width(6.dp))
-                // Hardcoded type badge logic for recurring
-                val type = if (item.categoryId == "rent" || item.categoryId == "bills") "Essential" else "Discretionary"
-                Surface(
-                    color = if (type == "Essential") ExpenseColors.MustBg else ExpenseColors.PrimaryLight,
-                    shape = RoundedCornerShape(99.dp)
-                ) {
-                    Text(
-                        type,
-                        fontSize = 9.sp,
-                        color = if (type == "Essential") ExpenseColors.MustText else ExpenseColors.PrimaryText,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                    )
+                Text(
+                    item.name,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.TextPrimary
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(item.frequency, fontSize = 11.sp, color = colors.TextMuted)
+                    Spacer(Modifier.width(6.dp))
+                    // Hardcoded type badge logic for recurring
+                    val type = if (item.categoryId == "rent" || item.categoryId == "bills") "Essential" else "Discretionary"
+                    Surface(
+                        color = if (type == "Essential") colors.MustBg else colors.PrimaryLight,
+                        shape = RoundedCornerShape(99.dp)
+                    ) {
+                        Text(
+                            type,
+                            fontSize = 9.sp,
+                            color = if (type == "Essential") colors.MustText else colors.PrimaryText,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                        )
+                    }
                 }
             }
-        }
 
         Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(horizontal = 8.dp)) {
-            Text(fmtLKR(item.amount), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Text(fmtLKR(item.amount), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = colors.TextPrimary)
             Text(
                 "in ${daysUntil}d",
                 fontSize = 11.sp,
-                color = if (daysUntil <= 5) ExpenseColors.MustAmber else ExpenseColors.TextMuted,
+                color = if (daysUntil <= 5) colors.MustAmber else colors.TextMuted,
                 fontWeight = if (daysUntil <= 5) FontWeight.Bold else FontWeight.Normal
             )
         }

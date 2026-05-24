@@ -4,125 +4,106 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.financeflow.ui.expenses.ExpenseColors
 import com.example.financeflow.ui.expenses.fmtLKR
 import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseBudgetCard(
     remaining: Int,
-    budgetTotal: Int,
-    budgetUsedPct: Float,
     todayTotal: Int,
     essentialTotal: Int,
-    totalSpent: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    colors: ExpensesColors = getExpensesColors(false)
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.ExpenseBg)
     ) {
         Column(
-            modifier = Modifier
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color(0xFFEFF6FF), Color(0xFFECFEFF))
-                    )
-                )
-                .padding(16.dp)
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Icon(
-                    Icons.Default.AccountBalanceWallet,
+                    Icons.Outlined.AccountBalanceWallet,
                     contentDescription = null,
-                    tint = ExpenseColors.PrimaryText,
-                    modifier = Modifier.size(18.dp)
+                    tint = colors.TextPrimary,
+                    modifier = Modifier.size(20.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "Discretionary Budget Left",
-                    fontSize = 12.sp,
-                    color = ExpenseColors.TextMuted,
-                    fontWeight = FontWeight.Medium
+                    "Optional Budget Remaining",
+                    fontSize = 14.sp,
+                    color = colors.TextPrimary,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
 
             Text(
                 text = fmtLKR(remaining),
-                fontSize = 36.sp,
+                fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = ExpenseColors.PrimaryText
+                color = colors.ExpenseRed
             )
 
-            Spacer(Modifier.height(12.dp))
-
-            LinearProgressIndicator(
-                progress = { budgetUsedPct / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp),
-                color = if (budgetUsedPct > 90f) ExpenseColors.ExpenseRed else ExpenseColors.Primary,
-                trackColor = Color.White.copy(alpha = 0.5f),
-                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
-            )
+            Spacer(Modifier.height(24.dp))
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 6.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Budget: ${fmtLKR(budgetTotal)}", fontSize = 11.sp, color = ExpenseColors.TextMuted)
-                Text("${budgetUsedPct.toInt()}% used", fontSize = 11.sp, color = ExpenseColors.TextMuted)
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            HorizontalDivider(thickness = 0.5.dp, color = ExpenseColors.Border.copy(alpha = 0.5f))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BudgetStat(label = "Today", value = fmtLKR(todayTotal), modifier = Modifier.weight(1f))
-                VerticalDivider(modifier = Modifier.height(24.dp), thickness = 0.5.dp, color = ExpenseColors.Border)
-                BudgetStat(label = "Essential", value = fmtLKR(essentialTotal), valueColor = ExpenseColors.MustAmber, modifier = Modifier.weight(1f))
-                VerticalDivider(modifier = Modifier.height(24.dp), thickness = 0.5.dp, color = ExpenseColors.Border)
-                BudgetStat(label = "Total", value = fmtLKR(totalSpent), modifier = Modifier.weight(1f))
+                BudgetStatBox(
+                    label = "Today's Spending",
+                    value = fmtLKR(todayTotal),
+                    modifier = Modifier.weight(1f)
+                )
+                BudgetStatBox(
+                    label = "Must Expenses",
+                    value = fmtLKR(essentialTotal),
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun BudgetStat(
+private fun BudgetStatBox(
     label: String,
     value: String,
-    valueColor: Color = ExpenseColors.TextPrimary,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    colors: ExpensesColors = getExpensesColors(false)
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = modifier
+            .shadow(2.dp, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.CardBg)
+            .padding(vertical = 12.dp, horizontal = 8.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(label, fontSize = 10.sp, color = ExpenseColors.TextMuted)
-        Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = valueColor)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(label, fontSize = 10.sp, color = colors.TextPrimary, fontWeight = FontWeight.Medium)
+            Text(value, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = colors.TextPrimary)
+        }
     }
 }
 
@@ -131,12 +112,9 @@ private fun BudgetStat(
 fun ExpenseBudgetCardPreview() {
     FinanceFlowTheme {
         ExpenseBudgetCard(
-            remaining = 15000,
-            budgetTotal = 50000,
-            budgetUsedPct = 70f,
-            todayTotal = 1200,
-            essentialTotal = 25000,
-            totalSpent = 35000,
+            remaining = 77150,
+            todayTotal = 1270,
+            essentialTotal = 44300,
             modifier = Modifier.padding(16.dp)
         )
     }

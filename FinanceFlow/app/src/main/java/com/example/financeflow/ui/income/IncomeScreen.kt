@@ -33,18 +33,43 @@ import com.example.financeflow.ui.components.Income.SalaryReminderCard
 import com.example.financeflow.ui.components.Income.TransactionCard
 import com.example.financeflow.ui.components.Income.generateMonthOptions
 
-private val ScreenBg = Color(0xFFF3ECFF)
-private val TextDark = Color(0xFF1F2937)
-private val TextMuted = Color(0xFF6B7280)
-private val GreenText = Color(0xFF22C55E)
-private val CardWhite = Color.White
+private val LightScreenBg = Color(0xFFF3ECFF)
+private val LightTextDark = Color(0xFF1F2937)
+private val LightTextMuted = Color(0xFF6B7280)
+private val LightGreenText = Color(0xFF22C55E)
+private val LightCardBg = Color.White
+
+private val DarkScreenBg = Color(0xFF1A1A2E)
+private val DarkTextDark = Color(0xFFE8E8E8)
+private val DarkTextMuted = Color(0xFFB0B0B0)
+private val DarkGreenText = Color(0xFF2DBD6E)
+private val DarkCardBg = Color(0xFF2A2A3E)
+
+private data class IncomeScreenColors(
+    val screenBg: Color,
+    val cardBg: Color,
+    val textDark: Color,
+    val textMuted: Color,
+    val greenText: Color
+)
+
+private fun getIncomeScreenColors(isDarkTheme: Boolean): IncomeScreenColors =
+    if (isDarkTheme) {
+        IncomeScreenColors(DarkScreenBg, DarkCardBg, DarkTextDark, DarkTextMuted, DarkGreenText)
+    } else {
+        IncomeScreenColors(LightScreenBg, LightCardBg, LightTextDark, LightTextMuted, LightGreenText)
+    }
 
 @Composable
-fun IncomeScreen(navController: NavController, viewModel: IncomeViewModel = hiltViewModel()) {
-
+fun IncomeScreen(
+    isDarkTheme: Boolean = false,
+    navController: NavController,
+    viewModel: IncomeViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     IncomeScreenContent(
+        isDarkTheme = isDarkTheme,
         uiState = uiState,
 
         onMonthSelected = { monthYear ->
@@ -88,6 +113,7 @@ fun IncomeScreen(navController: NavController, viewModel: IncomeViewModel = hilt
 
 @Composable
 fun IncomeScreenContent(
+    isDarkTheme: Boolean = false,
     uiState: IncomeUiState,
     onMonthSelected: (MonthYear) -> Unit,
     onAddIncome: (Income) -> Unit,
@@ -100,6 +126,7 @@ fun IncomeScreenContent(
     onShowDeleteDialog: (Income) -> Unit,
     onDismissDelete: () -> Unit
 ) {
+    val colors = getIncomeScreenColors(isDarkTheme)
 
     val monthOptions = remember {
         generateMonthOptions(
@@ -117,7 +144,7 @@ fun IncomeScreenContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ScreenBg)
+            .background(colors.screenBg)
     ) {
 
         LazyColumn(
@@ -138,13 +165,14 @@ fun IncomeScreenContent(
 
             item {
 
-                IncomeHeader()
+                IncomeHeader(isDarkTheme = isDarkTheme)
 
             }
 
             item {
 
                 MonthSelector(
+                    isDarkTheme = isDarkTheme,
                     selected = currentMonthYear,
                     options = monthOptions,
                     onSelected = onMonthSelected
@@ -155,6 +183,7 @@ fun IncomeScreenContent(
             item {
 
                 IncomeSummaryCard(
+                    isDarkTheme = isDarkTheme,
                     totalAmount = uiState.totalIncome,
                     currencyCode =
                         uiState.displayCurrency.code,
@@ -168,7 +197,8 @@ fun IncomeScreenContent(
             item {
 
                 SectionTitle(
-                    "Income by Source"
+                    isDarkTheme = isDarkTheme,
+                    title = "Income by Source"
                 )
 
             }
@@ -180,6 +210,7 @@ fun IncomeScreenContent(
                     source ->
 
                 IncomeCard(
+                    isDarkTheme = isDarkTheme,
                     data = source
                 )
 
@@ -188,7 +219,8 @@ fun IncomeScreenContent(
             item {
 
                 SectionTitle(
-                    "Recent Transactions"
+                    isDarkTheme = isDarkTheme,
+                    title = "Recent Transactions"
                 )
 
             }
@@ -196,6 +228,7 @@ fun IncomeScreenContent(
             item {
 
                 RecentTransactionsCard(
+                    isDarkTheme = isDarkTheme,
                     transactions =
                         uiState.recentTransactions,
 
@@ -215,6 +248,7 @@ fun IncomeScreenContent(
                 item {
 
                     SalaryReminderCard(
+                        isDarkTheme = isDarkTheme,
                         daysUntilSalary =
                             days
                     )
@@ -230,6 +264,7 @@ fun IncomeScreenContent(
     if (uiState.showAddDialog) {
 
         AddIncomeDialog(
+            isDarkTheme = isDarkTheme,
             onDismiss =
                 onDismissAdd,
 
@@ -244,6 +279,7 @@ fun IncomeScreenContent(
     ) {
 
         EditIncomeDialog(
+            isDarkTheme = isDarkTheme,
 
             existingIncome =
                 uiState.selectedIncome,
@@ -264,6 +300,7 @@ fun IncomeScreenContent(
     ) {
 
         DeleteIncomeDialog(
+            isDarkTheme = isDarkTheme,
 
             onDismiss =
                 onDismissDelete,
@@ -283,7 +320,8 @@ fun IncomeScreenContent(
 }
 
 @Composable
-private fun IncomeHeader() {
+private fun IncomeHeader(isDarkTheme: Boolean = false) {
+    val colors = getIncomeScreenColors(isDarkTheme)
 
     Column {
 
@@ -295,7 +333,7 @@ private fun IncomeHeader() {
 
             fontSize = 26.sp,
 
-            color = GreenText
+            color = colors.greenText
         )
 
         Text(
@@ -303,7 +341,7 @@ private fun IncomeHeader() {
                 "Track your saving habits & allocations",
 
             color =
-                TextMuted
+                colors.textMuted
         )
 
     }
@@ -312,8 +350,10 @@ private fun IncomeHeader() {
 
 @Composable
 private fun SectionTitle(
+    isDarkTheme: Boolean = false,
     title: String
 ) {
+    val colors = getIncomeScreenColors(isDarkTheme)
 
     Text(
 
@@ -327,7 +367,7 @@ private fun SectionTitle(
                 ),
 
         color =
-            TextDark
+            colors.textDark
 
     )
 
@@ -335,10 +375,12 @@ private fun SectionTitle(
 
 @Composable
 private fun RecentTransactionsCard(
+    isDarkTheme: Boolean = false,
     transactions: List<Income>,
     onEditClick: (Income) -> Unit,
     onDeleteClick: (Income) -> Unit
 ) {
+    val colors = getIncomeScreenColors(isDarkTheme)
 
     Card(
 
@@ -351,7 +393,7 @@ private fun RecentTransactionsCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    CardWhite
+                        colors.cardBg
             )
 
     ) {
@@ -368,6 +410,7 @@ private fun RecentTransactionsCard(
                     income ->
 
                 TransactionCard(
+                    isDarkTheme = isDarkTheme,
 
                     income =
                         income,

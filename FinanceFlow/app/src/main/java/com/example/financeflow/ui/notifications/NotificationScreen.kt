@@ -146,6 +146,7 @@ fun notificationBgColor(type: NotificationType): Color = when (type) {
 
 @Composable
 fun NotificationScreen(
+    isDarkTheme: Boolean = false,
     onNavigateBack: () -> Unit = {}
 ) {
     // ── Local state ────────────────────────────────────────────

@@ -21,10 +21,28 @@ import java.util.*
 import androidx.compose.foundation.background
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-private val TextDark  = Color(0xFF1F2937)
-private val TextMuted = Color(0xFF6B7280)
+private val LightTextDark  = Color(0xFF1F2937)
+private val LightTextMuted = Color(0xFF6B7280)
+private val LightCurrencyBg = Color(0xFFF3F4F6)
+
+private val DarkTextDark   = Color(0xFFE8E8E8)
+private val DarkTextMuted  = Color(0xFFB0B0B0)
+private val DarkCurrencyBg = Color(0xFF3A3A4E)
 private val GreenBadge = Color(0xFF22C55E)
 private val RedDelete  = Color(0xFFEF4444)
+
+private data class TransactionCardColors(
+    val textDark: Color,
+    val textMuted: Color,
+    val currencyBg: Color
+)
+
+private fun getTransactionCardColors(isDarkTheme: Boolean): TransactionCardColors =
+    if (isDarkTheme) {
+        TransactionCardColors(DarkTextDark, DarkTextMuted, DarkCurrencyBg)
+    } else {
+        TransactionCardColors(LightTextDark, LightTextMuted, LightCurrencyBg)
+    }
 
 /**
  * A single row in the "Recent Transactions" list.
@@ -39,11 +57,13 @@ private val RedDelete  = Color(0xFFEF4444)
  */
 @Composable
 fun TransactionCard(
+    isDarkTheme: Boolean = false,
     income: Income,
     onEditClick: (Income) -> Unit,
     onDeleteClick: (Income) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = getTransactionCardColors(isDarkTheme)
     var menuExpanded by remember { mutableStateOf(false) }
 
     Row(
@@ -57,7 +77,7 @@ fun TransactionCard(
             Text(
                 text = transactionTitle(income),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = TextDark
+                color = colors.textDark
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -66,7 +86,7 @@ fun TransactionCard(
                 Text(
                     text = "📅 ${formatDate(income.date)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextMuted
+                    color = colors.textMuted
                 )
                 CurrencyBadge(currency = income.currency)
             }
@@ -76,7 +96,7 @@ fun TransactionCard(
         Text(
             text = formatAmount(income.currency, income.amount),
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-            color = TextDark
+            color = colors.textDark
         )
 
         Spacer(modifier = Modifier.width(4.dp))
@@ -87,7 +107,7 @@ fun TransactionCard(
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "More options",
-                    tint = TextMuted
+                    tint = colors.textMuted
                 )
             }
 
@@ -146,7 +166,7 @@ fun CurrencyBadge(currency: String, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(6.dp),
-        color = Color(0xFFF3F4F6)
+        color = LightCurrencyBg
     ) {
         Text(
             text = currency,
@@ -155,7 +175,7 @@ fun CurrencyBadge(currency: String, modifier: Modifier = Modifier) {
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 10.sp
             ),
-            color = TextMuted
+            color = LightTextMuted
         )
     }
 }
@@ -192,6 +212,7 @@ private fun TransactionCardPreview() {
     Column(modifier = Modifier.padding(16.dp)) {
         fakeTransactions.forEach { income ->
             TransactionCard(
+                isDarkTheme = false,
                 income = income,
                 onEditClick = {},
                 onDeleteClick = {}

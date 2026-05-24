@@ -20,6 +20,32 @@ import com.example.financeflow.model.GoalBadge
 import com.example.financeflow.ui.components.goals.*
 import com.example.financeflow.viewmodel.goal.GoalViewModel
 
+private data class GoalsScreenPalette(
+    val background: Color,
+    val sectionBackground: Color,
+    val textPrimary: Color,
+    val textMuted: Color,
+    val tabTrack: Color
+)
+
+private fun goalsScreenPalette(isDarkTheme: Boolean) = if (isDarkTheme) {
+    GoalsScreenPalette(
+        background = Color(0xFF121212),
+        sectionBackground = Color(0xFF242230),
+        textPrimary = Color(0xFFF5F3FF),
+        textMuted = Color(0xFFB9B4C7),
+        tabTrack = Color(0xFF302B42)
+    )
+} else {
+    GoalsScreenPalette(
+        background = Color.White,
+        sectionBackground = Color(0xFFF2F2F2),
+        textPrimary = Color.Black,
+        textMuted = Color.Gray,
+        tabTrack = Color(0xFFF2F2F2)
+    )
+}
+
 @Composable
 fun GoalDetailScreen(
     goalId: String,
@@ -35,6 +61,7 @@ fun GoalDetailScreen(
 
 @Composable
 fun GoalsScreen(
+    isDarkTheme: Boolean = false,
     onNavigateToDetail: (String) -> Unit = {},
     onNavigateToCreate: () -> Unit = {},
     viewModel: GoalViewModel = hiltViewModel()
@@ -46,6 +73,7 @@ fun GoalsScreen(
     var showCreateGoal by remember { mutableStateOf(false) }
     var selectedBadge by remember { mutableStateOf<GoalBadge?>(null) }
     var goalToDelete by remember { mutableStateOf<Goal?>(null) }
+    val palette = goalsScreenPalette(isDarkTheme)
 
     LaunchedEffect(uiState.goals) {
         if (detailState.goal == null && uiState.goals.isNotEmpty()) {
@@ -54,16 +82,18 @@ fun GoalsScreen(
     }
 
     Scaffold(
-        containerColor = Color.White
+        containerColor = palette.background
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .background(palette.background)
                 .padding(bottom = padding.calculateBottomPadding())
         ) {
             item {
                 GoalsHeader(
                     selectedGoal = detailState.goal,
+                    isDarkTheme = isDarkTheme,
                     onCreateGoal = { 
                         viewModel.resetCreateGoalState()
                         showCreateGoal = true 
@@ -83,7 +113,7 @@ fun GoalsScreen(
                     item { EmptyGoalsState(onCreateGoal = { 
                         viewModel.resetCreateGoalState()
                         showCreateGoal = true 
-                    }) }
+                    }, isDarkTheme = isDarkTheme) }
                 }
                 else -> {
                     item {
@@ -91,7 +121,7 @@ fun GoalsScreen(
                             text = "All Goals (${uiState.goals.size})",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.Black,
+                            color = palette.textPrimary,
                             modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 12.dp)
                         )
                     }
@@ -99,6 +129,7 @@ fun GoalsScreen(
                     items(items = uiState.goals, key = { it.id }) { goal ->
                         GoalCard(
                             goal = goal,
+                            isDarkTheme = isDarkTheme,
                             isSelected = detailState.goal?.id == goal.id,
                             onClick = { 
                                 viewModel.loadGoalDetail(goal.id)
@@ -123,14 +154,14 @@ fun GoalsScreen(
                         
                         item {
                             Spacer(modifier = Modifier.height(32.dp))
-                            GoalDetailLargeCard(goal)
+                            GoalDetailLargeCard(goal, isDarkTheme = isDarkTheme)
                         }
 
                         item {
-                            GoalSummaryGrid(goal)
+                            GoalSummaryGrid(goal, isDarkTheme = isDarkTheme)
                         }
 
-                        item { GoalWarningCard(goal) }
+                        item { GoalWarningCard(goal, isDarkTheme = isDarkTheme) }
 
                         item {
                             Row(
@@ -138,7 +169,7 @@ fun GoalsScreen(
                                     .padding(horizontal = 24.dp, vertical = 20.dp)
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
-                                    .background(Color(0xFFF2F2F2))
+                                    .background(palette.tabTrack)
                                     .padding(4.dp)
                             ) {
                                 TabButton(
@@ -146,6 +177,7 @@ fun GoalsScreen(
                                     selected = selectedTab == 0, 
                                     onClick = { selectedTab = 0 }, 
                                     activeColor = categoryColor,
+                                    isDarkTheme = isDarkTheme,
                                     modifier = Modifier.weight(1f)
                                 )
                                 TabButton(
@@ -153,6 +185,7 @@ fun GoalsScreen(
                                     selected = selectedTab == 1, 
                                     onClick = { selectedTab = 1 }, 
                                     activeColor = categoryColor,
+                                    isDarkTheme = isDarkTheme,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -161,25 +194,28 @@ fun GoalsScreen(
                         if (selectedTab == 0) {
                             item {
                                 Box(modifier = Modifier.padding(horizontal = 24.dp)) {
-                                    GoalMilestonesSection(goal, onBadgeClick = { selectedBadge = it })
+                                    GoalMilestonesSection(goal, isDarkTheme = isDarkTheme, onBadgeClick = { selectedBadge = it })
                                 }
                             }
                         } else {
                             item {
                                 Box(modifier = Modifier.padding(horizontal = 24.dp)) {
-                                    MonthlyContributionsHeader(onAddClick = { showAddContribution = true })
+                                    MonthlyContributionsHeader(
+                                        isDarkTheme = isDarkTheme,
+                                        onAddClick = { showAddContribution = true }
+                                    )
                                 }
                             }
                             if (detailState.allocations.isEmpty()) {
                                 item {
                                     Box(modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
-                                        Text("No contributions tagged yet", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                                        Text("No contributions tagged yet", style = MaterialTheme.typography.bodyMedium, color = palette.textMuted)
                                     }
                                 }
                             } else {
                                 items(items = detailState.allocations, key = { it.id }) { allocation ->
                                     Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp)) {
-                                        AllocationItem(allocation, goal.currency)
+                                        AllocationItem(allocation, goal.currency, isDarkTheme = isDarkTheme)
                                     }
                                 }
                             }
@@ -187,7 +223,7 @@ fun GoalsScreen(
 
                         item {
                             Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
-                                GoalInsightSection(goal)
+                                GoalInsightSection(goal, isDarkTheme = isDarkTheme)
                             }
                         }
                     }
@@ -219,6 +255,7 @@ fun GoalsScreen(
         AddContributionDialog(
             goalId = detailState.goal!!.id,
             onDismiss = { showAddContribution = false },
+            isDarkTheme = isDarkTheme,
             viewModel = viewModel
         )
     }
@@ -226,6 +263,7 @@ fun GoalsScreen(
     if (showCreateGoal) {
         CreateGoalDialog(
             onDismiss = { showCreateGoal = false },
+            isDarkTheme = isDarkTheme,
             viewModel = viewModel
         )
     }
@@ -233,6 +271,7 @@ fun GoalsScreen(
     if (goalToDelete != null) {
         DeleteGoalConfirmationDialog(
             goalTitle = goalToDelete!!.title,
+            isDarkTheme = isDarkTheme,
             onConfirm = {
                 viewModel.deleteGoal(goalToDelete!!.id) {
                     goalToDelete = null
@@ -247,6 +286,7 @@ fun GoalsScreen(
             badge = selectedBadge!!,
             unlocked = selectedBadge!!.id in detailState.goal!!.unlockedBadges,
             goal = detailState.goal!!,
+            isDarkTheme = isDarkTheme,
             onDismiss = { selectedBadge = null }
         )
     }

@@ -57,6 +57,7 @@ private fun ChangeDirection.icon(): ImageVector = when (this) {
  */
 @Composable
 fun MonthlyComparisonCard(
+    isDarkTheme: Boolean = false,
     rows: List<ComparisonRow> = listOf(
         ComparisonRow(
             label = "Savings Increased",
@@ -78,9 +79,10 @@ fun MonthlyComparisonCard(
         )
     )
 ) {
+    val colors = getInsightsColors(isDarkTheme)
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = CardWhite,
+        color = colors.CardWhite,
         shadowElevation = 4.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -90,14 +92,14 @@ fun MonthlyComparisonCard(
                 text = "This Month vs Last Month",
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
-                color = TextDark
+                color = colors.TextDark
             )
 
             Spacer(Modifier.height(14.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 rows.forEach { row ->
-                    ComparisonRowItem(row)
+                    ComparisonRowItem(row, isDarkTheme = isDarkTheme)
                 }
             }
         }
@@ -105,8 +107,9 @@ fun MonthlyComparisonCard(
 }
 
 @Composable
-private fun ComparisonRowItem(row: ComparisonRow) {
+private fun ComparisonRowItem(row: ComparisonRow, isDarkTheme: Boolean = false) {
     val color = row.direction.color()
+    val colors = getInsightsColors(isDarkTheme)
 
     Row(
         modifier = Modifier
@@ -129,8 +132,8 @@ private fun ComparisonRowItem(row: ComparisonRow) {
                 modifier = Modifier.size(22.dp)
             )
             Column {
-                Text(text = row.label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextDark)
-                Text(text = row.subtitle, fontSize = 11.sp, color = TextMuted)
+                Text(text = row.label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = colors.TextDark)
+                Text(text = row.subtitle, fontSize = 11.sp, color = colors.TextMuted)
             }
         }
 

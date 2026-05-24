@@ -69,8 +69,11 @@ fun SmartInsightCard(
     title: String,
     body: String,
     actionText: String? = null,
+    isDarkTheme: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val colors = getInsightsColors(isDarkTheme)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -103,12 +106,12 @@ fun SmartInsightCard(
                     text = title,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
-                    color = TextDark
+                    color = colors.TextDark
                 )
                 Text(
                     text = body,
                     fontSize = 12.sp,
-                    color = TextMuted,
+                    color = colors.TextMuted,
                     lineHeight = 17.sp
                 )
                 if (actionText != null) {
@@ -129,14 +132,15 @@ fun SmartInsightCard(
 
 /** Three smart insight cards matching the Figma design */
 @Composable
-fun SmartInsightsSection() {
+fun SmartInsightsSection(isDarkTheme: Boolean = false) {
+    val colors = getInsightsColors(isDarkTheme)
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
         Text(
             text = "Smart Insights",
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp,
-            color = Color(0xFF1E1B2E)
+            color = colors.TextDark
         )
 
         SmartInsightCard(
@@ -144,7 +148,8 @@ fun SmartInsightsSection() {
             icon       = Icons.Default.CheckCircle,
             title      = "Strong Savings Habit",
             body       = "You've allocated 28% of income to savings this month – exceeding the recommended 20% target.",
-            actionText = "Keep It Up !"
+            actionText = "Keep It Up !",
+            isDarkTheme = isDarkTheme
         )
 
         SmartInsightCard(
@@ -152,7 +157,8 @@ fun SmartInsightsSection() {
             icon       = Icons.Default.Warning,
             title      = "Optional Budget Usage High",
             body       = "You've used 83% of your optional budget. Consider reducing discretionary spending.",
-            actionText = "Review optional expenses"
+            actionText = "Review optional expenses",
+            isDarkTheme = isDarkTheme
         )
 
         SmartInsightCard(
@@ -160,7 +166,8 @@ fun SmartInsightsSection() {
             icon       = Icons.Default.TrendingDown,
             title      = "Must Expenses Stable",
             body       = "Your essential expenses have remained consistent at LKR 52,000/month for 4 months.",
-            actionText = "Good control!"
+            actionText = "Good control!",
+            isDarkTheme = isDarkTheme
         )
     }
 }

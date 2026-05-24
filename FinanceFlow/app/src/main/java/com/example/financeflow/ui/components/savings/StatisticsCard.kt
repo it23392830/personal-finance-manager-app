@@ -22,23 +22,26 @@ import androidx.compose.ui.unit.sp
 // Shows total saved + avg savings rate with gradient chips, and "Save First" banner
 @Composable
 fun LifetimeStatisticsCard(
+    isDarkTheme: Boolean = false,
     totalSaved: String = "LKR 301,600",
     avgSavingsRate: String = "26.8%",
     periodLabel: String = "Total Saved (6 mon)"
 ) {
+    val colors = com.example.financeflow.ui.components.savings.getSavingsColors(isDarkTheme)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp)),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite)
+        colors = CardDefaults.cardColors(containerColor = colors.cardBg)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Lifetime Statistics",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.DarkGray
+                color = colors.textPrimary
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -49,19 +52,19 @@ fun LifetimeStatisticsCard(
                 GradientStatChip(
                     label = periodLabel,
                     value = totalSaved,
-                    gradientColors = listOf(Color(0xFFF5A623), Color(0xFFFF6F00)),
+                    gradientColors = listOf(colors.accent, Color(0xFFFF6F00)),
                     modifier = Modifier.weight(1f)
                 )
                 GradientStatChip(
                     label = "Avg. Savings Rate",
                     value = avgSavingsRate,
-                    gradientColors = listOf(Color(0xFF43A047), Color(0xFF1B5E20)),
+                    gradientColors = listOf(colors.success, Color(0xFF1B5E20)),
                     modifier = Modifier.weight(1f)
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            SaveFirstBanner()
+            SaveFirstBanner(isDarkTheme = isDarkTheme)
         }
     }
 }
@@ -95,12 +98,14 @@ fun GradientStatChip(
     }
 }
 @Composable
-fun SaveFirstBanner() {
+fun SaveFirstBanner(isDarkTheme: Boolean = false) {
+    val colors = com.example.financeflow.ui.components.savings.getSavingsColors(isDarkTheme)
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFF9F9F9))
+            .background(colors.formBg)
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(
@@ -111,13 +116,13 @@ fun SaveFirstBanner() {
                     text = "Save First Model Active",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.DarkGray
+                    color = colors.textPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Savings allocated automatically when income is added",
                     fontSize = 11.sp,
-                    color = Color.Gray,
+                    color = colors.muted,
                     lineHeight = 16.sp
                 )
             }
@@ -126,7 +131,7 @@ fun SaveFirstBanner() {
             Icon(
                 imageVector = Icons.Default.CurrencyExchange,
                 contentDescription = "Save First",
-                tint = OrangeAccent,
+                tint = colors.accent,
                 modifier = Modifier.size(32.dp)
             )
         }

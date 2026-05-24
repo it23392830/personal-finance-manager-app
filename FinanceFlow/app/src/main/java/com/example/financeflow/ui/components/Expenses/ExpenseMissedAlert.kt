@@ -19,24 +19,26 @@ import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseMissedAlert(
+    isDarkTheme: Boolean = false,
     missedItems: List<RecurringUiItem>,
     onMarkPaid: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (missedItems.isEmpty()) return
+    val colors = getExpensesColors(isDarkTheme)
 
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFECACA))
+        colors = CardDefaults.cardColors(containerColor = colors.ExpenseBg),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.ExpenseBg)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.Default.Warning,
                     contentDescription = null,
-                    tint = ExpenseColors.ExpenseRed,
+                    tint = colors.ExpenseRed,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(Modifier.width(8.dp))
@@ -44,7 +46,7 @@ fun ExpenseMissedAlert(
                     "Missed Payments",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ExpenseColors.ExpenseRed
+                    color = colors.ExpenseRed
                 )
             }
 
@@ -60,7 +62,7 @@ fun ExpenseMissedAlert(
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
-                                .background(Color.White, RoundedCornerShape(10.dp)),
+                                .background(colors.CardBg, RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(category.emoji, fontSize = 18.sp)
@@ -73,18 +75,18 @@ fun ExpenseMissedAlert(
                                 item.name,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ExpenseColors.TextPrimary
+                                color = colors.TextPrimary
                             )
                             Text(
                                 "${fmtLKR(item.amount)} • Was due ${item.nextDue}",
                                 fontSize = 11.sp,
-                                color = ExpenseColors.TextMuted
+                                color = colors.TextMuted
                             )
                         }
 
                         Button(
                             onClick = { onMarkPaid(item.id) },
-                            colors = ButtonDefaults.buttonColors(containerColor = ExpenseColors.ExpenseRed),
+                            colors = ButtonDefaults.buttonColors(containerColor = colors.ExpenseRed),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                             modifier = Modifier.height(32.dp),
                             shape = RoundedCornerShape(8.dp)

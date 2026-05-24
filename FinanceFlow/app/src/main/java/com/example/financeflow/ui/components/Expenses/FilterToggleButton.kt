@@ -23,11 +23,12 @@ fun FilterToggleButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(false)
     Surface(
         onClick = onClick,
-        color = if (active) ExpenseColors.HeaderRed else Color.White,
+        color = if (active) colors.HeaderRed else Color.White,
         shape = RoundedCornerShape(12.dp),
-        border = if (active) null else androidx.compose.foundation.BorderStroke(1.dp, ExpenseColors.Border),
+        border = if (active) null else androidx.compose.foundation.BorderStroke(1.dp, colors.Border),
         modifier = modifier.height(40.dp)
     ) {
         Box(
@@ -38,7 +39,7 @@ fun FilterToggleButton(
                 Icon(
                     Icons.Default.FilterList,
                     contentDescription = null,
-                    tint = if (active) Color.White else ExpenseColors.TextPrimary,
+                    tint = if (active) Color.White else colors.TextPrimary,
                     modifier = Modifier.size(20.dp)
                 )
                 if (hasDot) {
@@ -46,7 +47,7 @@ fun FilterToggleButton(
                     Box(
                         modifier = Modifier
                             .size(6.dp)
-                            .background(if (active) Color.White else ExpenseColors.HeaderRed, RoundedCornerShape(99.dp))
+                            .background(if (active) Color.White else colors.HeaderRed, RoundedCornerShape(99.dp))
                     )
                 }
             }

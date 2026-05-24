@@ -64,13 +64,14 @@ val dummyContributions = listOf(
 //   entry  – the ContributionEntry to display
 
 @Composable
-fun ContributionHistoryCard(entry: ContributionEntry) {
+fun ContributionHistoryCard(entry: ContributionEntry, isDarkTheme: Boolean = false) {
+    val colors = getSavingsColors(isDarkTheme)
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 5.dp, shape = RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = colors.cardBg)
     ) {
         Row(
             modifier = Modifier
@@ -88,7 +89,7 @@ fun ContributionHistoryCard(entry: ContributionEntry) {
                     text = entry.month,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
+                    color = colors.textPrimary
                 )
 
                 Spacer(modifier = Modifier.height(3.dp))
@@ -97,7 +98,7 @@ fun ContributionHistoryCard(entry: ContributionEntry) {
                 Text(
                     text = entry.date,
                     fontSize = 11.sp,
-                    color = Color.Gray
+                    color = colors.textSecondary
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -107,7 +108,7 @@ fun ContributionHistoryCard(entry: ContributionEntry) {
                     text = entry.title,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF444444)
+                    color = colors.textSecondary
                 )
             }
 
@@ -116,7 +117,7 @@ fun ContributionHistoryCard(entry: ContributionEntry) {
                 text = entry.amount,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A)
+                color = colors.textPrimary
             )
         }
     }
@@ -128,13 +129,13 @@ fun ContributionHistoryCard(entry: ContributionEntry) {
 // with consistent vertical spacing. Used directly inside GoalDetailsScreen.
 
 @Composable
-fun ContributionHistoryList(entries: List<ContributionEntry> = dummyContributions) {
+fun ContributionHistoryList(isDarkTheme: Boolean = false, entries: List<ContributionEntry> = dummyContributions) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         entries.forEach { entry ->
-            ContributionHistoryCard(entry = entry)
+            ContributionHistoryCard(entry = entry, isDarkTheme = isDarkTheme)
         }
     }
 }

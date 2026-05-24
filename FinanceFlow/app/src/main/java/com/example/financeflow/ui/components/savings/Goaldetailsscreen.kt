@@ -1,5 +1,7 @@
 package com.example.financeflow.ui.savings
 
+import com.example.financeflow.ui.components.savings.getSavingsColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,12 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.components.savings.ContributionHistoryList
 import com.example.financeflow.ui.components.savings.dummyContributions
 
-// Local color tokens (mirrors SavingsCard.kt tokens)
-
-private val BgPurple   = Color(0xFFEDE2FF)
-private val Orange     = Color(0xFFF5A623)
-private val GreenSaved = Color(0xFF00D68F)
-private val CardWhite  = Color(0xFFFFFFFF)
+// Uses shared savings theme tokens via getSavingsColors
 
 // GoalDetailsScreen
 //
@@ -39,36 +36,34 @@ private val CardWhite  = Color(0xFFFFFFFF)
 
 @Composable
 fun GoalDetailsScreen(
+    isDarkTheme: Boolean = false,
     onAddContribution: () -> Unit = {}
 ) {
+    val colors = getSavingsColors(isDarkTheme)
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgPurple),
-        contentPadding = PaddingValues(
-            start  = 16.dp,
-            end    = 16.dp,
-            top    = 20.dp,
-            bottom = 32.dp
-        ),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .background(colors.background)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(bottom = 16.dp)
     ) {
-
         // ── 1. Header card
-        item { GoalDetailsHeaderCard() }
+        item { GoalDetailsHeaderCard(isDarkTheme = isDarkTheme) }
 
         // ── 2. Goal information card
         item {
             GoalInfoCard(
-                goalName      = "Vacation",
+                isDarkTheme = isDarkTheme,
+                goalName = "Vacation",
                 currentAmount = "LKR 19,620.00",
-                savedAmount   = "LKR 6,53500.31",
-                progress      = 0.40f          // 40 % — adjust to match Figma bar
+                savedAmount = "LKR 6,53500.31",
+                progress = 0.40f
             )
         }
 
         // ── 3. Add Contribution button card
-        item { AddContributionCard(onAddContribution = onAddContribution) }
+        item { AddContributionCard(isDarkTheme = isDarkTheme, onAddContribution = onAddContribution) }
 
         // ── 4. Contribution History
         item {
@@ -76,12 +71,12 @@ fun GoalDetailsScreen(
                 text = "Contribution History",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1A1A1A),
+                color = colors.textPrimary,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
         }
 
-        item { ContributionHistoryList(entries = dummyContributions) }
+        item { ContributionHistoryList(isDarkTheme = isDarkTheme, entries = dummyContributions) }
     }
 }
 
@@ -89,13 +84,15 @@ fun GoalDetailsScreen(
 //
 // Top card matching the shared Savings Overview header design.
 @Composable
-private fun GoalDetailsHeaderCard() {
+private fun GoalDetailsHeaderCard(isDarkTheme: Boolean = false) {
+    val colors = getSavingsColors(isDarkTheme)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp)),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite)
+        colors = CardDefaults.cardColors(containerColor = colors.cardBg)
     ) {
         Row(
             modifier = Modifier
@@ -108,12 +105,12 @@ private fun GoalDetailsHeaderCard() {
                     text = "Savings Overview",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Orange
+                    color = colors.accent
                 )
                 Text(
                     text = "Track your saving habits & allocations",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = colors.muted
                 )
             }
         }
@@ -135,17 +132,20 @@ private fun GoalDetailsHeaderCard() {
 //   progress      – 0f..1f fraction for the progress bar
 @Composable
 fun GoalInfoCard(
+    isDarkTheme: Boolean = false,
     goalName: String      = "Vacation",
     currentAmount: String = "LKR 19,620.00",
     savedAmount: String   = "LKR 6,53500.31",
     progress: Float       = 0.40f
 ) {
+    val colors2 = getSavingsColors(isDarkTheme)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp)),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite)
+        colors = CardDefaults.cardColors(containerColor = colors2.cardBg)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
 
@@ -153,14 +153,14 @@ fun GoalInfoCard(
             Text(
                 text = "Goal",
                 fontSize = 12.sp,
-                color = Color.Gray
+                color = colors2.muted
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = goalName,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFF1A1A1A)
+                color = colors2.textPrimary
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -169,7 +169,8 @@ fun GoalInfoCard(
             GoalAmountRow(
                 label  = "Current Amount",
                 value  = currentAmount,
-                valueColor = Color(0xFF1A1A1A)
+                valueColor = colors2.textPrimary,
+                isDarkTheme = isDarkTheme
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -178,7 +179,8 @@ fun GoalInfoCard(
             GoalAmountRow(
                 label  = "Amount Saved",
                 value  = savedAmount,
-                valueColor = GreenSaved
+                valueColor = colors2.success,
+                isDarkTheme = isDarkTheme
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -189,8 +191,8 @@ fun GoalInfoCard(
                 modifier    = Modifier
                     .fillMaxWidth()
                     .height(10.dp),
-                color       = Orange,
-                trackColor  = Color(0xFFE0D4F5),   // soft purple-gray track
+                color       = colors2.accent,
+                trackColor  = colors2.progressTrack,
                 strokeCap   = StrokeCap.Round
             )
 
@@ -200,7 +202,7 @@ fun GoalInfoCard(
             Text(
                 text  = "${(progress * 100).toInt()}% saved",
                 fontSize = 11.sp,
-                color = Color.Gray
+                color = colors2.muted
             )
         }
     }
@@ -212,13 +214,15 @@ fun GoalInfoCard(
 private fun GoalAmountRow(
     label: String,
     value: String,
-    valueColor: Color
+    valueColor: Color,
+    isDarkTheme: Boolean = false
 ) {
+    val colors = getSavingsColors(isDarkTheme)
     Column {
         Text(
             text     = label,
             fontSize = 12.sp,
-            color    = Color.Gray
+            color    = colors.muted
         )
         Spacer(modifier = Modifier.height(3.dp))
         Text(
@@ -235,13 +239,15 @@ private fun GoalAmountRow(
 // White rounded card containing a single centered orange CTA button.
 
 @Composable
-fun AddContributionCard(onAddContribution: () -> Unit = {}) {
+fun AddContributionCard(isDarkTheme: Boolean = false, onAddContribution: () -> Unit = {}) {
+    val colors = getSavingsColors(isDarkTheme)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp)),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite)
+        colors = CardDefaults.cardColors(containerColor = colors.cardBg)
     ) {
         Box(
             modifier = Modifier
@@ -250,20 +256,20 @@ fun AddContributionCard(onAddContribution: () -> Unit = {}) {
             contentAlignment = Alignment.Center
         ) {
             Button(
-                onClick  = onAddContribution,
+                onClick = onAddContribution,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
                     .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp)),
-                shape    = RoundedCornerShape(16.dp),
-                colors   = ButtonDefaults.buttonColors(
-                    containerColor = Orange,
-                    contentColor   = Color.White
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.accent,
+                    contentColor = Color.White
                 )
             ) {
                 Text(
-                    text       = "+ Add Contribution",
-                    fontSize   = 15.sp,
+                    text = "+ Add Contribution",
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
                 )
             }

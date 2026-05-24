@@ -1,60 +1,27 @@
 package com.example.financeflow.ui.income
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-import com.example.financeflow.viewmodel.income.IncomeViewModel
-import com.example.financeflow.model.Income
-import com.example.financeflow.model.IncomeSource
-import com.google.firebase.Timestamp
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-// ─── Theme Colors (shared; declare only if not in a shared theme file) ────────
-private val BgPurple      = Color(0xFFF3ECFF)
-private val PrimaryPurple  = Color(0xFF8B5CF6)
-private val IncomeGreen    = Color(0xFF22C55E)
-private val CardWhite      = Color(0xFFFFFFFF)
-private val TextDark       = Color(0xFF1E1B2E)
-private val TextMuted      = Color(0xFF9CA3AF)
-private val FieldBg        = Color(0xFFF9F6FF)
-private val DividerColor   = Color(0xFFE9E2FF)
-private val CancelPurple   = Color(0xFF7C3AED)
-
-// ─── Sample data for edit prefill ────────────────────────────────────────────
-@Suppress("DEPRECATION")
-private val sampleIncomeSources = listOf(
-    "Salary"     to Icons.Default.Work,
-    "Freelance"  to Icons.Default.Code,
-    "AdSense"    to Icons.Default.AttachMoney,
-    "Crypto"     to Icons.Default.CurrencyBitcoin,
-    "Investment" to Icons.Default.TrendingUp,
-    "Other"      to Icons.Default.Category
-)
-
-private val sampleCurrencies = listOf(
-    "LKR (Sri Lankan Rupee)",
-    "USD (US Dollar)",
-    "EUR (Euro)",
-    "GBP (British Pound)",
-    "AUD (Australian Dollar)"
-)
+import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 /**
  * EditIncomeScreen
@@ -63,6 +30,8 @@ private val sampleCurrencies = listOf(
  * In a real app the IncomeViewModel would supply the current values;
  * here they default to sample data so the Preview renders correctly.
  *
+ * @param incomeId           The ID of the income record being edited.
+ * @param isDarkTheme        Whether the UI should render in dark mode.
  * @param initialSource      Pre-selected income source.
  * @param initialAmount      Pre-filled amount string.
  * @param initialCurrency    Pre-selected currency.
@@ -77,6 +46,7 @@ private val sampleCurrencies = listOf(
 @Composable
 fun EditIncomeScreen(
     incomeId: String = "",
+    isDarkTheme: Boolean = false,
     initialSource: String      = "Salary",
     initialAmount: String      = "135,000.00",
     initialCurrency: String    = "LKR (Sri Lankan Rupee)",
@@ -87,6 +57,7 @@ fun EditIncomeScreen(
                     description: String, date: String, notes: String) -> Unit = { _, _, _, _, _, _ -> },
     onCancel: () -> Unit = {}
 ) {
+    val colors = getIncomeFormColors(isDarkTheme)
     // ── Local mutable state (prefilled with initial values) ───────────────────
     var amount           by remember { mutableStateOf(initialAmount) }
     var selectedCurrency by remember { mutableStateOf(initialCurrency) }
@@ -95,229 +66,153 @@ fun EditIncomeScreen(
     var date             by remember { mutableStateOf(initialDate) }
     var notes            by remember { mutableStateOf(initialNotes) }
 
-    val viewModel: IncomeViewModel = hiltViewModel()
-    val scope = rememberCoroutineScope()
-
-    // Load income when incomeId provided
-    LaunchedEffect(incomeId) {
-        if (incomeId.isNotBlank()) {
-            val loaded = viewModel.getIncomeById(incomeId)
-            loaded?.let { inc ->
-                selectedSource = when (inc.source.lowercase()) {
-                    "salary" -> "Salary"
-                    "freelance" -> "Freelance"
-                    "adsense" -> "AdSense"
-                    "crypto" -> "Crypto"
-                    "investment" -> "Investment"
-                    "rental" -> "Rental"
-                    else -> "Other"
-                }
-                amount = String.format("%.2f", inc.amount)
-                selectedCurrency = inc.currency
-                description = inc.description
-                date = inc.date.toDate().let { d -> java.text.SimpleDateFormat("MM/dd/yyyy").format(d) }
-            }
-        }
-    }
-
-    var currencyExpanded by remember { mutableStateOf(false) }
+    // ── Dropdown expanded states ─────────────────────────────────────────────
     var sourceExpanded   by remember { mutableStateOf(false) }
+    var currencyExpanded by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
 
-    // ── Root scaffold ─────────────────────────────────────────────────────────
-    Scaffold(
-        containerColor = BgPurple,
-        topBar = {
-            IncomeTopBar(title = "Edit Income", onNavigateUp = onCancel)
-        }
-    ) { innerPadding ->
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.background)
+            .verticalScroll(scrollState)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
 
-        Column(
+        // ── 1. Header card ──────────────────────────────────────────────────
+        EditIncomeHeaderCard(colors)
+
+        // ── 2. Main form card ───────────────────────────────────────────────
+        Card(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxWidth()
+                .shadow(elevation = 6.dp, shape = RoundedCornerShape(28.dp)),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = colors.cardBg)
         ) {
-
-            // ── Form Card ─────────────────────────────────────────────────────
-            AnimatedVisibility(
-                visible = true,
-                enter = fadeIn() + slideInVertically { it / 4 }
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = CardWhite,
-                    tonalElevation = 0.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(
-                            elevation = 8.dp,
-                            shape = RoundedCornerShape(20.dp),
-                            ambientColor = PrimaryPurple.copy(alpha = 0.12f),
-                            spotColor   = PrimaryPurple.copy(alpha = 0.18f)
-                        )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(18.dp)
-                    ) {
-
-                        // Amount
-                        IncomeFieldLabel("Amount")
-                        IncomeAmountField(value = amount, onValueChange = { amount = it })
-
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                        // Currency
-                        IncomeFieldLabel("Currency")
-                        IncomeDropdownField(
-                            selectedValue    = selectedCurrency,
-                            options          = sampleCurrencies,
-                            expanded         = currencyExpanded,
-                            onExpandChange   = { currencyExpanded = it },
-                            onOptionSelected = { selectedCurrency = it; currencyExpanded = false },
-                            leadingIcon      = Icons.Default.CurrencyExchange
-                        )
-
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                        // Income Source
-                        IncomeFieldLabel("Income Source")
-                        IncomeSourceDropdown(
-                            selectedSource   = selectedSource,
-                            sourceOptions    = sampleIncomeSources,
-                            expanded         = sourceExpanded,
-                            onExpandChange   = { sourceExpanded = it },
-                            onOptionSelected = { selectedSource = it; sourceExpanded = false }
-                        )
-
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                        // Description
-                        IncomeFieldLabel("Description (Optional)")
-                        IncomeTextField(
-                            value         = description,
-                            onValueChange = { description = it },
-                            placeholder   = "e.g., React Project for ABC Co.",
-                            leadingIcon   = Icons.Default.Description
-                        )
-
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                        // Date
-                        IncomeFieldLabel("Date")
-                        IncomeDateField(value = date, onValueChange = { date = it })
-
-                        HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                        // Notes
-                        IncomeFieldLabel("Notes (Optional)")
-                        IncomeTextField(
-                            value         = notes,
-                            onValueChange = { notes = it },
-                            placeholder   = "Any additional notes…",
-                            leadingIcon   = Icons.Default.Notes,
-                            singleLine    = false,
-                            minLines      = 3
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // ── Action Buttons Row ────────────────────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
 
-                // Save Changes – green
-                Button(
-                    onClick = {
-                        // build Income and update via ViewModel
-                        val amountVal = amount.replace(",", "").toDoubleOrNull() ?: 0.0
-                        val sourceEnum = when (selectedSource.lowercase()) {
-                            "salary" -> IncomeSource.SALARY
-                            "freelance" -> IncomeSource.FREELANCE
-                            "adsense" -> IncomeSource.ADSENSE
-                            "crypto" -> IncomeSource.CRYPTO
-                            "investment" -> IncomeSource.INVESTMENT
-                            "rental" -> IncomeSource.RENTAL
-                            else -> IncomeSource.OTHER
-                        }
+                // ── Field 1: Amount ─────────────────────────────────────────
+                IncomeFieldLabel("Amount", isDarkTheme)
+                IncomeAmountField(amount, { amount = it }, isDarkTheme)
 
-                        val income = Income(
-                            id = incomeId,
-                            source = sourceEnum.name,
-                            amount = amountVal,
-                            currency = selectedCurrency.split(" ").firstOrNull() ?: selectedCurrency,
-                            description = description,
-                            date = Timestamp.now()
-                        )
+                // ── Field 2: Currency ───────────────────────────────────────
+                IncomeFieldLabel("Currency", isDarkTheme)
+                IncomeDropdownField(
+                    selectedValue = selectedCurrency,
+                    options = listOf("LKR (Sri Lankan Rupee)", "USD (US Dollar)", "EUR (Euro)", "GBP (British Pound)"),
+                    expanded = currencyExpanded,
+                    onExpandChange = { currencyExpanded = it },
+                    onOptionSelected = { selectedCurrency = it; currencyExpanded = false },
+                    leadingIcon = Icons.Default.CurrencyExchange,
+                    isDarkTheme = isDarkTheme
+                )
 
-                        scope.launch {
-                            viewModel.updateIncome(income)
-                            onSaveChanges(selectedSource, amount, selectedCurrency, description, date, notes)
-                        }
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = IncomeGreen,
-                        contentColor   = Color.White
+                // ── Field 3: Source ─────────────────────────────────────────
+                IncomeFieldLabel("Source", isDarkTheme)
+                IncomeSourceDropdown(
+                    selectedSource = selectedSource,
+                    sourceOptions = listOf(
+                        "Salary" to Icons.Default.Work,
+                        "Freelance" to Icons.Default.Code,
+                        "Investment" to Icons.Default.TrendingUp,
+                        "Other" to Icons.Default.Category
                     ),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Save Changes",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
+                    expanded = sourceExpanded,
+                    onExpandChange = { sourceExpanded = it },
+                    onOptionSelected = { selectedSource = it; sourceExpanded = false },
+                    isDarkTheme = isDarkTheme
+                )
 
-                // Cancel – purple outline
-                OutlinedButton(
-                    onClick = onCancel,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = CancelPurple
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(2.dp, CancelPurple)
-                ) {
-                    Text(
-                        text = "Cancel",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
+                // ── Field 4: Description ────────────────────────────────────
+                IncomeFieldLabel("Description", isDarkTheme)
+                IncomeTextField(description, { description = it }, "Description", Icons.Default.Description, isDarkTheme = isDarkTheme)
+
+                // ── Field 5: Date ───────────────────────────────────────────
+                IncomeFieldLabel("Date", isDarkTheme)
+                IncomeDateField(date, { date = it }, isDarkTheme)
+
+                // ── Field 6: Notes ───────────────────────────────────────────
+                IncomeFieldLabel("Notes (Optional)", isDarkTheme)
+                IncomeTextField(notes, { notes = it }, "Notes", Icons.Default.Notes, singleLine = false, minLines = 2, isDarkTheme = isDarkTheme)
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        // ── 3. Action buttons ───────────────────────────────────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Save Changes button
+            Button(
+                onClick = {
+                    onSaveChanges(selectedSource, amount, selectedCurrency, description, date, notes)
+                },
+                modifier = Modifier.weight(1f).height(50.dp).shadow(4.dp, RoundedCornerShape(16.dp)),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = colors.success, contentColor = Color.White)
+            ) {
+                Text("Save Changes", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
+            // Cancel button
+            Button(
+                onClick = onCancel,
+                modifier = Modifier.weight(1f).height(50.dp).shadow(4.dp, RoundedCornerShape(16.dp)),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = colors.secondary, contentColor = Color.White)
+            ) {
+                Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        // Bottom breathing room
+        Spacer(modifier = Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun EditIncomeHeaderCard(colors: IncomeFormColors) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp)),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.fieldBg)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text       = "Edit Income",
+                    fontSize   = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color      = colors.primary
+                )
+                Text(
+                    text     = "Modify your transaction details",
+                    fontSize = 12.sp,
+                    color    = colors.textMuted
+                )
+            }
         }
     }
 }
 
-// ─── Preview ──────────────────────────────────────────────────────────────────
-
 @Preview(showBackground = true, backgroundColor = 0xFFF3ECFF, showSystemUi = true)
 @Composable
 fun EditIncomeScreenPreview() {
-    MaterialTheme {
+    FinanceFlowTheme {
         EditIncomeScreen()
     }
 }

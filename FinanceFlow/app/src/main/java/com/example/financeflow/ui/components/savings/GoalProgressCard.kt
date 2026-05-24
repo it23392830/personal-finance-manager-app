@@ -21,17 +21,59 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.financeflow.ui.theme.CardWhite
+import com.example.financeflow.ui.theme.OrangeAccent
 
-// Design Tokens
-private val TextPrimary      = Color(0xFF1A1A2E)
-private val TextSecondary    = Color(0xFF6B7280)
+// Design Tokens - Light Mode
+private val LightTextPrimary      = Color(0xFF1A1A2E)
+private val LightTextSecondary    = Color(0xFF6B7280)
+private val LightCardBg           = Color.White
+private val LightProgressTrack    = Color(0xFFEDE7FF)
+private val LightDaysChipBg       = Color(0xFFF3EDFF)
+private val LightSavingsInfoBg    = Color(0xFFFFFDE7)
+
+// Design Tokens - Dark Mode
+private val DarkTextPrimary       = Color(0xFFE8E8E8)
+private val DarkTextSecondary     = Color(0xFFB0B0B0)
+private val DarkCardBg            = Color(0xFF2A2A3E)
+private val DarkProgressTrack     = Color(0xFF3A3A4E)
+private val DarkDaysChipBg        = Color(0xFF3E3E2A)
+private val DarkSavingsInfoBg     = Color(0xFF3E3E2A)
+
 private val PrimaryPurple    = Color(0xFF7C4DFF)
-private val ProgressTrack    = Color(0xFFEDE7FF)
 private val ProgressFillStart= Color(0xFF7C4DFF)
 private val ProgressFillEnd  = Color(0xFFB39DDB)
-private val DaysChipBg       = Color(0xFFF3EDFF)
-private val SavingsInfoBg    = Color(0xFFFFFDE7)
 private val WarningAmber     = Color(0xFFFF9800)
+
+data class GoalProgressCardColors(
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val cardBg: Color,
+    val progressTrack: Color,
+    val daysChipBg: Color,
+    val savingsInfoBg: Color
+)
+
+private fun getGoalProgressCardColors(isDarkTheme: Boolean): GoalProgressCardColors =
+    if (isDarkTheme) {
+        GoalProgressCardColors(
+            textPrimary = DarkTextPrimary,
+            textSecondary = DarkTextSecondary,
+            cardBg = DarkCardBg,
+            progressTrack = DarkProgressTrack,
+            daysChipBg = DarkDaysChipBg,
+            savingsInfoBg = DarkSavingsInfoBg
+        )
+    } else {
+        GoalProgressCardColors(
+            textPrimary = LightTextPrimary,
+            textSecondary = LightTextSecondary,
+            cardBg = LightCardBg,
+            progressTrack = LightProgressTrack,
+            daysChipBg = LightDaysChipBg,
+            savingsInfoBg = LightSavingsInfoBg
+        )
+    }
 
 // Data models
 
@@ -92,10 +134,12 @@ val dummyGoals: List<SavingGoal> = defaultGoals
 
 @Composable
 fun GoalProgressCard(
+    isDarkTheme: Boolean = false,
     data: GoalProgressData = goalProgressSample(),
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
+    val colors = getGoalProgressCardColors(isDarkTheme)
     var animationPlayed by remember { mutableStateOf(false) }
     val animatedProgress by animateFloatAsState(
         targetValue    = if (animationPlayed) data.progressFraction else 0f,
@@ -114,23 +158,26 @@ fun GoalProgressCard(
                 spotColor    = PrimaryPurple.copy(alpha = 0.14f)
             )
             .clip(RoundedCornerShape(20.dp))
-            .background(CardWhite)
+            .background(colors.cardBg)
             .clickable { onClick() }
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             GoalHeaderRow(
+                isDarkTheme   = isDarkTheme,
                 title         = data.goalTitle,
                 daysRemaining = data.daysRemaining
             )
             GoalAmountRow(
+                isDarkTheme    = isDarkTheme,
                 current        = data.currentAmount,
                 target         = data.targetAmount,
                 currencySymbol = data.currencySymbol,
                 percent        = data.progressPercent
             )
-            GoalProgressBar(progress = animatedProgress)
+            GoalProgressBar(isDarkTheme = isDarkTheme, progress = animatedProgress)
             DailySavingsPanel(
+                isDarkTheme    = isDarkTheme,
                 needed         = data.dailySavingsNeeded,
                 currentRate    = data.currentDailyRate,
                 currencySymbol = data.currencySymbol,
@@ -141,7 +188,8 @@ fun GoalProgressCard(
 }
 
 @Composable
-private fun GoalHeaderRow(title: String, daysRemaining: Int) {
+private fun GoalHeaderRow(isDarkTheme: Boolean = false, title: String, daysRemaining: Int) {
+    val colors = getGoalProgressCardColors(isDarkTheme)
     Row(
         modifier              = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -151,13 +199,13 @@ private fun GoalHeaderRow(title: String, daysRemaining: Int) {
             text  = title,
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
-                color      = TextPrimary,
+                color      = colors.textPrimary,
                 fontSize   = 16.sp
             )
         )
         Surface(
             shape = RoundedCornerShape(50),
-            color = DaysChipBg
+            color = colors.daysChipBg
         ) {
             Text(
                 text     = "$daysRemaining days left",
@@ -174,11 +222,13 @@ private fun GoalHeaderRow(title: String, daysRemaining: Int) {
 
 @Composable
 private fun GoalAmountRow(
+    isDarkTheme: Boolean = false,
     current: Long,
     target: Long,
     currencySymbol: String,
     percent: Float
 ) {
+    val colors = getGoalProgressCardColors(isDarkTheme)
     Row(
         modifier              = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -188,7 +238,7 @@ private fun GoalAmountRow(
             Text(
                 text  = "Current",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color    = TextSecondary,
+                    color    = colors.textSecondary,
                     fontSize = 11.sp
                 )
             )
@@ -196,7 +246,7 @@ private fun GoalAmountRow(
                 text  = "$currencySymbol ${"%,d".format(current)}",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.ExtraBold,
-                    color      = TextPrimary,
+                    color      = colors.textPrimary,
                     fontSize   = 22.sp
                 )
             )
@@ -208,7 +258,7 @@ private fun GoalAmountRow(
             Text(
                 text  = "Target",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color    = TextSecondary,
+                    color    = colors.textSecondary,
                     fontSize = 11.sp
                 )
             )
@@ -225,12 +275,13 @@ private fun GoalAmountRow(
 }
 
 @Composable
-private fun GoalProgressBar(progress: Float) {
+private fun GoalProgressBar(isDarkTheme: Boolean = false, progress: Float) {
+    val colors = getGoalProgressCardColors(isDarkTheme)
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text  = "${"%.1f".format(progress * 100)}% complete",
             style = MaterialTheme.typography.labelSmall.copy(
-                color      = TextSecondary,
+                color      = colors.textSecondary,
                 fontSize   = 11.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -240,7 +291,7 @@ private fun GoalProgressBar(progress: Float) {
                 .fillMaxWidth()
                 .height(10.dp)
                 .clip(RoundedCornerShape(50))
-                .background(ProgressTrack)
+                .background(colors.progressTrack)
         ) {
             Box(
                 modifier = Modifier
@@ -259,16 +310,18 @@ private fun GoalProgressBar(progress: Float) {
 
 @Composable
 private fun DailySavingsPanel(
+    isDarkTheme: Boolean = false,
     needed: Long,
     currentRate: Long,
     currencySymbol: String,
     isOnTrack: Boolean
 ) {
+    val colors = getGoalProgressCardColors(isDarkTheme)
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(SavingsInfoBg)
+            .background(colors.savingsInfoBg)
             .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
         Row(
@@ -280,7 +333,7 @@ private fun DailySavingsPanel(
                 Text(
                     text  = "Daily savings needed",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color    = TextSecondary,
+                        color    = colors.textSecondary,
                         fontSize = 12.sp
                     )
                 )
@@ -288,7 +341,7 @@ private fun DailySavingsPanel(
                     text  = "$currencySymbol ${"%,d".format(needed)}",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color      = TextPrimary,
+                        color      = colors.textPrimary,
                         fontSize   = 18.sp
                     )
                 )
@@ -322,44 +375,47 @@ private fun DailySavingsPanel(
 }
 
 @Composable
-fun SavingsByGoalCard(
+fun GoalProgressListCard(
+    isDarkTheme: Boolean = false,
     goals: List<SavingGoal> = defaultGoals,
     onEditClick: (SavingGoal) -> Unit = {},
     onDeleteClick: (SavingGoal) -> Unit = {}
 ) {
+    val colors = getGoalProgressCardColors(isDarkTheme)
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp)),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite)
+        colors = CardDefaults.cardColors(containerColor = colors.cardBg)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Savings by Goal",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.DarkGray
+                color = colors.textPrimary
             )
             Spacer(modifier = Modifier.height(16.dp))
             if (goals.isEmpty()) {
                 Text(
                     text = "No goals yet. Add one to get started!",
                     fontSize = 13.sp,
-                    color = Color.Gray,
+                    color = colors.textSecondary,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             } else {
                 goals.forEachIndexed { index, goal ->
                     GoalProgressItem(
                         goal = goal,
+                        isDarkTheme = isDarkTheme,
                         onEditClick = { onEditClick(goal) },
                         onDeleteClick = { onDeleteClick(goal) }
                     )
                     if (index < goals.lastIndex) {
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 14.dp),
-                            color = Color(0xFFF0F0F0),
+                            color = colors.progressTrack,
                             thickness = 1.dp
                         )
                     }
@@ -372,10 +428,12 @@ fun SavingsByGoalCard(
 @Composable
 fun GoalProgressItem(
     goal: SavingGoal,
+    isDarkTheme: Boolean = false,
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {}
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
+    val colors = getGoalProgressCardColors(isDarkTheme)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -387,14 +445,14 @@ fun GoalProgressItem(
                 text = goal.name,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.DarkGray,
+                color = colors.textPrimary,
                 modifier = Modifier.weight(1f)
             )
             Text(
                 text = goal.savedAmount,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.DarkGray
+                color = colors.textPrimary
             )
             Spacer(modifier = Modifier.width(4.dp))
             Box {
@@ -405,12 +463,13 @@ fun GoalProgressItem(
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "More options",
-                        tint = Color.Gray,
+                        tint = colors.textSecondary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
 
                 ActionMenuCard(
+                    isDarkTheme = isDarkTheme,
                     expanded = menuExpanded,
                     onDismiss = { menuExpanded = false },
                     onEditClick = {
@@ -431,7 +490,7 @@ fun GoalProgressItem(
                 .fillMaxWidth()
                 .height(8.dp),
             color = OrangeAccent,
-            trackColor = Color(0xFFF0E6D0),
+            trackColor = colors.progressTrack,
             strokeCap = StrokeCap.Round
         )
         Spacer(modifier = Modifier.height(6.dp))
@@ -442,12 +501,12 @@ fun GoalProgressItem(
             Text(
                 text = goal.progressLabel,
                 fontSize = 11.sp,
-                color = Color.Gray
+                color = colors.textSecondary
             )
             Text(
                 text = goal.targetAmount,
                 fontSize = 11.sp,
-                color = Color.Gray
+                color = colors.textSecondary
             )
         }
     }
@@ -465,10 +524,10 @@ private fun GoalProgressCardPreview() {
 
 @Preview(showBackground = true, backgroundColor = 0xFFEDE2FF)
 @Composable
-fun PreviewSavingsByGoalCard() {
+fun PreviewGoalProgressListCard() {
     MaterialTheme {
         Box(modifier = Modifier.padding(16.dp)) {
-            SavingsByGoalCard()
+            GoalProgressListCard()
         }
     }
 }

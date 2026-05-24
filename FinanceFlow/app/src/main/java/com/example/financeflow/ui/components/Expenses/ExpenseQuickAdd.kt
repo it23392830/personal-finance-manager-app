@@ -18,15 +18,18 @@ import com.example.financeflow.ui.theme.FinanceFlowTheme
 
 @Composable
 fun ExpenseQuickAdd(
+    isDarkTheme: Boolean = false,
     recentCategoryIds: List<String>,
     onCategoryClick: (categoryId: String) -> Unit,
     onCustomClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(isDarkTheme)
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = ExpenseColors.CardBg),
+        colors = CardDefaults.cardColors(containerColor = colors.CardBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -37,12 +40,18 @@ fun ExpenseQuickAdd(
             ) {
                 Text(
                     "Quick Add",
-                    fontSize = 16.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ExpenseColors.TextPrimary
+                    color = colors.TextPrimary
                 )
-                TextButton(onClick = onCustomClick) {
-                    Text("Custom", color = ExpenseColors.HeaderRed, fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = onCustomClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.HeaderRed),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Text("+ Add Expenses", fontSize = 12.sp, color = androidx.compose.ui.graphics.Color.White)
                 }
             }
 
@@ -58,6 +67,7 @@ fun ExpenseQuickAdd(
                     ) {
                         rowItems.forEach { cat ->
                             CategoryQuickItem(
+                                isDarkTheme = isDarkTheme,
                                 category = cat,
                                 onClick = { onCategoryClick(cat.id) },
                                 modifier = Modifier.weight(1f)
@@ -79,7 +89,7 @@ fun ExpenseQuickAdd(
                     "Recently Used",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = ExpenseColors.TextMuted
+                    color = colors.TextMuted
                 )
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -87,7 +97,7 @@ fun ExpenseQuickAdd(
                         val cat = getCat(id)
                         Surface(
                             onClick = { onCategoryClick(id) },
-                            color = ExpenseColors.SurfaceGrey,
+                            color = colors.SurfaceGrey,
                             shape = RoundedCornerShape(99.dp)
                         ) {
                             Row(
@@ -96,7 +106,7 @@ fun ExpenseQuickAdd(
                             ) {
                                 Text(cat.emoji, fontSize = 14.sp)
                                 Spacer(Modifier.width(4.dp))
-                                Text(cat.label, fontSize = 12.sp, color = ExpenseColors.TextPrimary)
+                                Text(cat.label, fontSize = 12.sp, color = colors.TextPrimary)
                             }
                         }
                     }
@@ -110,8 +120,10 @@ fun ExpenseQuickAdd(
 private fun CategoryQuickItem(
     category: CategoryDef,
     onClick: () -> Unit,
+    isDarkTheme: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val colors = getExpensesColors(isDarkTheme)
     Column(
         modifier = modifier.clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -128,7 +140,7 @@ private fun CategoryQuickItem(
         Text(
             text = category.label,
             fontSize = 11.sp,
-            color = ExpenseColors.TextPrimary,
+            color = colors.TextPrimary,
             textAlign = TextAlign.Center,
             maxLines = 1
         )

@@ -66,6 +66,7 @@ fun DashboardScreen(
         ) {
             composable(Routes.HOME) {
                 HomeScreen(
+                    isDarkTheme = isDarkTheme,
                     onAddIncomeClick = { rootNavController.navigate(Routes.ADD_INCOME) },
                     onAddExpenseClick = { navController.navigate(Routes.EXPENSES) },
                     onIncomeClick = { navController.navigate(Routes.INCOME) },
@@ -79,19 +80,23 @@ fun DashboardScreen(
             }
 
             composable(Routes.INCOME) {
-                IncomeScreen(navController = rootNavController)
+                IncomeScreen(isDarkTheme = isDarkTheme, navController = rootNavController)
             }
 
             composable(Routes.EXPENSES) {
-                ExpensesScreen()
+                ExpensesScreen(
+                    isDarkTheme = isDarkTheme,
+                    onAddExpenseClick = { navController.navigate(Routes.EXPENSES) }
+                )
             }
 
             composable(Routes.SAVINGS) {
-                SavingsScreen(navController = rootNavController)
+                SavingsScreen(isDarkTheme = isDarkTheme, navController = rootNavController)
             }
 
             composable(Routes.GOALS) {
                 GoalsScreen(
+                    isDarkTheme = isDarkTheme,
                     onNavigateToDetail = { goalId ->
                         rootNavController.navigate("goal_detail/$goalId")
                     }
@@ -100,6 +105,7 @@ fun DashboardScreen(
 
             composable(Routes.INSIGHTS) {
                 InsightsScreen(
+                    isDarkTheme = isDarkTheme,
                     onViewReports = { navController.navigate(Routes.DAILY_REPORT) }
                 )
             }
@@ -119,16 +125,21 @@ fun DashboardScreen(
 
             composable(Routes.GOAL_DETAILS) {
                 GoalDetailsScreen(
+                    isDarkTheme = isDarkTheme,
                     onAddContribution = { navController.navigate(Routes.ADD_SAVING) }
                 )
             }
 
             composable(Routes.ADD_SAVING) {
-                AddSavingScreen(onNavigateBack = { navController.popBackStack() })
+                AddSavingScreen(
+                    isDarkTheme = isDarkTheme,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
 
             composable(Routes.DAILY_REPORT) {
                 DailyReportScreen(
+                    isDarkTheme = isDarkTheme,
                     onNavigateUp = { navController.popBackStack() },
                     onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
                     onTabSelected = { tab ->
@@ -146,6 +157,7 @@ fun DashboardScreen(
 
             composable(Routes.WEEKLY_REPORT) {
                 WeeklyReportScreen(
+                    isDarkTheme = isDarkTheme,
                     onNavigateUp = { navController.popBackStack() },
                     onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
                     onTabSelected = { tab ->
@@ -163,6 +175,7 @@ fun DashboardScreen(
 
             composable(Routes.MONTHLY_REPORT) {
                 MonthlyReportScreen(
+                    isDarkTheme = isDarkTheme,
                     onNavigateUp = { navController.popBackStack() },
                     onClose = { navController.popBackStack(Routes.INSIGHTS, false) },
                     onTabSelected = { tab ->

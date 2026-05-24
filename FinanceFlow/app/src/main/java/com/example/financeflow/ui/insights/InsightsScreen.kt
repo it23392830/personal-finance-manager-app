@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.*
+import com.example.financeflow.ui.components.insights.getInsightsColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,13 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.example.financeflow.ui.components.insights.*
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
-private val BgPurple      = Color(0xFFF3ECFF)
-private val PrimaryPurple = Color(0xFF8B5CF6)
-private val CardWhite     = Color(0xFFFFFFFF)
-private val TextDark      = Color(0xFF1E1B2E)
-private val TextMuted     = Color(0xFF9CA3AF)
-private val DayDetailBg   = Color(0xFFE8F4FD)   // light blue info card
-private val IncomeGreen   = Color(0xFF22C55E)
+ // Colors are provided by getInsightsColors(isDarkTheme)
 
 // ─── Fake day detail data ─────────────────────────────────────────────────────
 private data class DayDetail(
@@ -90,6 +85,7 @@ private val fakeDayDetails: Map<Int, DayDetail> = mapOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsightsScreen(
+    isDarkTheme: Boolean = false,
     onViewReports: () -> Unit = {},
     onNavigateUp: () -> Unit = {}
 ) {
@@ -98,9 +94,10 @@ fun InsightsScreen(
     val dayDetail = selectedDay?.let { fakeDayDetails[it] }
 
     val scrollState = rememberScrollState()
+    val colors = getInsightsColors(isDarkTheme)
 
     Scaffold(
-        containerColor = BgPurple,
+        containerColor = colors.BgPurple,
         topBar = {
             TopAppBar(
                 title = {
@@ -109,12 +106,12 @@ fun InsightsScreen(
                             text = "Financial Insights",
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 20.sp,
-                            color = PrimaryPurple
+                            color = colors.PrimaryPurple
                         )
                         Text(
                             text = "Understand your money habits",
                             fontSize = 12.sp,
-                            color = TextMuted
+                            color = colors.TextMuted
                         )
                     }
                 },
@@ -123,11 +120,11 @@ fun InsightsScreen(
                         Icon(
                             imageVector = Icons.Default.BarChart,
                             contentDescription = "Reports",
-                            tint = PrimaryPurple
+                            tint = colors.PrimaryPurple
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BgPurple)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.BgPurple)
             )
         }
     ) { innerPadding ->
@@ -150,7 +147,7 @@ fun InsightsScreen(
                     .height(50.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryPurple,
+                    containerColor = colors.PrimaryPurple,
                     contentColor = Color.White
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
@@ -164,6 +161,7 @@ fun InsightsScreen(
 
             // ── Activity Calendar ─────────────────────────────────────────────
             CalendarCard(
+                isDarkTheme = isDarkTheme,
                 month = "May 2026",
                 startDayOffset = 5,        // May 2026 starts on Friday
                 days = sampleMay2026Days,
@@ -173,11 +171,12 @@ fun InsightsScreen(
 
             // ── Day detail card (appears after a day is selected) ─────────────
             if (dayDetail != null) {
-                DayDetailCard(detail = dayDetail)
+                DayDetailCard(detail = dayDetail, colors)
             }
 
             // ── Financial Health Score ────────────────────────────────────────
             FinancialHealthCard(
+                isDarkTheme = isDarkTheme,
                 score = 23,
                 label = "Good – Keep Improving!",
                 savingsRate = "28.8%",
@@ -188,20 +187,20 @@ fun InsightsScreen(
             // ── Smart Insights ────────────────────────────────────────────────
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = CardWhite,
+                color = colors.CardWhite,
                 shadowElevation = 4.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(modifier = Modifier.padding(16.dp)) {
-                    SmartInsightsSection()
+                    SmartInsightsSection(isDarkTheme = isDarkTheme)
                 }
             }
 
             // ── Expense Breakdown ─────────────────────────────────────────────
-            ExpenseBreakdownCard()
+            ExpenseBreakdownCard(isDarkTheme = isDarkTheme)
 
             // ── Monthly Comparison ────────────────────────────────────────────
-            MonthlyComparisonCard()
+            MonthlyComparisonCard(isDarkTheme = isDarkTheme)
 
             Spacer(Modifier.height(16.dp))
         }
@@ -215,13 +214,13 @@ fun InsightsScreen(
  * Matches the Figma design with dayName, monthDay, and three entry counts.
  */
 @Composable
-private fun DayDetailCard(detail: DayDetail) {
+private fun DayDetailCard(detail: DayDetail, colors: InsightsColors) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(DayDetailBg)
-            .border(1.dp, PrimaryPurple.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
+            .background(colors.DayDetailBg)
+            .border(1.dp, colors.PrimaryPurple.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
             .padding(16.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -231,25 +230,25 @@ private fun DayDetailCard(detail: DayDetail) {
                 text = "${detail.dayName}  ${detail.monthDay}",
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = TextDark
+                color = colors.TextDark
             )
 
-            HorizontalDivider(color = PrimaryPurple.copy(alpha = 0.15f))
+            HorizontalDivider(color = colors.PrimaryPurple.copy(alpha = 0.15f))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                DayEntryChip("Income",   detail.incomeEntries,  IncomeGreen)
-                DayEntryChip("Expenses", detail.expenseEntries, Color(0xFFEF4444))
-                DayEntryChip("Savings",  detail.savingsEntries, PrimaryPurple)
+                DayEntryChip("Income",   detail.incomeEntries,  colors.IncomeGreen, colors)
+                DayEntryChip("Expenses", detail.expenseEntries, Color(0xFFEF4444), colors)
+                DayEntryChip("Savings",  detail.savingsEntries, colors.PrimaryPurple, colors)
             }
         }
     }
 }
 
 @Composable
-private fun DayEntryChip(label: String, count: Int, color: Color) {
+private fun DayEntryChip(label: String, count: Int, color: Color, colors: InsightsColors) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "$count ${if (count == 1) "entry" else "entries"}",
@@ -257,7 +256,7 @@ private fun DayEntryChip(label: String, count: Int, color: Color) {
             fontSize = 14.sp,
             color = color
         )
-        Text(text = label, fontSize = 11.sp, color = TextMuted)
+        Text(text = label, fontSize = 11.sp, color = colors.TextMuted)
     }
 }
 

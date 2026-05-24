@@ -118,6 +118,7 @@ fun AppNavGraph(
 
         composable(Routes.ADD_INCOME) {
             AddIncomeScreen(
+                isDarkTheme = isDarkTheme,
                 onAddIncome = { _, _, _, _, _, _ -> navController.popBackStack() },
                 onNavigateUp = { navController.popBackStack() }
             )
@@ -130,6 +131,7 @@ fun AppNavGraph(
             val incomeId = backStackEntry.arguments?.getString("incomeId") ?: ""
             EditIncomeScreen(
                 incomeId = incomeId,
+                isDarkTheme = isDarkTheme,
                 onCancel = { navController.popBackStack() },
                 onSaveChanges = { _, _, _, _, _, _ -> navController.popBackStack() }
             )
@@ -142,6 +144,7 @@ fun AppNavGraph(
             val incomeId = backStackEntry.arguments?.getString("incomeId") ?: ""
             DeleteIncomeScreen(
                 incomeId = incomeId,
+                isDarkTheme = isDarkTheme,
                 onCancel = { navController.popBackStack() },
                 onConfirmDelete = { navController.popBackStack() }
             )

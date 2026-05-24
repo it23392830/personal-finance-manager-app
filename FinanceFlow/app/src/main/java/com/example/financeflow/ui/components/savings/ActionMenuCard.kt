@@ -1,5 +1,6 @@
 package com.example.financeflow.ui.components.savings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,18 +22,22 @@ private val ActionMenuDeleteRed = Color(0xFFEF4444)
 
 @Composable
 fun ActionMenuCard(
+    isDarkTheme: Boolean = false,
     expanded: Boolean,
     onDismiss: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
+    val colors = getSavingsColors(isDarkTheme)
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismiss,
         modifier = Modifier.width(136.dp)
     ) {
         Column(
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier
+                .background(colors.cardBg)
+                .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(

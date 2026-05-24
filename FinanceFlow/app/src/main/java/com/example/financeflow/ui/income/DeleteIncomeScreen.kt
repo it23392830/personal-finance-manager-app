@@ -17,7 +17,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.example.financeflow.viewmodel.income.IncomeViewModel
-import com.example.financeflow.model.Income
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,26 +29,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ─── Theme Colors ─────────────────────────────────────────────────────────────
-private val BgPurple       = Color(0xFFF3ECFF)
-private val PrimaryPurple   = Color(0xFF8B5CF6)
-private val CardWhite       = Color(0xFFFFFFFF)
-private val TextDark        = Color(0xFF1E1B2E)
-private val TextMuted       = Color(0xFF6B7280)
-private val DeleteRed       = Color(0xFFEF4444)
-private val DeleteRedBg     = Color(0xFFFFEEEE)
-private val CancelGray      = Color(0xFF9CA3AF)
-private val CancelGrayBg    = Color(0xFFF3F4F6)
-private val IconBgRed       = Color(0xFFFFE4E4)
-private val IncomeGreen     = Color(0xFF22C55E)
-private val DividerColor    = Color(0xFFE9E2FF)
-
 /**
  * DeleteIncomeScreen
  *
  * Displays a centred warning card asking the user to confirm deletion of
  * an income record. Uses sample/fake data by default for Preview.
  *
+ * @param incomeId       The ID of the income record being deleted.
+ * @param isDarkTheme    Whether the UI should render in dark mode.
  * @param incomeSource   Label of the income source being deleted.
  * @param incomeAmount   Formatted amount string (e.g. "LKR 135,000.00").
  * @param incomeDate     Formatted date string.
@@ -60,6 +47,7 @@ private val DividerColor    = Color(0xFFE9E2FF)
 @Composable
 fun DeleteIncomeScreen(
     incomeId: String = "",
+    isDarkTheme: Boolean = false,
     incomeSource: String    = "Salary",
     incomeAmount: String    = "LKR 135,000.00",
     incomeDate: String      = "05/05/2026",
@@ -68,14 +56,15 @@ fun DeleteIncomeScreen(
 ) {
     val viewModel: IncomeViewModel = hiltViewModel()
     val scope = rememberCoroutineScope()
+    val colors = getIncomeFormColors(isDarkTheme)
     // Controls the spring-in animation of the warning card
     var cardVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { cardVisible = true }
 
     Scaffold(
-        containerColor = BgPurple,
+        containerColor = colors.background,
         topBar = {
-            IncomeTopBar(title = "Delete Income", onNavigateUp = onCancel)
+            IncomeTopBar(title = "Delete Income", onNavigateUp = onCancel, isDarkTheme = isDarkTheme)
         }
     ) { innerPadding ->
 
@@ -98,15 +87,15 @@ fun DeleteIncomeScreen(
             ) {
                 Surface(
                     shape = RoundedCornerShape(24.dp),
-                    color = CardWhite,
+                    color = colors.cardBg,
                     tonalElevation = 0.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .shadow(
                             elevation    = 12.dp,
                             shape        = RoundedCornerShape(24.dp),
-                            ambientColor = DeleteRed.copy(alpha = 0.10f),
-                            spotColor    = DeleteRed.copy(alpha = 0.15f)
+                            ambientColor = Color(0xFFEF4444).copy(alpha = 0.10f),
+                            spotColor    = Color(0xFFEF4444).copy(alpha = 0.15f)
                         )
                 ) {
                     Column(
@@ -120,13 +109,13 @@ fun DeleteIncomeScreen(
                             modifier = Modifier
                                 .size(72.dp)
                                 .clip(CircleShape)
-                                .background(IconBgRed),
+                                .background(Color(0xFFFFE4E4)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.DeleteForever,
                                 contentDescription = "Delete warning",
-                                tint   = DeleteRed,
+                                tint   = Color(0xFFEF4444),
                                 modifier = Modifier.size(36.dp)
                             )
                         }
@@ -136,14 +125,14 @@ fun DeleteIncomeScreen(
                             text       = "Delete Income Entry?",
                             fontSize   = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color      = TextDark,
+                            color      = colors.textPrimary,
                             textAlign  = TextAlign.Center
                         )
 
                         // ── Record summary card ───────────────────────────────
                         Surface(
                             shape = RoundedCornerShape(14.dp),
-                            color = BgPurple,
+                            color = colors.fieldBg,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(
@@ -153,20 +142,23 @@ fun DeleteIncomeScreen(
                                 DeleteInfoRow(
                                     icon  = Icons.Default.Work,
                                     label = "Income Source",
-                                    value = incomeSource
+                                    value = incomeSource,
+                                    isDarkTheme = isDarkTheme
                                 )
-                                HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                                HorizontalDivider(color = colors.divider, thickness = 1.dp)
                                 DeleteInfoRow(
                                     icon  = Icons.Default.AttachMoney,
                                     label = "Amount",
                                     value = incomeAmount,
-                                    valueColor = IncomeGreen
+                                    valueColor = colors.success,
+                                    isDarkTheme = isDarkTheme
                                 )
-                                HorizontalDivider(color = DividerColor, thickness = 1.dp)
+                                HorizontalDivider(color = colors.divider, thickness = 1.dp)
                                 DeleteInfoRow(
                                     icon  = Icons.Default.CalendarMonth,
                                     label = "Date",
-                                    value = incomeDate
+                                    value = incomeDate,
+                                    isDarkTheme = isDarkTheme
                                 )
                             }
                         }
@@ -176,7 +168,7 @@ fun DeleteIncomeScreen(
                             text      = "Are you sure you want to delete this income record? " +
                                     "This action cannot be undone.",
                             fontSize  = 14.sp,
-                            color     = TextMuted,
+                            color     = colors.textMuted,
                             textAlign = TextAlign.Center,
                             lineHeight = 20.sp
                         )
@@ -200,7 +192,7 @@ fun DeleteIncomeScreen(
                                     .height(50.dp),
                                 shape = RoundedCornerShape(14.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = DeleteRed,
+                                    containerColor = Color(0xFFEF4444),
                                     contentColor   = Color.White
                                 ),
                                 elevation = ButtonDefaults.buttonElevation(
@@ -221,7 +213,7 @@ fun DeleteIncomeScreen(
                                 )
                             }
 
-                            // Cancel – gray outlined / soft
+                            // Cancel – Soft Primary
                             Button(
                                 onClick = onCancel,
                                 modifier = Modifier
@@ -229,7 +221,7 @@ fun DeleteIncomeScreen(
                                     .height(50.dp),
                                 shape = RoundedCornerShape(14.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = PrimaryPurple,
+                                    containerColor = colors.primary,
                                     contentColor   = Color.White
                                 ),
                                 elevation = ButtonDefaults.buttonElevation(
@@ -250,23 +242,18 @@ fun DeleteIncomeScreen(
     }
 }
 
-// ─── Reusable row: icon + label + value ──────────────────────────────────────
-
 /**
  * A single information row inside the record-summary card.
- *
- * @param icon       Leading Material icon.
- * @param label      Grey descriptor text (e.g. "Amount").
- * @param value      Bold value text (e.g. "LKR 135,000.00").
- * @param valueColor Optional colour override for the value text.
  */
 @Composable
 private fun DeleteInfoRow(
     icon: ImageVector,
     label: String,
     value: String,
-    valueColor: Color = TextDark
+    valueColor: Color = Color.Unspecified,
+    isDarkTheme: Boolean = false
 ) {
+    val colors = getIncomeFormColors(isDarkTheme)
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -280,13 +267,13 @@ private fun DeleteInfoRow(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = PrimaryPurple,
+                tint = colors.primary,
                 modifier = Modifier.size(18.dp)
             )
             Text(
                 text     = label,
                 fontSize = 13.sp,
-                color    = TextMuted
+                color    = colors.textMuted
             )
         }
 
@@ -295,12 +282,10 @@ private fun DeleteInfoRow(
             text       = value,
             fontSize   = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color      = valueColor
+            color      = if (valueColor == Color.Unspecified) colors.textPrimary else valueColor
         )
     }
 }
-
-// ─── Preview ──────────────────────────────────────────────────────────────────
 
 @Preview(showBackground = true, backgroundColor = 0xFFF3ECFF, showSystemUi = true)
 @Composable
