@@ -17,6 +17,7 @@ import com.example.financeflow.ui.auth.RegisterScreen
 import com.example.financeflow.ui.auth.SplashScreen
 import com.example.financeflow.ui.auth.WelcomeScreen
 import com.example.financeflow.ui.dashboard.DashboardScreen
+import com.example.financeflow.ui.expenses.AddExpenseScreen
 import com.example.financeflow.ui.goals.GoalDetailScreen
 import com.example.financeflow.ui.income.AddIncomeScreen
 import com.example.financeflow.ui.income.DeleteIncomeScreen
@@ -29,9 +30,7 @@ import com.example.financeflow.ui.savings.GoalDetailsScreen
 @Composable
 fun AppNavGraph(
     isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit,
-    openStreakOnLaunch: Boolean = false,
-    onStreakLaunchHandled: () -> Unit = {}
+    onThemeToggle: () -> Unit
 ) {
     val navController = rememberNavController()
     val topPadding = WindowInsets.systemBars.asPaddingValues().calculateTopPadding()
@@ -115,9 +114,7 @@ fun AppNavGraph(
             DashboardScreen(
                 rootNavController = navController,
                 isDarkTheme = isDarkTheme,
-                onThemeToggle = onThemeToggle,
-                openStreakOnLaunch = openStreakOnLaunch,
-                onStreakLaunchHandled = onStreakLaunchHandled
+                onThemeToggle = onThemeToggle
             )
         }
 
@@ -191,6 +188,13 @@ fun AppNavGraph(
 
         composable(Routes.ADD_SAVING) {
             AddSavingScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.ADD_EXPENSE) {
+            AddExpenseScreen(
+                isDarkTheme = isDarkTheme,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }

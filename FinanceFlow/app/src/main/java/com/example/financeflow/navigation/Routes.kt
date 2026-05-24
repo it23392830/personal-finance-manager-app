@@ -13,9 +13,9 @@ object Routes {
     const val SAVINGS = "savings"
     const val GOALS = "goals"
     const val INSIGHTS = "insights"
-    const val STREAK = "streak"
     const val DASHBOARD = "dashboard"
 
+    const val ADD_EXPENSE = "add_expense"
     const val ADD_SAVING = "add_saving"
     const val GOAL_DETAILS = "goal_details"
     const val PROFILE = "profile"
