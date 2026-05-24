@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">Penny-Pilot</string>
+    <string name="streak_widget_title">Finance Streak</string>
+    <string name="streak_widget_motivation">Consistency is key!</string>
+    <string name="streak_widget_footer">Tap to track your progress</string>
+    <string name="streak_widget_current_label">CURRENT</string>
+    <string name="streak_widget_current_value">12 Days</string>
+    <string name="streak_widget_freeze_label">FREEZE</string>
+    <string name="streak_widget_freeze_value">2 Left</string>
+    <string name="streak_widget_best_label">BEST</string>
+    <string name="streak_widget_best_value">24 Days</string>
+    <string name="streak_widget_consistency_label">CONSISTENCY</string>
+    <string name="streak_widget_consistency_value">92%</string>
 </resources>

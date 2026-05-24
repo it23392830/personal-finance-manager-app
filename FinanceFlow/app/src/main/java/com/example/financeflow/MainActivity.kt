@@ -28,4 +28,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    companion object {
+        const val EXTRA_OPEN_STREAK_WIDGET = "extra_open_streak_widget"
+    }
 }
