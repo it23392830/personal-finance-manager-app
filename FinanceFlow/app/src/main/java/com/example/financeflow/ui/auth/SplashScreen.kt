@@ -60,8 +60,10 @@ fun SplashScreen(
         val isRemembered = viewModel.rememberMe.value
 
         if (isAuth && isRemembered) {
+            // Case 1: SplashScreen -> WelcomeScreen -> HomeScreen
             onNavigateToHome()
         } else {
+            // Case 2: SplashScreen -> LoginScreen
             // Stale or unremembered sessions are cleared
             if (isAuth) {
                 viewModel.logout()

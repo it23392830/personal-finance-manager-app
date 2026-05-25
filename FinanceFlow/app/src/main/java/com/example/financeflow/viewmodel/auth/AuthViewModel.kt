@@ -3,6 +3,7 @@ package com.example.financeflow.viewmodel.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.financeflow.repository.auth.AuthRepository
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,11 +50,15 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             
-            // Set remember me preference locally
-            repository.setRememberMe(remember)
-            
             val result = repository.login(email, password)
             if (result.isSuccess) {
+                // If login successful, handle Remember Me
+                if (remember) {
+                    val user = FirebaseAuth.getInstance().currentUser
+                    repository.setRememberMe(true, user?.uid ?: "", email)
+                } else {
+                    repository.clearRememberMe()
+                }
                 _uiState.update { it.copy(isLoading = false, isSuccess = true) }
             } else {
                 val errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Login failed"

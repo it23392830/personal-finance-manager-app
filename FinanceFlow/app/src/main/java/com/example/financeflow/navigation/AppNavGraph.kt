@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -46,8 +47,22 @@ fun AppNavGraph(
             SplashScreen(
                 onNavigateToLogin = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.SPLASH) { inclusive = true }
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onNavigateToHome = {
+                    navController.navigate(Routes.WELCOME) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
                     }
                 }
             )
@@ -57,17 +72,29 @@ fun AppNavGraph(
             LoginScreen(
                 onNext = {
                     navController.navigate(Routes.WELCOME) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
                     }
                 },
                 onForgotPassword = {
                     navController.navigate(Routes.FORGOT_PASSWORD) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
                     }
                 },
                 onRegister = {
                     navController.navigate(Routes.REGISTER) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
                     }
                 }
             )
@@ -77,14 +104,20 @@ fun AppNavGraph(
             RegisterScreen(
                 onNext = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.REGISTER) { inclusive = true }
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
                     }
                 },
                 onLoginClick = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.REGISTER) { inclusive = true }
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
                     }
                 }
             )
@@ -94,8 +127,11 @@ fun AppNavGraph(
             ForgotPasswordScreen(
                 onVerify = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.FORGOT_PASSWORD) { inclusive = true }
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
                     }
                 }
             )
@@ -105,7 +141,9 @@ fun AppNavGraph(
             WelcomeScreen(
                 onNavigateToHome = {
                     navController.navigate(Routes.DASHBOARD) {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(Routes.WELCOME) {
+                            inclusive = true
+                        }
                         launchSingleTop = true
                     }
                 }
@@ -172,7 +210,15 @@ fun AppNavGraph(
                 isDarkTheme = isDarkTheme,
                 onThemeToggle = onThemeToggle,
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToLogout = { navController.navigate(Routes.LOGOUT) }
+                onNavigateToLogout = { 
+                    navController.navigate(Routes.LOGOUT) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
         }
 
@@ -183,8 +229,12 @@ fun AppNavGraph(
                 onNavigateBack = { navController.popBackStack() },
                 onAccountDeleted = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
                     }
                 }
             )
@@ -192,7 +242,15 @@ fun AppNavGraph(
 
         composable(Routes.GOAL_DETAILS) {
             GoalDetailsScreen(
-                onAddContribution = { navController.navigate(Routes.ADD_SAVING) }
+                onAddContribution = { 
+                    navController.navigate(Routes.ADD_SAVING) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
         }
 
