@@ -1,6 +1,4 @@
-package com.example.financeflow.ui.savings
-
-import com.example.financeflow.ui.components.savings.getSavingsColors
+package com.example.financeflow.ui.components.savings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,8 +18,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.financeflow.model.Goal
 import com.example.financeflow.model.Saving
-import com.example.financeflow.model.SavingGoal
 import com.example.financeflow.ui.components.savings.ContributionHistoryList
 import com.example.financeflow.ui.components.savings.ContributionEntry
 import com.example.financeflow.viewmodel.savings.SavingsViewModel
@@ -51,7 +49,7 @@ fun GoalDetailsScreen(
     val savings by viewModel.savings.collectAsState()
     val selectedGoal = goals.firstOrNull()
     val goalSavings = selectedGoal?.let { goal ->
-        savings.filter { it.goalName == goal.goalName }
+        savings.filter { it.goalName == goal.title }
     }.orEmpty()
 
     LazyColumn(
@@ -69,10 +67,10 @@ fun GoalDetailsScreen(
         item {
             GoalInfoCard(
                 isDarkTheme = isDarkTheme,
-                goalName = selectedGoal?.goalName ?: "No goal selected",
-                currentAmount = (selectedGoal?.currentAmount ?: 0.0).toLkr(),
+                goalName = selectedGoal?.title ?: "No goal selected",
+                currentAmount = (selectedGoal?.currentSavedAmount ?: 0.0).toLkr(),
                 savedAmount = goalSavings.sumOf { it.amountSaved }.toLkr(),
-                progress = selectedGoal?.safeProgress() ?: 0f
+                progress = (selectedGoal?.progressPercentage?.div(100.0))?.toFloat() ?: 0f
             )
         }
 
@@ -96,15 +94,6 @@ fun GoalDetailsScreen(
                 entries = goalSavings.map { it.toContributionEntry() }
             )
         }
-    }
-}
-
-/** Calculates a display-safe goal progress fraction. */
-private fun SavingGoal.safeProgress(): Float {
-    return if (targetAmount > 0.0) {
-        (currentAmount / targetAmount).toFloat().coerceIn(0f, 1f)
-    } else {
-        progress.coerceIn(0f, 1f)
     }
 }
 

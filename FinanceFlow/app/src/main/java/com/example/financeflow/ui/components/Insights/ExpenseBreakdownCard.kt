@@ -37,22 +37,12 @@ data class BreakdownItem(val label: String, val amount: String)
 @Composable
 fun ExpenseBreakdownCard(
     isDarkTheme: Boolean = false,
-    mustTotal: String = "Rs52,000",
-    mustPct: String = "43% of total",
-    optionalTotal: String = "Rs68,400",
-    optionalPct: String = "57% of total",
-    mustItems: List<BreakdownItem> = listOf(
-        BreakdownItem("Rent",          "LKR 34,000"),
-        BreakdownItem("Utilities",     "LKR 8,500"),
-        BreakdownItem("Subscriptions", "LKR 5,200"),
-        BreakdownItem("Internet",      "LKR 4,300")
-    ),
-    optionalItems: List<BreakdownItem> = listOf(
-        BreakdownItem("Food & Dining",  "LKR 28,400"),
-        BreakdownItem("Transport",      "LKR 18,600"),
-        BreakdownItem("Entertainment",  "LKR 12,900"),
-        BreakdownItem("Shopping",       "LKR 8,500")
-    )
+    mustTotal: String,
+    mustPct: String,
+    optionalTotal: String,
+    optionalPct: String,
+    mustItems: List<BreakdownItem>,
+    optionalItems: List<BreakdownItem>
 ) {
     val colors = getInsightsColors(isDarkTheme)
     Surface(
@@ -172,7 +162,22 @@ private fun BreakdownSection(
 @Preview(showBackground = true, backgroundColor = 0xFFF3ECFF)
 @Composable
 fun ExpenseBreakdownCardPreview() {
+    val mustItems = listOf(
+        BreakdownItem("Rent", "LKR 34,000"),
+        BreakdownItem("Utilities", "LKR 8,500")
+    )
+    val optionalItems = listOf(
+        BreakdownItem("Food & Dining", "LKR 28,400"),
+        BreakdownItem("Transport", "LKR 18,600")
+    )
     Box(modifier = Modifier.padding(16.dp)) {
-        ExpenseBreakdownCard()
+        ExpenseBreakdownCard(
+            mustTotal = "LKR 52,000",
+            mustPct = "43% of total",
+            optionalTotal = "LKR 68,400",
+            optionalPct = "57% of total",
+            mustItems = mustItems,
+            optionalItems = optionalItems
+        )
     }
 }

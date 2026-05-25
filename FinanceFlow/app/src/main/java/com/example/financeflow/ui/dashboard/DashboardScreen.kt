@@ -31,8 +31,8 @@ import com.example.financeflow.ui.insights.WeeklyReportScreen
 import com.example.financeflow.ui.notifications.NotificationScreen
 import com.example.financeflow.ui.profile.LogoutScreen
 import com.example.financeflow.ui.profile.ProfileScreen
+import com.example.financeflow.ui.components.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.AddSavingScreen
-import com.example.financeflow.ui.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.SavingsScreen
 import com.example.financeflow.ui.streak.Streak.StreakScreen
 import com.example.financeflow.presentation.viewmodel.StreakViewModel
@@ -98,6 +98,7 @@ fun DashboardScreen(
                     onExpensesClick = { navController.navigate(Routes.EXPENSES) },
                     onSavingsClick = { navController.navigate(Routes.SAVINGS) },
                     onGoalCardClick = { navController.navigate(Routes.GOALS) },
+                    onViewInsightsClick = { navController.navigate(Routes.INSIGHTS) },
                     onStreakClick = { navController.navigate(Routes.STREAK) },
                     onThemeClick = onThemeToggle,
                     onProfileClick = { navController.navigate(Routes.PROFILE) },

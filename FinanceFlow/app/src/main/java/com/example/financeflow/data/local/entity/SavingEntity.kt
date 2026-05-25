@@ -13,6 +13,7 @@ import androidx.room.PrimaryKey
 data class SavingEntity(
     @PrimaryKey val id: String,
     val userId: String = "",
+    val goalId: String = "",
     val amountSaved: Double = 0.0,
     val totalIncome: Double = 0.0,
     val savingRate: Double = 0.0,

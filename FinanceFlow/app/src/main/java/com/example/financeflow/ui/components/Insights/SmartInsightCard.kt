@@ -32,6 +32,14 @@ enum class InsightType {
     NEUTRAL    // blue – informational
 }
 
+data class InsightItem(
+    val type: InsightType,
+    val icon: ImageVector,
+    val title: String,
+    val body: String,
+    val actionText: String? = null
+)
+
 private fun InsightType.borderColor() = when (this) {
     InsightType.POSITIVE -> Color(0xFF22C55E)
     InsightType.WARNING  -> Color(0xFFF59E0B)
@@ -132,7 +140,10 @@ fun SmartInsightCard(
 
 /** Three smart insight cards matching the Figma design */
 @Composable
-fun SmartInsightsSection(isDarkTheme: Boolean = false) {
+fun SmartInsightsSection(
+    isDarkTheme: Boolean = false,
+    items: List<InsightItem>
+) {
     val colors = getInsightsColors(isDarkTheme)
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
@@ -143,32 +154,16 @@ fun SmartInsightsSection(isDarkTheme: Boolean = false) {
             color = colors.TextDark
         )
 
-        SmartInsightCard(
-            type       = InsightType.POSITIVE,
-            icon       = Icons.Default.CheckCircle,
-            title      = "Strong Savings Habit",
-            body       = "You've allocated 28% of income to savings this month – exceeding the recommended 20% target.",
-            actionText = "Keep It Up !",
-            isDarkTheme = isDarkTheme
-        )
-
-        SmartInsightCard(
-            type       = InsightType.WARNING,
-            icon       = Icons.Default.Warning,
-            title      = "Optional Budget Usage High",
-            body       = "You've used 83% of your optional budget. Consider reducing discretionary spending.",
-            actionText = "Review optional expenses",
-            isDarkTheme = isDarkTheme
-        )
-
-        SmartInsightCard(
-            type       = InsightType.NEUTRAL,
-            icon       = Icons.Default.TrendingDown,
-            title      = "Must Expenses Stable",
-            body       = "Your essential expenses have remained consistent at LKR 52,000/month for 4 months.",
-            actionText = "Good control!",
-            isDarkTheme = isDarkTheme
-        )
+        items.forEach { item ->
+            SmartInsightCard(
+                type = item.type,
+                icon = item.icon,
+                title = item.title,
+                body = item.body,
+                actionText = item.actionText,
+                isDarkTheme = isDarkTheme
+            )
+        }
     }
 }
 
@@ -177,10 +172,26 @@ fun SmartInsightsSection(isDarkTheme: Boolean = false) {
 @Preview(showBackground = true, backgroundColor = 0xFFF3ECFF)
 @Composable
 fun SmartInsightCardPreview() {
+    val sampleItems = listOf(
+        InsightItem(
+            type = InsightType.POSITIVE,
+            icon = Icons.Default.CheckCircle,
+            title = "Strong Savings Habit",
+            body = "You allocated over 20% of income to savings.",
+            actionText = "Keep it up"
+        ),
+        InsightItem(
+            type = InsightType.WARNING,
+            icon = Icons.Default.Warning,
+            title = "Optional Budget High",
+            body = "Optional spending is close to your limit.",
+            actionText = "Review optional expenses"
+        )
+    )
     Column(
         modifier = Modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        SmartInsightsSection()
+        SmartInsightsSection(items = sampleItems)
     }
 }
