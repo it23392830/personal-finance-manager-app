@@ -28,10 +28,24 @@ import com.example.financeflow.ui.components.Home.ExpenseBreakdownSection
 import com.example.financeflow.ui.components.Home.MoneyFlowSection
 import com.example.financeflow.ui.components.Home.MonthlySummaryCard
 import com.example.financeflow.ui.components.Home.QuickActionRow
-import com.example.financeflow.ui.components.Home.expenseSampleData
-import com.example.financeflow.ui.components.Home.moneyFlowSampleData
+import com.example.financeflow.ui.components.Home.ExpenseItem
+import com.example.financeflow.ui.components.Home.ExpenseSectionData
+import com.example.financeflow.ui.components.Home.ExpenseType
+import com.example.financeflow.ui.components.Home.IconGreen
+import com.example.financeflow.ui.components.Home.IconOrange
+import com.example.financeflow.ui.components.Home.IconPurple
+import com.example.financeflow.ui.components.Home.IconRed
+import com.example.financeflow.ui.components.Home.PastelGreen
+import com.example.financeflow.ui.components.Home.PastelOrange
+import com.example.financeflow.ui.components.Home.PastelPurple
+import com.example.financeflow.ui.components.Home.PastelRed
+import com.example.financeflow.ui.components.Home.SummaryCardData
 import com.example.financeflow.ui.components.savings.GoalProgressCard
 import com.example.financeflow.ui.components.savings.GoalProgressData
+import com.example.financeflow.viewmodel.dashboard.DashboardViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import kotlin.math.max
+import kotlin.math.roundToInt
 
 // ─────────────────────────────────────────────
 //  Design Tokens - Light Mode
@@ -81,27 +95,6 @@ private fun getHomeScreenColors(isDarkTheme: Boolean): HomeScreenColors =
         )
     }
 
-// ─────────────────────────────────────────────
-//  Hardcoded sample data
-// ─────────────────────────────────────────────
-private val sampleBalanceData = BalanceCardData(
-    userName = "Kavindu",
-    availableBalance = 35_000L,
-    totalIncome = 120_000L,
-    totalExpenses = 37_500L,
-    totalSaved = 53_200L,
-    streakDays = 3
-)
-
-private val sampleGoalData = GoalProgressData(
-    goalTitle = "MacBook Pro M4 Goal",
-    currentAmount = 11_200L,
-    targetAmount = 490_000L,
-    daysRemaining = 267,
-    dailySavingsNeeded = 1_794L,
-    currentDailyRate = 1_774L
-)
-
 private data class IncomeSourceItem(
     val source: String,
     val amount: Long,
@@ -109,23 +102,14 @@ private data class IncomeSourceItem(
     val isPositive: Boolean = true
 )
 
-private val sampleIncomeSources = listOf(
-    IncomeSourceItem("Salary",         135_000L),
-    IncomeSourceItem("Freelance",       45_000L),
-    IncomeSourceItem("AdSense (USD)",    5_200L),
-    IncomeSourceItem("Crypto Trading",  2_300L, isPositive = true)
-)
-
-private const val OPTIONAL_BUDGET_USED_PERCENT = 83
-private val OPTIONAL_BUDGET_REMAINING          = 13_900L
-
 /**
  * HomeScreen
  */
 @Composable
 fun HomeScreen(
     isDarkTheme: Boolean = false,
-    streakDays: Int = sampleBalanceData.streakDays,
+    streakDays: Int = 0,
+    viewModel: DashboardViewModel = hiltViewModel(),
     onAddIncomeClick: () -> Unit = {},
     onAddExpenseClick: () -> Unit = {},
     onIncomeClick: () -> Unit = {},
@@ -141,7 +125,96 @@ fun HomeScreen(
     unreadNotificationCount: Int = 0
 ) {
     val colors = getHomeScreenColors(isDarkTheme)
-    val balanceCardData = sampleBalanceData.copy(streakDays = streakDays)
+    val totalIncome by viewModel.totalIncome.collectAsState()
+    val totalExpenses by viewModel.totalExpenses.collectAsState()
+    val totalSavings by viewModel.totalSavings.collectAsState()
+    val remainingBalance by viewModel.remainingBalance.collectAsState()
+    val incomeSources by viewModel.incomeSources.collectAsState()
+    val expenseSectionSummary by viewModel.expenseSectionSummary.collectAsState()
+    val goalProgress by viewModel.goalProgress.collectAsState()
+    val monthlySummary by viewModel.monthlySummary.collectAsState()
+    val userName by viewModel.userName.collectAsState()
+
+    val balanceCardData = BalanceCardData(
+        userName = userName,
+        availableBalance = remainingBalance.toLong(),
+        totalIncome = totalIncome.toLong(),
+        totalExpenses = totalExpenses.toLong(),
+        totalSaved = totalSavings.toLong(),
+        streakDays = streakDays
+    )
+
+    val savingsPct = if (totalIncome > 0.0) ((totalSavings / totalIncome) * 100).roundToInt() else 0
+    val moneyFlowItems = listOf(
+        SummaryCardData(
+            title = "Total Income",
+            amount = totalIncome.toLong(),
+            icon = Icons.Outlined.TrendingUp,
+            iconTint = IconGreen,
+            iconBackground = PastelGreen
+        ),
+        SummaryCardData(
+            title = "Allocated to Goals",
+            amount = totalSavings.toLong(),
+            icon = Icons.Outlined.Savings,
+            iconTint = IconPurple,
+            iconBackground = PastelPurple,
+            badgeText = if (savingsPct > 0) "$savingsPct %" else null
+        ),
+        SummaryCardData(
+            title = "Reserved for Must Expenses",
+            amount = expenseSectionSummary.mustTotal.toLong(),
+            icon = Icons.Outlined.CreditCard,
+            iconTint = IconRed,
+            iconBackground = PastelRed
+        ),
+        SummaryCardData(
+            title = "Available for Optional Spending",
+            amount = max(0.0, remainingBalance).toLong(),
+            icon = Icons.Outlined.AttachMoney,
+            iconTint = IconOrange,
+            iconBackground = PastelOrange
+        )
+    )
+
+    val goalCardData = goalProgress.firstOrNull()?.let { goal ->
+        GoalProgressData(
+            goalTitle = goal.title,
+            currentAmount = goal.currentAmount.toLong(),
+            targetAmount = goal.targetAmount.toLong(),
+            daysRemaining = goal.daysRemaining,
+            dailySavingsNeeded = goal.dailySavingsNeeded.toLong(),
+            currentDailyRate = goal.currentDailyRate.toLong()
+        )
+    } ?: GoalProgressData(
+        goalTitle = "No active goals",
+        currentAmount = 0L,
+        targetAmount = 1L,
+        daysRemaining = 0,
+        dailySavingsNeeded = 0L,
+        currentDailyRate = 0L
+    )
+
+    val expenseSections = listOf(
+        ExpenseSectionData(
+            type = ExpenseType.MUST,
+            totalAmount = expenseSectionSummary.mustTotal.toLong(),
+            items = expenseSectionSummary.mustItems.map { item ->
+                ExpenseItem(name = item.label, amount = item.amount.toLong())
+            }
+        ),
+        ExpenseSectionData(
+            type = ExpenseType.OPTIONAL,
+            totalAmount = expenseSectionSummary.optionalTotal.toLong(),
+            items = expenseSectionSummary.optionalItems.map { item ->
+                ExpenseItem(name = item.label, amount = item.amount.toLong())
+            }
+        )
+    ).filter { it.totalAmount > 0 || it.items.isNotEmpty() }
+
+    val incomeSourceItems = incomeSources.map { source ->
+        IncomeSourceItem(source = source.source, amount = source.amount.toLong())
+    }
     val listState = rememberLazyListState()
     val showHeaderIcons by remember {
         derivedStateOf {
@@ -189,7 +262,7 @@ fun HomeScreen(
             item {
                 MoneyFlowSection(
                     isDarkTheme = isDarkTheme,
-                    items = moneyFlowSampleData(),
+                    items = moneyFlowItems,
                     onIncomeClick = onIncomeClick,
                     onGoalsClick = onGoalsClick,
                     onExpensesClick = onExpensesClick,
@@ -202,30 +275,35 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(10.dp))
                 GoalProgressCard(
                     isDarkTheme = isDarkTheme,
-                    data = sampleGoalData,
+                    data = goalCardData,
                     onClick = onGoalCardClick
                 )
             }
 
             item {
-                IncomeSourcesCard(isDarkTheme = isDarkTheme, sources = sampleIncomeSources)
+                IncomeSourcesCard(isDarkTheme = isDarkTheme, sources = incomeSourceItems)
             }
 
             item {
-                ExpenseBreakdownSection(isDarkTheme = isDarkTheme, sections = expenseSampleData())
+                ExpenseBreakdownSection(isDarkTheme = isDarkTheme, sections = expenseSections)
             }
 
             item {
+                val usedPercent = if (totalIncome > 0.0) ((totalExpenses / totalIncome) * 100).roundToInt() else 0
                 BudgetUsageBar(
                     isDarkTheme = isDarkTheme,
-                    usedPercent      = OPTIONAL_BUDGET_USED_PERCENT,
-                    remainingAmount  = OPTIONAL_BUDGET_REMAINING
+                    usedPercent = usedPercent.coerceIn(0, 100),
+                    remainingAmount = max(0.0, remainingBalance).toLong()
                 )
             }
 
             item {
                 MonthlySummaryCard(
                     isDarkTheme = isDarkTheme,
+                    totalIncome = monthlySummary.income,
+                    totalExpenses = monthlySummary.expenses,
+                    totalSavings = monthlySummary.savings,
+                    remainingBalance = monthlySummary.remainingBalance,
                     onViewInsightsClick = onViewInsightsClick
                 )
             }

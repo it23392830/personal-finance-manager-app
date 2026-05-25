@@ -3,13 +3,15 @@ package com.example.financeflow.viewmodel.savings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.financeflow.model.Saving
-import com.example.financeflow.model.SavingGoal
+import com.example.financeflow.model.Goal
 import com.example.financeflow.repository.savings.SavingsRepository
 import com.example.financeflow.repository.savings.SavingsResult
+import com.example.financeflow.repository.goal.GoalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,7 +26,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class SavingsViewModel @Inject constructor(
-    private val repository: SavingsRepository
+    private val repository: SavingsRepository,
+    private val goalRepository: GoalRepository
 ) : ViewModel() {
 
     // ── Savings list (real-time) ─────────────────────────────────────────────
@@ -32,8 +35,8 @@ class SavingsViewModel @Inject constructor(
     val savings: StateFlow<List<Saving>> = _savings.asStateFlow()
 
     // ── Goals list (real-time) ───────────────────────────────────────────────
-    private val _goals = MutableStateFlow<List<SavingGoal>>(emptyList())
-    val goals: StateFlow<List<SavingGoal>> = _goals.asStateFlow()
+    private val _goals = MutableStateFlow<List<Goal>>(emptyList())
+    val goals: StateFlow<List<Goal>> = _goals.asStateFlow()
 
     // ── Loading state ───────────────────────────────────────────────────────
     private val _isLoading = MutableStateFlow(false)
@@ -89,6 +92,43 @@ class SavingsViewModel @Inject constructor(
             _errorMessage.value = null
             when (val result = repository.addSaving(saving)) {
                 is SavingsResult.Success -> {
+                    updateGoalProgressForSaving(saving.goalId, saving.amountSaved)
+                    _toastMessage.value = "Saving added successfully"
+                }
+                is SavingsResult.Error -> {
+                    _errorMessage.value = result.exception.message
+                    _toastMessage.value = "Failed to add saving"
+                }
+            }
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Adds a new goal when needed, then creates a saving linked to that goal.
+     */
+    fun addSavingWithOptionalGoal(
+        saving: Saving,
+        newGoalTitle: String? = null,
+        newGoalTargetAmount: Double? = null
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            val finalGoalId = if (!newGoalTitle.isNullOrBlank() && newGoalTargetAmount != null) {
+                createGoalFromSavings(newGoalTitle, newGoalTargetAmount)
+            } else {
+                saving.goalId
+            }
+
+            val finalSaving = saving.copy(
+                goalId = finalGoalId,
+                goalName = if (!newGoalTitle.isNullOrBlank()) newGoalTitle else saving.goalName
+            )
+
+            when (val result = repository.addSaving(finalSaving)) {
+                is SavingsResult.Success -> {
+                    updateGoalProgressForSaving(finalGoalId, finalSaving.amountSaved)
                     _toastMessage.value = "Saving added successfully"
                 }
                 is SavingsResult.Error -> {
@@ -151,8 +191,8 @@ class SavingsViewModel @Inject constructor(
     fun loadGoals() {
         viewModelScope.launch {
             try {
-                repository.getGoalsFlow().collect { list ->
-                    _goals.value = list
+                goalRepository.observeGoals().collect { result ->
+                    _goals.value = result.getOrNull().orEmpty()
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to load goals: ${e.message}"
@@ -160,7 +200,7 @@ class SavingsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             try {
-                repository.syncGoalsFromFirestore()
+                goalRepository.syncFromFirestore()
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to sync goals: ${e.message}"
             }
@@ -170,19 +210,16 @@ class SavingsViewModel @Inject constructor(
     /**
      * Adds a new saving goal. Progress is auto-calculated.
      */
-    fun addGoal(goal: SavingGoal) {
+    fun addGoal(goal: Goal) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            when (val result = repository.addGoal(goal)) {
-                is SavingsResult.Success -> {
-                    _toastMessage.value = "Goal added successfully"
-                }
-                is SavingsResult.Error -> {
-                    _errorMessage.value = result.exception.message
+            goalRepository.createGoal(goal)
+                .onSuccess { _toastMessage.value = "Goal added successfully" }
+                .onFailure { error ->
+                    _errorMessage.value = error.message
                     _toastMessage.value = "Failed to add goal"
                 }
-            }
             _isLoading.value = false
         }
     }
@@ -190,19 +227,16 @@ class SavingsViewModel @Inject constructor(
     /**
      * Updates an existing saving goal.
      */
-    fun updateGoal(goal: SavingGoal) {
+    fun updateGoal(goal: Goal) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            when (val result = repository.updateGoal(goal)) {
-                is SavingsResult.Success -> {
-                    _toastMessage.value = "Goal updated successfully"
-                }
-                is SavingsResult.Error -> {
-                    _errorMessage.value = result.exception.message
+            goalRepository.updateGoal(goal)
+                .onSuccess { _toastMessage.value = "Goal updated successfully" }
+                .onFailure { error ->
+                    _errorMessage.value = error.message
                     _toastMessage.value = "Failed to update goal"
                 }
-            }
             _isLoading.value = false
         }
     }
@@ -214,17 +248,43 @@ class SavingsViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            when (val result = repository.deleteGoal(goalId)) {
-                is SavingsResult.Success -> {
-                    _toastMessage.value = "Goal deleted successfully"
-                }
-                is SavingsResult.Error -> {
-                    _errorMessage.value = result.exception.message
+            goalRepository.deleteGoal(goalId)
+                .onSuccess { _toastMessage.value = "Goal deleted successfully" }
+                .onFailure { error ->
+                    _errorMessage.value = error.message
                     _toastMessage.value = "Failed to delete goal"
                 }
-            }
             _isLoading.value = false
         }
+    }
+
+    private suspend fun createGoalFromSavings(title: String, targetAmount: Double): String {
+        val now = com.google.firebase.Timestamp.now()
+        val calendar = java.util.Calendar.getInstance().apply {
+            timeInMillis = now.toDate().time
+            add(java.util.Calendar.YEAR, 1)
+        }
+        val deadline = com.google.firebase.Timestamp(calendar.time)
+        val newGoal = Goal(
+            title = title,
+            targetAmount = targetAmount,
+            currentSavedAmount = 0.0,
+            deadlineDate = deadline,
+            createdAt = now,
+            updatedAt = now
+        )
+        return goalRepository.createGoal(newGoal).getOrElse { "" }
+    }
+
+    private suspend fun updateGoalProgressForSaving(goalId: String, amount: Double) {
+        if (goalId.isBlank()) return
+        val current = goalRepository.observeGoal(goalId).first().getOrNull() ?: return
+        val updatedAmount = current.currentSavedAmount + amount
+        val updated = current.copy(
+            currentSavedAmount = updatedAmount,
+            isCompleted = updatedAmount >= current.targetAmount
+        )
+        goalRepository.updateGoal(updated)
     }
 
     // ══════════════════════════════════════════════════════════════════════════

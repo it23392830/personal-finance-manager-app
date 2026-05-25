@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.financeflow.model.Saving
-import com.example.financeflow.model.SavingGoal
 import com.example.financeflow.ui.components.savings.SavingsColors
 import com.example.financeflow.ui.components.savings.getSavingsColors
 import com.example.financeflow.viewmodel.savings.SavingsViewModel
@@ -92,6 +91,7 @@ fun AddSavingScreen(
     var totalIncome by remember { mutableStateOf("") }
     var selectedCurrency by remember { mutableStateOf(currencyOptions[0]) }
     var selectedGoal by remember { mutableStateOf("") }
+    var selectedGoalId by remember { mutableStateOf("") }
     var newGoalName by remember { mutableStateOf("") }
     var targetAmount by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -100,7 +100,7 @@ fun AddSavingScreen(
     var currencyExpanded by remember { mutableStateOf(false) }
     var goalExpanded by remember { mutableStateOf(false) }
     val goalOptions = remember(goals) {
-        val names = goals.map { it.goalName }.filter { it.isNotBlank() }
+        val names = goals.map { it.title }.filter { it.isNotBlank() }
         (names + "Other").distinct()
     }
 
@@ -177,6 +177,7 @@ fun AddSavingScreen(
                     onDismiss = { goalExpanded = false },
                     onSelect = {
                         selectedGoal = it
+                        selectedGoalId = goals.firstOrNull { goal -> goal.title == it }?.id.orEmpty()
                         goalExpanded = false
                     },
                     leadingIcon = Icons.Default.CardGiftcard,
@@ -228,8 +229,9 @@ fun AddSavingScreen(
                 onClick = {
                     val savedAmount = amount.toMoneyDouble()
                     val incomeAmount = totalIncome.toMoneyDouble()
-                    val selectedGoalData = goals.firstOrNull { it.goalName == selectedGoal }
-                    val finalGoalName = if (selectedGoal == "Other") newGoalName.trim() else selectedGoal
+                    val selectedGoalData = goals.firstOrNull { it.id == selectedGoalId }
+                    val finalGoalName = if (selectedGoal == "Other") newGoalName.trim() else selectedGoalData?.title.orEmpty()
+                    val finalGoalId = if (selectedGoal == "Other") "" else selectedGoalData?.id.orEmpty()
                     val finalTargetAmount = selectedGoalData?.targetAmount ?: targetAmount.toMoneyDouble()
 
                     if (savedAmount <= 0.0 || incomeAmount <= 0.0) {
@@ -242,26 +244,21 @@ fun AddSavingScreen(
                         return@ActionButton
                     }
 
-                    if (selectedGoal == "Other") {
-                        viewModel.addGoal(
-                            SavingGoal(
-                                goalName = finalGoalName,
-                                currentAmount = savedAmount,
-                                targetAmount = finalTargetAmount
-                            )
-                        )
-                    }
+                    val saving = Saving(
+                        goalId = finalGoalId,
+                        amountSaved = savedAmount,
+                        totalIncome = incomeAmount,
+                        month = monthLabel,
+                        date = selectedDate,
+                        goalName = finalGoalName.ifBlank { "General" },
+                        description = description,
+                        targetAmount = finalTargetAmount
+                    )
 
-                    viewModel.addSaving(
-                        Saving(
-                            amountSaved = savedAmount,
-                            totalIncome = incomeAmount,
-                            month = monthLabel,
-                            date = selectedDate,
-                            goalName = finalGoalName.ifBlank { "General" },
-                            description = description,
-                            targetAmount = finalTargetAmount
-                        )
+                    viewModel.addSavingWithOptionalGoal(
+                        saving = saving,
+                        newGoalTitle = if (selectedGoal == "Other") finalGoalName else null,
+                        newGoalTargetAmount = if (selectedGoal == "Other") finalTargetAmount else null
                     )
                 }
             )

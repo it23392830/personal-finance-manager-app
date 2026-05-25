@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,15 +36,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.CheckCircle
 import com.example.financeflow.ui.components.common.FeatureMonthHeader
+import com.example.financeflow.ui.components.insights.ActivityLevel
+import com.example.financeflow.ui.components.insights.BreakdownItem
 import com.example.financeflow.ui.components.insights.CalendarCard
+import com.example.financeflow.ui.components.insights.CalendarDay
 import com.example.financeflow.ui.components.insights.ExpenseBreakdownCard
 import com.example.financeflow.ui.components.insights.FinancialHealthCard
 import com.example.financeflow.ui.components.insights.InsightsColors
 import com.example.financeflow.ui.components.insights.MonthlyComparisonCard
+import com.example.financeflow.ui.components.insights.ComparisonRow
+import com.example.financeflow.ui.components.insights.ChangeDirection
+import com.example.financeflow.ui.components.insights.InsightItem
+import com.example.financeflow.ui.components.insights.InsightType
 import com.example.financeflow.ui.components.insights.SmartInsightsSection
 import com.example.financeflow.ui.components.insights.getInsightsColors
-import com.example.financeflow.ui.components.insights.sampleMay2026Days
+import com.example.financeflow.ui.expenses.getCat
+import com.example.financeflow.viewmodel.dashboard.DashboardViewModel
+import com.example.financeflow.model.Expense
+import java.time.YearMonth
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlin.math.roundToInt
 
 private data class DayDetail(
     val dayName: String,
@@ -53,40 +73,6 @@ private data class DayDetail(
     val savingsEntries: Int
 )
 
-private val fakeDayDetails: Map<Int, DayDetail> = mapOf(
-    1 to DayDetail("Friday", "May 1", 0, 1, 0),
-    2 to DayDetail("Saturday", "May 2", 1, 2, 1),
-    3 to DayDetail("Sunday", "May 3", 0, 2, 0),
-    4 to DayDetail("Monday", "May 4", 0, 0, 0),
-    5 to DayDetail("Tuesday", "May 5", 2, 1, 1),
-    6 to DayDetail("Wednesday", "May 6", 1, 3, 0),
-    7 to DayDetail("Thursday", "May 7", 0, 2, 0),
-    8 to DayDetail("Friday", "May 8", 0, 0, 0),
-    9 to DayDetail("Saturday", "May 9", 1, 1, 0),
-    10 to DayDetail("Sunday", "May 10", 2, 3, 1),
-    11 to DayDetail("Monday", "May 11", 1, 2, 0),
-    12 to DayDetail("Tuesday", "May 12", 0, 0, 0),
-    13 to DayDetail("Wednesday", "May 13", 0, 0, 0),
-    14 to DayDetail("Thursday", "May 14", 0, 1, 0),
-    15 to DayDetail("Friday", "May 15", 1, 2, 1),
-    16 to DayDetail("Saturday", "May 16", 0, 2, 0),
-    17 to DayDetail("Sunday", "May 17", 3, 4, 1),
-    18 to DayDetail("Monday", "May 18", 1, 2, 0),
-    19 to DayDetail("Tuesday", "May 19", 0, 0, 0),
-    20 to DayDetail("Wednesday", "May 20", 0, 0, 0),
-    21 to DayDetail("Thursday", "May 21", 0, 2, 0),
-    22 to DayDetail("Friday", "May 22", 2, 3, 1),
-    23 to DayDetail("Saturday", "May 23", 0, 1, 0),
-    24 to DayDetail("Sunday", "May 24", 1, 2, 0),
-    25 to DayDetail("Monday", "May 25", 0, 0, 0),
-    26 to DayDetail("Tuesday", "May 26", 0, 0, 0),
-    27 to DayDetail("Wednesday", "May 27", 0, 0, 0),
-    28 to DayDetail("Thursday", "May 28", 1, 2, 1),
-    29 to DayDetail("Friday", "May 29", 0, 3, 0),
-    30 to DayDetail("Saturday", "May 30", 2, 4, 1),
-    31 to DayDetail("Sunday", "May 31", 1, 2, 0)
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsightsScreen(
@@ -94,10 +80,144 @@ fun InsightsScreen(
     onViewReports: () -> Unit = {},
     onNavigateUp: () -> Unit = {}
 ) {
-    var selectedDay by remember { mutableStateOf<Int?>(6) }
-    var selectedMonth by remember { mutableStateOf("May 2026") }
-    val dayDetail = selectedDay?.let { fakeDayDetails[it] }
-    val monthOptions = listOf("May 2026", "April 2026", "March 2026", "February 2026", "January 2026")
+    val viewModel: DashboardViewModel = hiltViewModel()
+    val expenses by viewModel.expenses.collectAsState()
+    val incomes by viewModel.incomes.collectAsState()
+    val savings by viewModel.savings.collectAsState()
+    val goals by viewModel.goals.collectAsState()
+
+    val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+    val currentMonth = remember { YearMonth.now() }
+    var selectedDay by remember { mutableStateOf<Int?>(null) }
+    var selectedMonth by remember { mutableStateOf(currentMonth.format(formatter)) }
+
+    val monthOptions = remember(incomes, expenses, savings) {
+        val monthSet = mutableSetOf<YearMonth>()
+        incomes.forEach { item ->
+            val ym = YearMonth.from(item.date.toDate().toInstant().atZone(ZoneId.systemDefault()))
+            monthSet.add(ym)
+        }
+        expenses.forEach { item ->
+            val ym = YearMonth.from(item.date.toDate().toInstant().atZone(ZoneId.systemDefault()))
+            monthSet.add(ym)
+        }
+        savings.forEach { item ->
+            val parsed = runCatching { YearMonth.parse(item.month, formatter) }.getOrNull()
+            if (parsed != null) monthSet.add(parsed)
+        }
+        val fallback = if (monthSet.isEmpty()) listOf(currentMonth) else monthSet.toList()
+        fallback.sortedByDescending { it }.map { it.format(formatter) }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(monthOptions) {
+        if (monthOptions.isNotEmpty() && selectedMonth !in monthOptions) {
+            selectedMonth = monthOptions.first()
+        }
+    }
+
+    val selectedYearMonth = remember(selectedMonth) {
+        runCatching { YearMonth.parse(selectedMonth, formatter) }.getOrElse { currentMonth }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(selectedYearMonth) {
+        selectedDay = null
+    }
+
+    val startDayOffset = remember(selectedYearMonth) {
+        val firstDayValue = selectedYearMonth.atDay(1).dayOfWeek.value
+        firstDayValue % 7
+    }
+
+    val dailyActivity = remember(selectedYearMonth, incomes, expenses, savings) {
+        viewModel.getDailyActivityFor(selectedYearMonth)
+    }
+
+    val calendarDays = remember(dailyActivity) {
+        dailyActivity.map { day ->
+            val total = day.incomeCount + day.expenseCount + day.savingsCount
+            val activity = when {
+                total <= 0 -> ActivityLevel.NONE
+                total <= 1 -> ActivityLevel.LOW
+                total <= 3 -> ActivityLevel.MEDIUM
+                else -> ActivityLevel.HIGH
+            }
+            CalendarDay(
+                dayOfMonth = day.dayOfMonth,
+                activity = activity,
+                incomeEntries = day.incomeCount,
+                expenseEntries = day.expenseCount,
+                savingsEntries = day.savingsCount
+            )
+        }
+    }
+
+    val dayDetail = selectedDay?.let { day ->
+        val activity = dailyActivity.firstOrNull { it.dayOfMonth == day }
+        val date = selectedYearMonth.atDay(day)
+        activity?.let { act ->
+            DayDetail(
+                dayName = date.dayOfWeek.name.lowercase().replaceFirstChar { char -> char.uppercase() },
+                monthDay = "${date.month.name.lowercase().replaceFirstChar { char -> char.uppercase() }} ${date.dayOfMonth}",
+                incomeEntries = act.incomeCount,
+                expenseEntries = act.expenseCount,
+                savingsEntries = act.savingsCount
+            )
+        }
+    }
+
+    val currentSummary = remember(selectedYearMonth, incomes, expenses, savings) {
+        viewModel.getMonthlySummaryFor(selectedYearMonth)
+    }
+    val previousSummary = remember(selectedYearMonth, incomes, expenses, savings) {
+        viewModel.getMonthlySummaryFor(selectedYearMonth.minusMonths(1))
+    }
+
+    val savingsRate = if (currentSummary.income > 0.0) (currentSummary.savings / currentSummary.income) * 100 else 0.0
+    val consistency = if (selectedYearMonth.lengthOfMonth() > 0) {
+        (dailyActivity.count { it.incomeCount + it.expenseCount + it.savingsCount > 0 } * 100.0 / selectedYearMonth.lengthOfMonth())
+    } else 0.0
+    val averageGoalProgress = if (goals.isNotEmpty()) goals.map { it.progressPercentage }.average() else 0.0
+    val score = (savingsRate * 0.4 + consistency * 0.3 + averageGoalProgress * 0.3).coerceIn(0.0, 100.0)
+    val scoreLabel = when {
+        score >= 80 -> "Excellent – Keep Leading!"
+        score >= 60 -> "Good – Keep Improving!"
+        score >= 40 -> "Fair – Room to Grow"
+        else -> "Needs Attention"
+    }
+
+    val insightItems = listOf(
+        InsightItem(
+            type = InsightType.NEUTRAL,
+            icon = Icons.Default.CheckCircle,
+            title = "Monthly Income",
+            body = "LKR ${"%,.0f".format(currentSummary.income)}",
+            actionText = null
+        ),
+        InsightItem(
+            type = InsightType.NEUTRAL,
+            icon = Icons.AutoMirrored.Filled.TrendingDown,
+            title = "Monthly Expenses",
+            body = "LKR ${"%,.0f".format(currentSummary.expenses)}",
+            actionText = null
+        ),
+        InsightItem(
+            type = InsightType.POSITIVE,
+            icon = Icons.Default.CheckCircle,
+            title = "Monthly Savings",
+            body = "LKR ${"%,.0f".format(currentSummary.savings)}",
+            actionText = null
+        ),
+        InsightItem(
+            type = InsightType.NEUTRAL,
+            icon = Icons.AutoMirrored.Filled.TrendingUp,
+            title = "Remaining Balance",
+            body = "LKR ${"%,.0f".format(currentSummary.remainingBalance)}",
+            actionText = null
+        )
+    )
+
+    val comparisonRows = buildComparisonRows(currentSummary, previousSummary)
+    val expenseBreakdown = buildExpenseBreakdown(expenses, selectedYearMonth)
     val scrollState = rememberScrollState()
     val colors = getInsightsColors(isDarkTheme)
 
@@ -147,8 +267,8 @@ fun InsightsScreen(
                 CalendarCard(
                     isDarkTheme = isDarkTheme,
                     month = selectedMonth,
-                    startDayOffset = 5,
-                    days = sampleMay2026Days,
+                    startDayOffset = startDayOffset,
+                    days = calendarDays,
                     selectedDay = selectedDay,
                     onDaySelected = { day -> selectedDay = day.dayOfMonth }
                 )
@@ -159,11 +279,11 @@ fun InsightsScreen(
 
                 FinancialHealthCard(
                     isDarkTheme = isDarkTheme,
-                    score = 23,
-                    label = "Good - Keep Improving!",
-                    savingsRate = "28.8%",
-                    consistency = "75/100",
-                    goalProgress = "2.2"
+                    score = score.roundToInt(),
+                    label = scoreLabel,
+                    savingsRate = "${"%.1f".format(savingsRate)}%",
+                    consistency = "${"%.0f".format(consistency)}/100",
+                    goalProgress = "${"%.1f".format(averageGoalProgress)}%"
                 )
 
                 Surface(
@@ -173,12 +293,20 @@ fun InsightsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Box(modifier = Modifier.padding(16.dp)) {
-                        SmartInsightsSection(isDarkTheme = isDarkTheme)
+                        SmartInsightsSection(isDarkTheme = isDarkTheme, items = insightItems)
                     }
                 }
 
-                ExpenseBreakdownCard(isDarkTheme = isDarkTheme)
-                MonthlyComparisonCard(isDarkTheme = isDarkTheme)
+                ExpenseBreakdownCard(
+                    isDarkTheme = isDarkTheme,
+                    mustTotal = expenseBreakdown.mustTotal,
+                    mustPct = expenseBreakdown.mustPct,
+                    optionalTotal = expenseBreakdown.optionalTotal,
+                    optionalPct = expenseBreakdown.optionalPct,
+                    mustItems = expenseBreakdown.mustItems,
+                    optionalItems = expenseBreakdown.optionalItems
+                )
+                MonthlyComparisonCard(isDarkTheme = isDarkTheme, rows = comparisonRows)
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
@@ -228,6 +356,93 @@ private fun DayEntryChip(label: String, count: Int, color: Color, colors: Insigh
         )
         Text(text = label, fontSize = 11.sp, color = colors.TextMuted)
     }
+}
+
+private data class ExpenseBreakdownUi(
+    val mustTotal: String,
+    val mustPct: String,
+    val optionalTotal: String,
+    val optionalPct: String,
+    val mustItems: List<BreakdownItem>,
+    val optionalItems: List<BreakdownItem>
+)
+
+private fun buildComparisonRows(current: com.example.financeflow.repository.dashboard.MonthlySummary, previous: com.example.financeflow.repository.dashboard.MonthlySummary): List<ComparisonRow> {
+    fun percentChange(currentValue: Double, previousValue: Double): Double {
+        return if (previousValue > 0.0) ((currentValue - previousValue) / previousValue) * 100 else if (currentValue > 0.0) 100.0 else 0.0
+    }
+
+    fun directionFor(pct: Double): ChangeDirection = when {
+        pct > 1.0 -> ChangeDirection.UP
+        pct < -1.0 -> ChangeDirection.DOWN
+        else -> ChangeDirection.FLAT
+    }
+
+    fun formatAmount(value: Double): String = "LKR ${"%,.0f".format(value)}"
+
+    val incomeChange = percentChange(current.income, previous.income)
+    val expenseChange = percentChange(current.expenses, previous.expenses)
+    val savingsChange = percentChange(current.savings, previous.savings)
+
+    return listOf(
+        ComparisonRow(
+            label = "Income Change",
+            subtitle = "${formatAmount(current.income)} vs last month",
+            badge = "${if (incomeChange >= 0) "+" else ""}${"%.1f".format(incomeChange)}%",
+            direction = directionFor(incomeChange)
+        ),
+        ComparisonRow(
+            label = "Expense Change",
+            subtitle = "${formatAmount(current.expenses)} vs last month",
+            badge = "${if (expenseChange >= 0) "+" else ""}${"%.1f".format(expenseChange)}%",
+            direction = directionFor(expenseChange)
+        ),
+        ComparisonRow(
+            label = "Savings Change",
+            subtitle = "${formatAmount(current.savings)} vs last month",
+            badge = "${if (savingsChange >= 0) "+" else ""}${"%.1f".format(savingsChange)}%",
+            direction = directionFor(savingsChange)
+        )
+    )
+}
+
+private fun buildExpenseBreakdown(expenses: List<Expense>, month: YearMonth): ExpenseBreakdownUi {
+    val start = month.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    val end = month.atEndOfMonth().atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    val monthExpenses = expenses.filter { it.date.toDate().time in start..end }
+
+    val mustExpenses = monthExpenses.filter { it.isFixed }
+    val optionalExpenses = monthExpenses.filter { !it.isFixed }
+
+    fun toBreakdownItems(list: List<Expense>): List<BreakdownItem> {
+        return list.groupBy { exp ->
+            val cat = getCat(exp.category)
+            cat.parentLabel ?: cat.label
+        }.map { (label, items) ->
+            val total = items.sumOf { it.amount }
+            BreakdownItem(label = label, amount = "LKR ${"%,.0f".format(total)}")
+        }.sortedByDescending { item ->
+            item.amount.replace("LKR", "").replace(",", "").trim().toDoubleOrNull() ?: 0.0
+        }
+    }
+
+    val mustItems = toBreakdownItems(mustExpenses)
+    val optionalItems = toBreakdownItems(optionalExpenses)
+    val mustTotalValue = mustExpenses.sumOf { it.amount }
+    val optionalTotalValue = optionalExpenses.sumOf { it.amount }
+    val totalValue = mustTotalValue + optionalTotalValue
+
+    val mustPct = if (totalValue > 0.0) (mustTotalValue / totalValue) * 100 else 0.0
+    val optionalPct = if (totalValue > 0.0) (optionalTotalValue / totalValue) * 100 else 0.0
+
+    return ExpenseBreakdownUi(
+        mustTotal = "LKR ${"%,.0f".format(mustTotalValue)}",
+        mustPct = "${"%.0f".format(mustPct)}% of total",
+        optionalTotal = "LKR ${"%,.0f".format(optionalTotalValue)}",
+        optionalPct = "${"%.0f".format(optionalPct)}% of total",
+        mustItems = mustItems,
+        optionalItems = optionalItems
+    )
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFF3ECFF, showSystemUi = true)

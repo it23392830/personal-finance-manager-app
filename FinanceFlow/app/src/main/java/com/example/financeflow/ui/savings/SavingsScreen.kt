@@ -24,7 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.financeflow.model.Saving
-import com.example.financeflow.model.SavingGoal
+import com.example.financeflow.model.Goal
 import com.example.financeflow.navigation.Routes
 import com.example.financeflow.ui.components.SavingsInsightsCard
 import com.example.financeflow.ui.components.savings.HeaderCard
@@ -57,10 +57,10 @@ fun SavingsScreen(
     }
 
     var selectedMonth by remember { mutableStateOf(currentMonth) }
-    var editingGoal by remember { mutableStateOf<SavingGoal?>(null) }
+    var editingGoal by remember { mutableStateOf<Goal?>(null) }
     var editingSaving by remember { mutableStateOf<Saving?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var selectedGoal by remember { mutableStateOf<SavingGoal?>(null) }
+    var selectedGoal by remember { mutableStateOf<Goal?>(null) }
     var selectedSaving by remember { mutableStateOf<Saving?>(null) }
 
     val colors = getSavingsColors(isDarkTheme)
@@ -167,16 +167,16 @@ fun SavingsScreen(
     editingGoal?.let { goal ->
         EditGoalAllocationScreen(
             isDarkTheme = isDarkTheme,
-            goalName = goal.goalName,
-            allocatedAmount = goal.currentAmount.toPlainAmount(),
+            goalName = goal.title,
+            allocatedAmount = goal.currentSavedAmount.toPlainAmount(),
             targetAmount = goal.targetAmount.toPlainAmount(),
-            progressPercent = goal.progress,
-            progressLabel = "${"%.1f".format(goal.progress * 100)}% complete",
+            progressPercent = (goal.progressPercentage / 100.0).toFloat(),
+            progressLabel = "${"%.1f".format(goal.progressPercentage)}% complete",
             onSave = { name, currentAmount, targetAmount ->
                 viewModel.updateGoal(
                     goal.copy(
-                        goalName = name,
-                        currentAmount = currentAmount,
+                        title = name,
+                        currentSavedAmount = currentAmount,
                         targetAmount = targetAmount
                     )
                 )
@@ -217,16 +217,16 @@ fun SavingsScreen(
     }
 }
 
-/** Maps Firestore SavingGoal into the UI card model. */
-private fun SavingGoal.toGoalUi(): SavingGoalUi {
+/** Maps Goal into the UI card model. */
+private fun Goal.toGoalUi(): SavingGoalUi {
     val safeProgress = if (targetAmount > 0.0) {
-        (currentAmount / targetAmount).toFloat().coerceIn(0f, 1f)
+        (currentSavedAmount / targetAmount).toFloat().coerceIn(0f, 1f)
     } else {
-        progress.coerceIn(0f, 1f)
+        0f
     }
     return SavingGoalUi(
-        name = goalName,
-        savedAmount = currentAmount.toLkr(),
+        name = title,
+        savedAmount = currentSavedAmount.toLkr(),
         targetAmount = "Target: ${targetAmount.toLkr()}",
         progressPercent = safeProgress,
         progressLabel = "${"%.1f".format(safeProgress * 100)}% complete",

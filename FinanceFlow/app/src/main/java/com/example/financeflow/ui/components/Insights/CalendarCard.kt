@@ -50,34 +50,6 @@ fun ActivityLevel.color(): Color = when (this) {
     ActivityLevel.HIGH   -> ActivityHigh
 }
 
-// ─── Fake data for May 2026 ───────────────────────────────────────────────────
-val sampleMay2026Days: List<CalendarDay> = buildList {
-    // May 2026 starts on Friday (index 5 in SUN-SAT grid → offset 5 empty cells)
-    val activities = listOf(
-        ActivityLevel.NONE, ActivityLevel.NONE, ActivityLevel.NONE,
-        ActivityLevel.NONE, ActivityLevel.NONE, ActivityLevel.LOW,   // 1,2
-        ActivityLevel.MEDIUM,                                          // 3
-        ActivityLevel.NONE, ActivityLevel.LOW, ActivityLevel.HIGH,   // 4,5,6
-        ActivityLevel.MEDIUM, ActivityLevel.NONE, ActivityLevel.NONE, ActivityLevel.NONE, // 7..
-        ActivityLevel.LOW, ActivityLevel.MEDIUM, ActivityLevel.HIGH,
-        ActivityLevel.LOW, ActivityLevel.NONE, ActivityLevel.NONE, ActivityLevel.MEDIUM,
-        ActivityLevel.HIGH, ActivityLevel.MEDIUM, ActivityLevel.LOW,
-        ActivityLevel.NONE, ActivityLevel.NONE, ActivityLevel.NONE,
-        ActivityLevel.LOW, ActivityLevel.MEDIUM, ActivityLevel.HIGH,
-        ActivityLevel.LOW
-    )
-    activities.forEachIndexed { index, act ->
-        add(
-            CalendarDay(
-                dayOfMonth     = index + 1,
-                activity       = act,
-                incomeEntries  = if (act == ActivityLevel.HIGH) 2 else if (act == ActivityLevel.MEDIUM) 1 else 0,
-                expenseEntries = if (act != ActivityLevel.NONE) (1..3).random() else 0,
-                savingsEntries = if (act == ActivityLevel.HIGH) 1 else 0
-            )
-        )
-    }
-}
 
 /**
  * CalendarCard
@@ -96,7 +68,7 @@ fun CalendarCard(
     isDarkTheme: Boolean = false,
     month: String = "May 2026",
     startDayOffset: Int = 5,
-    days: List<CalendarDay> = sampleMay2026Days,
+    days: List<CalendarDay> = emptyList(),
     selectedDay: Int? = null,
     onDaySelected: (CalendarDay) -> Unit = {}
 ) {
@@ -240,6 +212,15 @@ fun CalendarCard(
 @Preview(showBackground = true, backgroundColor = 0xFFF3ECFF)
 @Composable
 fun CalendarCardPreview() {
+    val sampleDays = (1..30).map { day ->
+        CalendarDay(
+            dayOfMonth = day,
+            activity = if (day % 5 == 0) ActivityLevel.HIGH else ActivityLevel.LOW,
+            incomeEntries = if (day % 5 == 0) 2 else 0,
+            expenseEntries = if (day % 2 == 0) 1 else 0,
+            savingsEntries = if (day % 7 == 0) 1 else 0
+        )
+    }
     var selected by remember { mutableStateOf<Int?>(6) }
-    CalendarCard(selectedDay = selected, onDaySelected = { selected = it.dayOfMonth })
+    CalendarCard(days = sampleDays, selectedDay = selected, onDaySelected = { selected = it.dayOfMonth })
 }

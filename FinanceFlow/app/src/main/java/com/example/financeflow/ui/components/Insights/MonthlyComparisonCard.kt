@@ -58,26 +58,7 @@ private fun ChangeDirection.icon(): ImageVector = when (this) {
 @Composable
 fun MonthlyComparisonCard(
     isDarkTheme: Boolean = false,
-    rows: List<ComparisonRow> = listOf(
-        ComparisonRow(
-            label = "Savings Increased",
-            subtitle = "LKR 4,300 more than March",
-            badge = "+8.8%",
-            direction = ChangeDirection.UP
-        ),
-        ComparisonRow(
-            label = "Optional Expenses Reduce",
-            subtitle = "LKR 7,800 less than March",
-            badge = "-8.7%",
-            direction = ChangeDirection.DOWN
-        ),
-        ComparisonRow(
-            label = "Must Expenses Stable",
-            subtitle = "No change from March",
-            badge = "0%",
-            direction = ChangeDirection.FLAT
-        )
-    )
+    rows: List<ComparisonRow>
 ) {
     val colors = getInsightsColors(isDarkTheme)
     Surface(
@@ -159,7 +140,21 @@ private fun ComparisonRowItem(row: ComparisonRow, isDarkTheme: Boolean = false) 
 @Preview(showBackground = true, backgroundColor = 0xFFF3ECFF)
 @Composable
 fun MonthlyComparisonCardPreview() {
+    val sampleRows = listOf(
+        ComparisonRow(
+            label = "Savings Increased",
+            subtitle = "LKR 4,300 more than March",
+            badge = "+8.8%",
+            direction = ChangeDirection.UP
+        ),
+        ComparisonRow(
+            label = "Optional Expenses Reduce",
+            subtitle = "LKR 7,800 less than March",
+            badge = "-8.7%",
+            direction = ChangeDirection.DOWN
+        )
+    )
     Box(modifier = Modifier.padding(16.dp)) {
-        MonthlyComparisonCard()
+        MonthlyComparisonCard(rows = sampleRows)
     }
 }

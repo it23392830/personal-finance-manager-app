@@ -1,5 +1,6 @@
 package com.example.financeflow.ui.auth
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,7 +29,9 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.financeflow.viewmodel.auth.AuthViewModel
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 
 private val PrimaryPurple = Color(0xFF7C4DFF)
 
@@ -52,18 +55,20 @@ fun SplashScreen(
     )
 
     LaunchedEffect(Unit) {
-        // Wait exactly 1 second
-        delay(1000L)
-        
-        // Inspect session and local settings
-        val isAuth = viewModel.isUserAuthenticated()
-        val isRemembered = viewModel.rememberMe.value
+        delay(1000)
 
-        if (isAuth && isRemembered) {
+        val remember = viewModel.repository.getRememberMe().first()
+        val user = FirebaseAuth.getInstance().currentUser
+
+        Log.d("RememberDebug", "Remember=$remember User=$user")
+
+        if (remember && user != null) {
+            Log.d("RememberDebug", "Navigating to Welcome")
             onNavigateToHome()
         } else {
-            // Stale or unremembered sessions are cleared
-            if (isAuth) {
+            Log.d("RememberDebug", "Navigating to Login")
+            if (user != null) {
+                Log.d("RememberDebug", "Logging out as remember is false")
                 viewModel.logout()
             }
             onNavigateToLogin()
