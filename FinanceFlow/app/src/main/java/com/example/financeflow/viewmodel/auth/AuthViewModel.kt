@@ -1,5 +1,6 @@
 package com.example.financeflow.viewmodel.auth
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.financeflow.repository.auth.AuthRepository
@@ -20,7 +21,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val repository: AuthRepository
+    val repository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -47,21 +48,26 @@ class AuthViewModel @Inject constructor(
     }
 
     private fun loginUser(email: String, password: String, remember: Boolean) {
+        Log.d("AuthFlow", "loginUser: email=$email, remember=$remember")
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             
             val result = repository.login(email, password)
             if (result.isSuccess) {
+                Log.d("AuthFlow", "loginUser: Success")
                 // If login successful, handle Remember Me
                 if (remember) {
                     val user = FirebaseAuth.getInstance().currentUser
+                    Log.d("AuthFlow", "loginUser: Saving RememberMe for uid=${user?.uid}")
                     repository.setRememberMe(true, user?.uid ?: "", email)
                 } else {
+                    Log.d("AuthFlow", "loginUser: Clearing RememberMe")
                     repository.clearRememberMe()
                 }
                 _uiState.update { it.copy(isLoading = false, isSuccess = true) }
             } else {
                 val errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Login failed"
+                Log.e("AuthFlow", "loginUser: Failed - $errorMessage")
                 _uiState.update { it.copy(isLoading = false, error = errorMessage) }
             }
         }
@@ -106,6 +112,7 @@ class AuthViewModel @Inject constructor(
      * Signs out the user and clears all local remember me settings.
      */
     fun logout() {
+        Log.d("AuthFlow", "logout: Clearing session")
         viewModelScope.launch {
             repository.clearRememberMe()
             repository.logout()

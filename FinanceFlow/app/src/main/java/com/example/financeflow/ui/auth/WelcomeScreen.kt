@@ -1,5 +1,6 @@
 package com.example.financeflow.ui.auth
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,7 +36,9 @@ fun WelcomeScreen(onNavigateToHome: () -> Unit = {}) {
     )
 
     LaunchedEffect(Unit) {
+        Log.d("Welcome", "Waiting 1 second...")
         delay(1000L)
+        Log.d("Welcome", "Navigating to Home")
         onNavigateToHome()
     }
 

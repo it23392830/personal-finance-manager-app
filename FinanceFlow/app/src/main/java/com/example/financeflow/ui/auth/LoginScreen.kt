@@ -1,5 +1,6 @@
 package com.example.financeflow.ui.auth
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -105,6 +106,7 @@ fun LoginScreen(
     // Monitor authentication result
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
+            Log.d("RememberDebug", "Login success, rememberMe checked = $rememberMe")
             onNext()
             viewModel.onEvent(AuthEvent.ResetState)
         }

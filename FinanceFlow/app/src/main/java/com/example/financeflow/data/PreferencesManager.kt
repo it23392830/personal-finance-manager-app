@@ -1,6 +1,7 @@
 package com.example.financeflow.data
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -29,13 +30,16 @@ class PreferencesManager @Inject constructor(
     // Flow that emits changes to the Remember Me boolean preference
     val rememberMe: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
-            preferences[rememberMeKey] ?: false
+            val value = preferences[rememberMeKey] ?: false
+            Log.d("RememberMe", "Loaded value = $value")
+            value
         }
 
     /**
      * Saves the Remember Me preference status along with user info.
      */
     suspend fun setRememberMe(remember: Boolean, userId: String = "", email: String = "") {
+        Log.d("RememberMe", "Saving value = $remember")
         context.dataStore.edit { preferences ->
             preferences[rememberMeKey] = remember
             if (remember) {
