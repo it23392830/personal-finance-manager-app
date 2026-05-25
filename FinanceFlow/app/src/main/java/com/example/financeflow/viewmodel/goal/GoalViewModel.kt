@@ -96,6 +96,14 @@ class GoalViewModel @Inject constructor(
             launch {
                 repository.observeGoal(goalId).collect { result ->
                     val finalGoal = result.getOrNull()
+                    if (finalGoal != null) {
+                        val newBadges = GoalBadge.checkNewBadges(finalGoal)
+                        if (newBadges.isNotEmpty()) {
+                            // Automatically unlock and save badges if progress qualifies but badges are missing
+                            repository.updateGoal(finalGoal)
+                            _goalDetailState.update { it.copy(newlyUnlockedBadges = newBadges) }
+                        }
+                    }
                     _goalDetailState.update { it.copy(goal = finalGoal, isLoading = false) }
                 }
             }

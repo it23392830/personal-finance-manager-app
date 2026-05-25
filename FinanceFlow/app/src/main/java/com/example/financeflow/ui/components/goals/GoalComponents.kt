@@ -651,6 +651,9 @@ fun CreateGoalDialog(
                         Text(if (isEdit) "Save Goal" else "Create Goal", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
+                
+                // Extra space at the bottom to ensure buttons aren't cut off by system bars
+                Spacer(Modifier.height(60.dp))
             }
         }
     }
