@@ -29,14 +29,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private const val TotalIncomeAmount = 120_000
-private const val ExpensesAmount = 68_400
-private const val SavingsAmount = 20_000
-private const val RemainingAmount = 31_600
-
 @Composable
 fun MonthlySummaryCard(
     isDarkTheme: Boolean = false,
+    totalIncome: Double,
+    totalExpenses: Double,
+    totalSavings: Double,
+    remainingBalance: Double,
     onViewInsightsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -86,10 +85,10 @@ fun MonthlySummaryCard(
         Box(modifier = Modifier.fillMaxWidth()) {
             PieChartComponent(
                 isDarkTheme = isDarkTheme,
-                totalIncome = TotalIncomeAmount.toFloat(),
-                expenses = ExpensesAmount.toFloat(),
-                savings = SavingsAmount.toFloat(),
-                remaining = RemainingAmount.toFloat(),
+                totalIncome = totalIncome.toFloat(),
+                expenses = totalExpenses.toFloat(),
+                savings = totalSavings.toFloat(),
+                remaining = remainingBalance.toFloat(),
                 modifier = Modifier.align(androidx.compose.ui.Alignment.Center)
             )
         }
@@ -98,19 +97,19 @@ fun MonthlySummaryCard(
             isDarkTheme = isDarkTheme,
             color = Color(0xFFFF6B6B),
             label = "Expenses",
-            amount = "LKR 68,400"
+            amount = "LKR ${"%,.0f".format(totalExpenses)}"
         )
         LegendItem(
             isDarkTheme = isDarkTheme,
             color = Color(0xFF4CAF50),
             label = "Remaining",
-            amount = "LKR 31,600"
+            amount = "LKR ${"%,.0f".format(remainingBalance)}"
         )
         LegendItem(
             isDarkTheme = isDarkTheme,
             color = Color(0xFFFFA726),
             label = "Savings",
-            amount = "LKR 20,000"
+            amount = "LKR ${"%,.0f".format(totalSavings)}"
         )
 
         Column(
@@ -152,6 +151,10 @@ private fun MonthlySummaryCardPreview() {
     MaterialTheme {
         MonthlySummaryCard(
             isDarkTheme = false,
+            totalIncome = 120_000.0,
+            totalExpenses = 68_400.0,
+            totalSavings = 20_000.0,
+            remainingBalance = 31_600.0,
             onViewInsightsClick = {},
             modifier = Modifier.padding(16.dp)
         )

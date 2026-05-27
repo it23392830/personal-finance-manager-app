@@ -82,8 +82,8 @@ class AuthRepositoryImpl @Inject constructor(
         return preferencesManager.rememberMe
     }
 
-    override suspend fun setRememberMe(remember: Boolean) {
-        preferencesManager.setRememberMe(remember)
+    override suspend fun setRememberMe(remember: Boolean, userId: String, email: String) {
+        preferencesManager.setRememberMe(remember, userId, email)
     }
 
     override suspend fun clearRememberMe() {

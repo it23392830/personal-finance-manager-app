@@ -290,4 +290,14 @@ fun GoalsScreen(
             onDismiss = { selectedBadge = null }
         )
     }
+
+    if (detailState.newlyUnlockedBadges.isNotEmpty() && detailState.goal != null) {
+        MilestoneDetailDialog(
+            badge = detailState.newlyUnlockedBadges.first(),
+            unlocked = true,
+            goal = detailState.goal!!,
+            isDarkTheme = isDarkTheme,
+            onDismiss = { viewModel.clearNewBadges() }
+        )
+    }
 }

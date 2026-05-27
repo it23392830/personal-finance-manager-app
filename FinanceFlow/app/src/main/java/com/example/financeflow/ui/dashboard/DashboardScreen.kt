@@ -13,6 +13,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -31,8 +33,8 @@ import com.example.financeflow.ui.insights.WeeklyReportScreen
 import com.example.financeflow.ui.notifications.NotificationScreen
 import com.example.financeflow.ui.profile.LogoutScreen
 import com.example.financeflow.ui.profile.ProfileScreen
+import com.example.financeflow.ui.components.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.AddSavingScreen
-import com.example.financeflow.ui.savings.GoalDetailsScreen
 import com.example.financeflow.ui.savings.SavingsScreen
 import com.example.financeflow.ui.streak.Streak.StreakScreen
 import com.example.financeflow.presentation.viewmodel.StreakViewModel
@@ -91,17 +93,106 @@ fun DashboardScreen(
                 HomeScreen(
                     isDarkTheme = isDarkTheme,
                     streakDays = streakUiState.currentStreak,
-                    onAddIncomeClick = { rootNavController.navigate(Routes.ADD_INCOME) },
-                    onAddExpenseClick = { navController.navigate(Routes.EXPENSES) },
-                    onIncomeClick = { navController.navigate(Routes.INCOME) },
-                    onGoalsClick = { navController.navigate(Routes.GOALS) },
-                    onExpensesClick = { navController.navigate(Routes.EXPENSES) },
-                    onSavingsClick = { navController.navigate(Routes.SAVINGS) },
-                    onGoalCardClick = { navController.navigate(Routes.GOALS) },
-                    onStreakClick = { navController.navigate(Routes.STREAK) },
+                    onAddIncomeClick = { 
+                        rootNavController.navigate(Routes.ADD_INCOME) {
+                            popUpTo(rootNavController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onAddExpenseClick = { 
+                        navController.navigate(Routes.EXPENSES) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onIncomeClick = { 
+                        navController.navigate(Routes.INCOME) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onGoalsClick = { 
+                        navController.navigate(Routes.GOALS) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onExpensesClick = { 
+                        navController.navigate(Routes.EXPENSES) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onSavingsClick = { 
+                        navController.navigate(Routes.SAVINGS) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onGoalCardClick = { 
+                        navController.navigate(Routes.GOALS) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onViewInsightsClick = { 
+                        navController.navigate(Routes.INSIGHTS) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onStreakClick = { 
+                        navController.navigate(Routes.STREAK) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     onThemeClick = onThemeToggle,
-                    onProfileClick = { navController.navigate(Routes.PROFILE) },
-                    onNotificationClick = { navController.navigate(Routes.NOTIFICATIONS) },
+                    onProfileClick = { 
+                        navController.navigate(Routes.PROFILE) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onNotificationClick = { 
+                        navController.navigate(Routes.NOTIFICATIONS) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     unreadNotificationCount = unreadNotificationCount
                 )
             }
@@ -154,7 +245,15 @@ fun DashboardScreen(
                     isDarkTheme = isDarkTheme,
                     onThemeToggle = onThemeToggle,
                     onNavigateBack = { navController.popBackStack() },
-                    onNavigateToLogout = { navController.navigate(Routes.LOGOUT) }
+                    onNavigateToLogout = { 
+                        navController.navigate(Routes.LOGOUT) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
 
@@ -165,8 +264,12 @@ fun DashboardScreen(
                     onNavigateBack = { navController.popBackStack() },
                     onAccountDeleted = {
                         rootNavController.navigate(Routes.LOGIN) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo(rootNavController.graph.findStartDestination().id) {
+                                inclusive = true
+                                saveState = true
+                            }
                             launchSingleTop = true
+                            restoreState = true
                         }
                     }
                 )
@@ -175,7 +278,15 @@ fun DashboardScreen(
             composable(Routes.GOAL_DETAILS) {
                 GoalDetailsScreen(
                     isDarkTheme = isDarkTheme,
-                    onAddContribution = { navController.navigate(Routes.ADD_SAVING) }
+                    onAddContribution = { 
+                        navController.navigate(Routes.ADD_SAVING) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
 

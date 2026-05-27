@@ -5,6 +5,7 @@ package com.example.financeflow.model
  */
 data class Saving(
     val id: String = "",
+    val goalId: String = "",
     val amountSaved: Double = 0.0,
     val totalIncome: Double = 0.0,
     val savingRate: Double = 0.0,

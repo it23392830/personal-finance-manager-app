@@ -49,10 +49,10 @@ interface AuthRepository {
     /**
      * Updates the local 'Remember Me' preference state.
      */
-    suspend fun setRememberMe(remember: Boolean)
+    suspend fun setRememberMe(remember: Boolean, userId: String = "", email: String = "")
 
     /**
      * Clears local 'Remember Me' preference state.
      */
     suspend fun clearRememberMe()
-}
+}

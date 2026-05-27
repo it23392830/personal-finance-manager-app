@@ -36,6 +36,7 @@ class SavingsRepository(
     private fun savingEntityToDomain(entity: SavingEntity): Saving {
         return Saving(
             id = entity.id,
+            goalId = entity.goalId,
             amountSaved = entity.amountSaved,
             totalIncome = entity.totalIncome,
             savingRate = entity.savingRate,
@@ -53,6 +54,7 @@ class SavingsRepository(
         return SavingEntity(
             id = saving.id,
             userId = userId,
+            goalId = saving.goalId,
             amountSaved = saving.amountSaved,
             totalIncome = saving.totalIncome,
             savingRate = calculateSavingRate(saving.amountSaved, saving.totalIncome),
