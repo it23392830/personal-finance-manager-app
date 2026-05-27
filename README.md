@@ -153,7 +153,6 @@ FinanceFlow
 │   ├── goals
 │   ├── insights
 │   ├── notifications
-│   ├── streak
 │   └── components
 │
 ├── utils
