@@ -87,20 +87,10 @@ Penny-Pilot is a modern personal finance management mobile application designed 
 
 ---
 
-### 🔥 Streak Tracking
-- Daily expense streaks
-- Missed day recovery
-- Streak freeze functionality
-- Daily engagement tracking
-- Streak progress monitoring
-
----
-
 ### 🔔 Notifications
 - Daily reminders
 - Missing transaction notifications
 - Goal completion notifications
-- Streak notifications
 - Fixed payment reminders
 - Smart user activity notifications
 
