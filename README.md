@@ -322,4 +322,4 @@ This project was developed for educational and academic purposes.
 ## ❤️ Developed By
 
 **FinanceFlow Team**  
-SLIIT – Software Engineering Project
+SLIIT – Platform Based Development project
