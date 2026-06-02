@@ -227,14 +227,9 @@ fun AppNavGraph(
                 isDarkTheme = isDarkTheme,
                 onThemeToggle = onThemeToggle,
                 onNavigateBack = { navController.popBackStack() },
-                onAccountDeleted = {
+                onLoggedOut = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
