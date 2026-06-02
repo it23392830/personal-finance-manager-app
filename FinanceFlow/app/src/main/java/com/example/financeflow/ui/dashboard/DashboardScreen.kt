@@ -22,6 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.financeflow.navigation.Routes
+import com.example.financeflow.ui.chat.ChatScreen
 import com.example.financeflow.ui.components.Home.BottomNavigationBar
 import com.example.financeflow.ui.expenses.ExpensesScreen
 import com.example.financeflow.ui.goals.GoalsScreen
@@ -69,6 +70,7 @@ fun DashboardScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             BottomNavigationBar(
+                isDarkTheme = isDarkTheme,
                 currentDestination = currentDestination,
                 onItemClick = { item ->
                     navController.navigate(item.route) {
@@ -226,6 +228,10 @@ fun DashboardScreen(
                     isDarkTheme = isDarkTheme,
                     onViewReports = { navController.navigate(Routes.DAILY_REPORT) }
                 )
+            }
+
+            composable(Routes.CHAT) {
+                ChatScreen()
             }
 
             composable(Routes.STREAK) {

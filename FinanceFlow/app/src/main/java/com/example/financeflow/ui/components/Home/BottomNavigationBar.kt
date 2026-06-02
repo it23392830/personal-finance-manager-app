@@ -50,7 +50,8 @@ private val bottomNavItems = listOf(
     BottomNavItem.Income,
     BottomNavItem.Expenses,
     BottomNavItem.Savings,
-    BottomNavItem.Goals
+    BottomNavItem.Goals,
+    BottomNavItem.Chat
 )
 
 /**

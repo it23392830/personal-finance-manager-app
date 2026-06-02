@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.outlined.TrackChanges
@@ -56,5 +57,11 @@ sealed class BottomNavItem(
         Routes.INSIGHTS,
         "Insights",
         Icons.Outlined.BarChart
+    )
+
+    object Chat : BottomNavItem(
+        Routes.CHAT,
+        "Chat",
+        Icons.Outlined.ChatBubbleOutline
     )
 }

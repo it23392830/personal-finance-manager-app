@@ -2,6 +2,7 @@ package com.example.financeflow.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.financeflow.data.local.dao.ChatMessageDao
 import com.example.financeflow.data.local.dao.IncomeDao
 import com.example.financeflow.data.local.dao.NotificationDao
 import com.example.financeflow.data.local.dao.SavingDao
@@ -60,4 +61,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideSavingGoalDao(db: AppDatabase): SavingGoalDao = db.savingGoalDao()
+
+    @Provides
+    @Singleton
+    fun provideChatMessageDao(db: AppDatabase): ChatMessageDao = db.chatMessageDao()
 }
