@@ -7,7 +7,6 @@ import com.example.financeflow.data.local.entity.GoalEntity
 import com.example.financeflow.data.remote.GoalFirebaseService
 import com.example.financeflow.model.Goal
 import com.example.financeflow.model.GoalAllocation
-import com.example.financeflow.model.GoalBadge
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -89,15 +88,6 @@ class GoalRepository @Inject constructor(
         allocatedAt = a.allocatedAt.toDate().time
     )
 
-    private fun Goal.checkAndApplyBadges(): Goal {
-        val newBadges = GoalBadge.checkNewBadges(this)
-        return if (newBadges.isNotEmpty()) {
-            this.copy(unlockedBadges = this.unlockedBadges + newBadges.map { it.id })
-        } else {
-            this
-        }
-    }
-
     // --- Public API -----------------------------------------------------
 
     fun observeGoals(): Flow<Result<List<Goal>>> = flow {
@@ -118,14 +108,7 @@ class GoalRepository @Inject constructor(
         val id = if (goal.id.isBlank()) UUID.randomUUID().toString() else goal.id
         val uid = firebase.currentUserId() ?: return Result.failure(IllegalStateException("No authenticated user"))
         val now = Timestamp.now()
-        
-        val withId = goal.copy(
-            id = id, 
-            userId = uid, 
-            createdAt = now, 
-            updatedAt = now
-        ).checkAndApplyBadges()
-        
+        val withId = goal.copy(id = id, userId = uid, createdAt = now, updatedAt = now)
         // persist locally
         goalDao.insertGoal(domainToEntity(withId))
         // persist remotely
@@ -137,19 +120,7 @@ class GoalRepository @Inject constructor(
 
     suspend fun updateGoal(goal: Goal): Result<Unit> = try {
         val uid = firebase.currentUserId() ?: return Result.failure(IllegalStateException("No authenticated user"))
-        
-        // Fetch existing to preserve badges if not provided
-        val existing = goalDao.getGoalById(goal.id)
-        val currentBadges = if (existing != null) {
-            entityToDomain(existing).unlockedBadges
-        } else emptyList()
-        
-        val updated = goal.copy(
-            userId = uid, 
-            updatedAt = Timestamp.now(),
-            unlockedBadges = currentBadges
-        ).checkAndApplyBadges()
-        
+        val updated = goal.copy(userId = uid, updatedAt = Timestamp.now())
         goalDao.insertGoal(domainToEntity(updated))
         firebase.updateGoal(updated)
         Result.success(Unit)
@@ -191,16 +162,10 @@ class GoalRepository @Inject constructor(
         val totalSaved = allocations.sumOf { it.amount }
         val gLocal = goalDao.getGoalById(goalId)
         if (gLocal != null) {
-            val domainGoal = entityToDomain(gLocal).copy(
-                currentSavedAmount = totalSaved,
-                isCompleted = totalSaved >= gLocal.targetAmount
-            )
-            
-            val updated = domainGoal.checkAndApplyBadges()
-            
-            goalDao.insertGoal(domainToEntity(updated))
+            val updated = gLocal.copy(currentSavedAmount = totalSaved, isCompleted = totalSaved >= gLocal.targetAmount)
+            goalDao.insertGoal(updated)
             // update remote goal as well
-            try { firebase.updateGoal(updated) } catch (_: Exception) {}
+            try { firebase.updateGoal(entityToDomain(updated)) } catch (_: Exception) {}
         }
 
         Result.success(Unit)
@@ -211,10 +176,7 @@ class GoalRepository @Inject constructor(
         val remote = firebase.getAllGoals()
         // replace local
         goalDao.deleteGoalsForUser(uid)
-        remote.forEach { 
-            val updated = it.copy(userId = uid).checkAndApplyBadges()
-            goalDao.insertGoal(domainToEntity(updated)) 
-        }
+        remote.forEach { goalDao.insertGoal(domainToEntity(it)) }
         // sync allocations (simple approach: fetch per-goal)
         remote.forEach { goal ->
             val allocs = firebase.getAllocations(goal.id)

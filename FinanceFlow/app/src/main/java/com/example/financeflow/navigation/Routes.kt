@@ -16,6 +16,7 @@ object Routes {
     const val STREAK = "streak"
     const val NOTIFICATIONS = "notifications"
     const val DASHBOARD = "dashboard"
+    const val CHAT = "chat"
 
     const val ADD_EXPENSE = "add_expense"
     const val ADD_SAVING = "add_saving"

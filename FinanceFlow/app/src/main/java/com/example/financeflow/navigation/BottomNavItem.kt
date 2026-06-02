@@ -57,4 +57,5 @@ sealed class BottomNavItem(
         "Insights",
         Icons.Outlined.BarChart
     )
+
 }
