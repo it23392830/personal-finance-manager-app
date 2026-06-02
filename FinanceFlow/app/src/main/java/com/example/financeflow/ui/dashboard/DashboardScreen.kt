@@ -320,14 +320,9 @@ fun DashboardScreen(
                     isDarkTheme = isDarkTheme,
                     onThemeToggle = onThemeToggle,
                     onNavigateBack = { navController.popBackStack() },
-                    onAccountDeleted = {
+                    onLoggedOut = {
                         rootNavController.navigate(Routes.LOGIN) {
-                            popUpTo(rootNavController.graph.findStartDestination().id) {
-                                inclusive = true
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
+                            popUpTo(0) { inclusive = true }
                         }
                     }
                 )

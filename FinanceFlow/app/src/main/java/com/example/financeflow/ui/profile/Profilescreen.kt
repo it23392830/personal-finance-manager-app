@@ -193,7 +193,6 @@ fun ProfileScreen(
             AccountActionsCard(
                 onChangePassword = { showChangePasswordDialog = true },
                 onLogOut = {
-                    authViewModel.logout()
                     onNavigateToLogout()
                 },
                 palette = palette
