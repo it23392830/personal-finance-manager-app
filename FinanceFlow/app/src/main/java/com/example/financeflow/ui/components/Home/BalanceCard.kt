@@ -211,7 +211,7 @@ private fun GreetingRow(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text       = "Hello, $userName!!",
+                text       = userName,
                 style      = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
                     color      = PrimaryPurple,

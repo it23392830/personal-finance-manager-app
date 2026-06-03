@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +44,7 @@ import com.example.financeflow.ui.components.Home.SummaryCardData
 import com.example.financeflow.ui.components.savings.GoalProgressCard
 import com.example.financeflow.ui.components.savings.GoalProgressData
 import com.example.financeflow.viewmodel.dashboard.DashboardViewModel
+import com.example.financeflow.viewmodel.dashboard.HomeViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -110,6 +112,7 @@ fun HomeScreen(
     isDarkTheme: Boolean = false,
     streakDays: Int = 0,
     viewModel: DashboardViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel(),
     onAddIncomeClick: () -> Unit = {},
     onAddExpenseClick: () -> Unit = {},
     onIncomeClick: () -> Unit = {},
@@ -133,10 +136,10 @@ fun HomeScreen(
     val expenseSectionSummary by viewModel.expenseSectionSummary.collectAsState()
     val goalProgress by viewModel.goalProgress.collectAsState()
     val monthlySummary by viewModel.monthlySummary.collectAsState()
-    val userName by viewModel.userName.collectAsState()
+    val greeting by homeViewModel.greetingState.collectAsState()
 
     val balanceCardData = BalanceCardData(
-        userName = userName,
+        userName = greeting,
         availableBalance = remainingBalance.toLong(),
         totalIncome = totalIncome.toLong(),
         totalExpenses = totalExpenses.toLong(),
