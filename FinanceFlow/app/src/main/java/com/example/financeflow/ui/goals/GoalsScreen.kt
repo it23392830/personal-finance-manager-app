@@ -84,168 +84,171 @@ fun GoalsScreen(
     Scaffold(
         containerColor = palette.background
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(palette.background)
                 .padding(bottom = padding.calculateBottomPadding())
         ) {
-            item {
-                GoalsHeader(
-                    selectedGoal = detailState.goal,
-                    isDarkTheme = isDarkTheme,
-                    onCreateGoal = { 
-                        viewModel.resetCreateGoalState()
-                        showCreateGoal = true 
-                    }
-                )
-            }
-
-            when {
-                uiState.isLoading -> {
-                    item {
-                        Box(modifier = Modifier.fillParentMaxHeight(0.6f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = Color(0xFF6F00FF))
-                        }
-                    }
+            GoalsHeader(
+                selectedGoal = detailState.goal,
+                isDarkTheme = isDarkTheme,
+                onCreateGoal = { 
+                    viewModel.resetCreateGoalState()
+                    showCreateGoal = true 
                 }
-                uiState.goals.isEmpty() -> {
-                    item { EmptyGoalsState(onCreateGoal = { 
-                        viewModel.resetCreateGoalState()
-                        showCreateGoal = true 
-                    }, isDarkTheme = isDarkTheme) }
-                }
-                else -> {
-                    item {
-                        Text(
-                            text = "All Goals (${uiState.goals.size})",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = palette.textPrimary,
-                            modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 12.dp)
-                        )
-                    }
+            )
 
-                    items(items = uiState.goals, key = { it.id }) { goal ->
-                        GoalCard(
-                            goal = goal,
-                            isDarkTheme = isDarkTheme,
-                            isSelected = detailState.goal?.id == goal.id,
-                            onClick = { 
-                                viewModel.loadGoalDetail(goal.id)
-                                // If navigation callback is provided (main screen), we navigate.
-                                // If not provided (detail screen), we just update state locally.
-                                onNavigateToDetail(goal.id)
-                            },
-                            onEdit = {
-                                viewModel.setEditGoal(goal)
-                                showCreateGoal = true
-                            },
-                            onDelete = {
-                                goalToDelete = goal
-                            },
-                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-                        )
-                    }
-
-                    if (detailState.goal != null) {
-                        val goal = detailState.goal!!
-                        val categoryColor = getCategoryColor(goal.category)
-                        
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                when {
+                    uiState.isLoading -> {
                         item {
-                            Spacer(modifier = Modifier.height(32.dp))
-                            GoalDetailLargeCard(goal, isDarkTheme = isDarkTheme)
-                        }
-
-                        item {
-                            GoalSummaryGrid(goal, isDarkTheme = isDarkTheme)
-                        }
-
-                        item { GoalWarningCard(goal, isDarkTheme = isDarkTheme) }
-
-                        item {
-                            Row(
-                                modifier = Modifier
-                                    .padding(horizontal = 24.dp, vertical = 20.dp)
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(24.dp))
-                                    .background(palette.tabTrack)
-                                    .padding(4.dp)
-                            ) {
-                                TabButton(
-                                    text = "Milestones", 
-                                    selected = selectedTab == 0, 
-                                    onClick = { selectedTab = 0 }, 
-                                    activeColor = categoryColor,
-                                    isDarkTheme = isDarkTheme,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                TabButton(
-                                    text = "Contributions", 
-                                    selected = selectedTab == 1, 
-                                    onClick = { selectedTab = 1 }, 
-                                    activeColor = categoryColor,
-                                    isDarkTheme = isDarkTheme,
-                                    modifier = Modifier.weight(1f)
-                                )
+                            Box(modifier = Modifier.fillParentMaxHeight(0.6f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = Color(0xFF6F00FF))
                             }
                         }
+                    }
+                    uiState.goals.isEmpty() -> {
+                        item { EmptyGoalsState(onCreateGoal = { 
+                            viewModel.resetCreateGoalState()
+                            showCreateGoal = true 
+                        }, isDarkTheme = isDarkTheme) }
+                    }
+                    else -> {
+                        item {
+                            Text(
+                                text = "All Goals (${uiState.goals.size})",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = palette.textPrimary,
+                                modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 12.dp)
+                            )
+                        }
 
-                        if (selectedTab == 0) {
+                        items(items = uiState.goals, key = { it.id }) { goal ->
+                            GoalCard(
+                                goal = goal,
+                                isDarkTheme = isDarkTheme,
+                                isSelected = detailState.goal?.id == goal.id,
+                                onClick = { 
+                                    viewModel.loadGoalDetail(goal.id)
+                                    // If navigation callback is provided (main screen), we navigate.
+                                    // If not provided (detail screen), we just update state locally.
+                                    onNavigateToDetail(goal.id)
+                                },
+                                onEdit = {
+                                    viewModel.setEditGoal(goal)
+                                    showCreateGoal = true
+                                },
+                                onDelete = {
+                                    goalToDelete = goal
+                                },
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                            )
+                        }
+
+                        if (detailState.goal != null) {
+                            val goal = detailState.goal!!
+                            val categoryColor = getCategoryColor(goal.category)
+                            
                             item {
-                                Box(modifier = Modifier.padding(horizontal = 24.dp)) {
-                                    GoalMilestonesSection(goal, isDarkTheme = isDarkTheme, onBadgeClick = { selectedBadge = it })
-                                }
+                                Spacer(modifier = Modifier.height(32.dp))
+                                GoalDetailLargeCard(goal, isDarkTheme = isDarkTheme)
                             }
-                        } else {
+
                             item {
-                                Box(modifier = Modifier.padding(horizontal = 24.dp)) {
-                                    MonthlyContributionsHeader(
+                                GoalSummaryGrid(goal, isDarkTheme = isDarkTheme)
+                            }
+
+                            item { GoalWarningCard(goal, isDarkTheme = isDarkTheme) }
+
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .padding(horizontal = 24.dp, vertical = 20.dp)
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(palette.tabTrack)
+                                        .padding(4.dp)
+                                ) {
+                                    TabButton(
+                                        text = "Milestones", 
+                                        selected = selectedTab == 0, 
+                                        onClick = { selectedTab = 0 }, 
+                                        activeColor = categoryColor,
                                         isDarkTheme = isDarkTheme,
-                                        onAddClick = { showAddContribution = true }
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    TabButton(
+                                        text = "Contributions", 
+                                        selected = selectedTab == 1, 
+                                        onClick = { selectedTab = 1 }, 
+                                        activeColor = categoryColor,
+                                        isDarkTheme = isDarkTheme,
+                                        modifier = Modifier.weight(1f)
                                     )
                                 }
                             }
-                            if (detailState.allocations.isEmpty()) {
+
+                            if (selectedTab == 0) {
                                 item {
-                                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
-                                        Text("No contributions tagged yet", style = MaterialTheme.typography.bodyMedium, color = palette.textMuted)
+                                    Box(modifier = Modifier.padding(horizontal = 24.dp)) {
+                                        GoalMilestonesSection(goal, isDarkTheme = isDarkTheme, onBadgeClick = { selectedBadge = it })
                                     }
                                 }
                             } else {
-                                items(items = detailState.allocations, key = { it.id }) { allocation ->
-                                    Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp)) {
-                                        AllocationItem(allocation, goal.currency, isDarkTheme = isDarkTheme)
+                                item {
+                                    Box(modifier = Modifier.padding(horizontal = 24.dp)) {
+                                        MonthlyContributionsHeader(
+                                            isDarkTheme = isDarkTheme,
+                                            onAddClick = { showAddContribution = true }
+                                        )
                                     }
+                                }
+                                if (detailState.allocations.isEmpty()) {
+                                    item {
+                                        Box(modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
+                                            Text("No contributions tagged yet", style = MaterialTheme.typography.bodyMedium, color = palette.textMuted)
+                                        }
+                                    }
+                                } else {
+                                    items(items = detailState.allocations, key = { it.id }) { allocation ->
+                                        Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp)) {
+                                            AllocationItem(allocation, goal.currency, isDarkTheme = isDarkTheme)
+                                        }
+                                    }
+                                }
+                            }
+
+                            item {
+                                Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
+                                    GoalInsightSection(goal, isDarkTheme = isDarkTheme)
                                 }
                             }
                         }
 
                         item {
-                            Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
-                                GoalInsightSection(goal, isDarkTheme = isDarkTheme)
+                            Button(
+                                onClick = { 
+                                    viewModel.resetCreateGoalState()
+                                    showCreateGoal = true 
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 24.dp, vertical = 24.dp)
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(28.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6F00FF))
+                            ) {
+                                Text("+ Create New Goal", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                             }
                         }
+                        
+                        item { Spacer(modifier = Modifier.height(120.dp)) }
                     }
-
-                    item {
-                        Button(
-                            onClick = { 
-                                viewModel.resetCreateGoalState()
-                                showCreateGoal = true 
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 24.dp)
-                                .height(56.dp),
-                            shape = RoundedCornerShape(28.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6F00FF))
-                        ) {
-                            Text("+ Create New Goal", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        }
-                    }
-                    
-                    item { Spacer(modifier = Modifier.height(40.dp)) }
                 }
             }
         }

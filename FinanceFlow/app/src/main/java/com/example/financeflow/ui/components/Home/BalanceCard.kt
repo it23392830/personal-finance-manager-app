@@ -135,14 +135,6 @@ fun BalanceCard(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
-            // ── Greeting row ────────────────────────────────
-            GreetingRow(
-                isDarkTheme = isDarkTheme,
-                userName = data.userName,
-                onThemeClick = onThemeClick,
-                onProfileClick = onProfileClick
-            )
-
             // ── Balance block ───────────────────────────────
             BalanceBlock(
                 isDarkTheme    = isDarkTheme,
@@ -194,40 +186,6 @@ fun BalanceCard(
 // ─────────────────────────────────────────────
 //  Private sub-composables
 // ─────────────────────────────────────────────
-
-@Composable
-private fun GreetingRow(
-    isDarkTheme: Boolean = false,
-    userName: String,
-    onThemeClick: () -> Unit,
-    onProfileClick: () -> Unit
-) {
-    val colors = getBalanceCardColors(isDarkTheme)
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text       = userName,
-                style      = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color      = PrimaryPurple,
-                    fontSize   = 22.sp
-                )
-            )
-            Text(
-                text  = "Welcome Back",
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color    = colors.textSecondary,
-                    fontSize = 13.sp
-                )
-            )
-        }
-    }
-}
 
 @Composable
 private fun StreakChip(

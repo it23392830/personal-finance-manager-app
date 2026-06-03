@@ -30,9 +30,9 @@ class HomeViewModel @Inject constructor(
                 val greeting = getGreeting()
                 
                 val displayGreeting = if (firstName.isNotEmpty()) {
-                    "$greeting, $firstName 👋"
+                    "$greeting, $firstName!!"
                 } else {
-                    "$greeting 👋"
+                    "$greeting!!"
                 }
                 _greetingState.value = displayGreeting
             }
