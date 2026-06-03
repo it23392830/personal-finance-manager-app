@@ -245,8 +245,23 @@ fun GoalsHeader(
     onCreateGoal: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedMonth by remember { mutableStateOf("May 2026") }
-    val months = listOf("May 2026", "April 2026", "March 2026", "February 2026", "January 2026")
+    val months = remember {
+        val monthSet = mutableListOf<String>()
+        val creationTime = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.metadata?.creationTimestamp ?: java.util.Calendar.getInstance().timeInMillis
+        val creationCal = java.util.Calendar.getInstance().apply { timeInMillis = creationTime }
+        val currentCal = java.util.Calendar.getInstance()
+        
+        val tempCal = creationCal.clone() as java.util.Calendar
+        tempCal.set(java.util.Calendar.DAY_OF_MONTH, 1)
+        val sdf = java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale.getDefault())
+        
+        while (tempCal.before(currentCal) || (tempCal.get(java.util.Calendar.YEAR) == currentCal.get(java.util.Calendar.YEAR) && tempCal.get(java.util.Calendar.MONTH) == currentCal.get(java.util.Calendar.MONTH))) {
+            monthSet.add(sdf.format(tempCal.time))
+            tempCal.add(java.util.Calendar.MONTH, 1)
+        }
+        monthSet.reversed()
+    }
+    var selectedMonth by remember(months) { mutableStateOf(months.firstOrNull() ?: "") }
 
     val primaryColor = if (isDarkTheme) Color(0xFF4C1D95) else Color(0xFF6F00FF)
     val secondaryColor = if (isDarkTheme) Color(0xFF312E81) else Color(0xFF8A2BE2)

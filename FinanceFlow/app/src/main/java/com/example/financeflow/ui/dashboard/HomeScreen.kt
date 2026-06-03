@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +23,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import coil.compose.AsyncImage
+import com.example.financeflow.viewmodel.ProfileViewModel
 import com.example.financeflow.ui.components.Home.BalanceCard
 import com.example.financeflow.ui.components.Home.BalanceCardData
 import com.example.financeflow.ui.components.Home.ExpenseBreakdownSection
@@ -43,6 +48,7 @@ import com.example.financeflow.ui.components.Home.SummaryCardData
 import com.example.financeflow.ui.components.savings.GoalProgressCard
 import com.example.financeflow.ui.components.savings.GoalProgressData
 import com.example.financeflow.viewmodel.dashboard.DashboardViewModel
+import com.example.financeflow.viewmodel.dashboard.HomeViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -110,6 +116,8 @@ fun HomeScreen(
     isDarkTheme: Boolean = false,
     streakDays: Int = 0,
     viewModel: DashboardViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel(),
+    profileViewModel: ProfileViewModel = hiltViewModel(),
     onAddIncomeClick: () -> Unit = {},
     onAddExpenseClick: () -> Unit = {},
     onIncomeClick: () -> Unit = {},
@@ -133,10 +141,11 @@ fun HomeScreen(
     val expenseSectionSummary by viewModel.expenseSectionSummary.collectAsState()
     val goalProgress by viewModel.goalProgress.collectAsState()
     val monthlySummary by viewModel.monthlySummary.collectAsState()
-    val userName by viewModel.userName.collectAsState()
+    val greeting by homeViewModel.greetingState.collectAsState()
+    val profileState by profileViewModel.profile.collectAsState()
 
     val balanceCardData = BalanceCardData(
-        userName = userName,
+        userName = greeting,
         availableBalance = remainingBalance.toLong(),
         totalIncome = totalIncome.toLong(),
         totalExpenses = totalExpenses.toLong(),
@@ -215,163 +224,110 @@ fun HomeScreen(
     val incomeSourceItems = incomeSources.map { source ->
         IncomeSourceItem(source = source.source, amount = source.amount.toLong())
     }
-    val listState = rememberLazyListState()
-    val showHeaderIcons by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
-        }
-    }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.scaffoldBg)
     ) {
+        HomeHeader(
+            isDarkTheme = isDarkTheme,
+            greeting = greeting,
+            profileImage = profileState.profileImage,
+            onThemeClick = onThemeClick,
+            onProfileClick = onProfileClick,
+            onNotificationClick = onNotificationClick,
+            unreadNotificationCount = unreadNotificationCount
+        )
+
         LazyColumn(
-            state          = listState,
             modifier       = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
-                start  = 16.dp,
-                end    = 16.dp,
                 top    = 20.dp,
                 bottom = 120.dp
             ),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // add space so the icons placed at the top-left sit visually above the card
-            item { Spacer(modifier = Modifier.height(24.dp)) }
-
             item {
-                BalanceCard(
-                    isDarkTheme = isDarkTheme,
-                    data = balanceCardData,
-                    onStreakClick = onStreakClick,
-                    onThemeClick = onThemeClick,
-                    onProfileClick = onProfileClick
-                )
-            }
-
-            item {
-                QuickActionRow(
-                    isDarkTheme = isDarkTheme,
-                    onAddIncomeClick = onAddIncomeClick,
-                    onAddExpenseClick = onAddExpenseClick
-                )
-            }
-
-            item {
-                MoneyFlowSection(
-                    isDarkTheme = isDarkTheme,
-                    items = moneyFlowItems,
-                    onIncomeClick = onIncomeClick,
-                    onGoalsClick = onGoalsClick,
-                    onExpensesClick = onExpensesClick,
-                    onSavingsClick = onSavingsClick
-                )
-            }
-
-            item {
-                SectionHeader(isDarkTheme = isDarkTheme, title = "Savings Goal")
-                Spacer(modifier = Modifier.height(10.dp))
-                GoalProgressCard(
-                    isDarkTheme = isDarkTheme,
-                    data = goalCardData,
-                    onClick = onGoalCardClick
-                )
-            }
-
-            item {
-                IncomeSourcesCard(isDarkTheme = isDarkTheme, sources = incomeSourceItems)
-            }
-
-            item {
-                ExpenseBreakdownSection(isDarkTheme = isDarkTheme, sections = expenseSections)
-            }
-
-            item {
-                val usedPercent = if (totalIncome > 0.0) ((totalExpenses / totalIncome) * 100).roundToInt() else 0
-                BudgetUsageBar(
-                    isDarkTheme = isDarkTheme,
-                    usedPercent = usedPercent.coerceIn(0, 100),
-                    remainingAmount = max(0.0, remainingBalance).toLong()
-                )
-            }
-
-            item {
-                MonthlySummaryCard(
-                    isDarkTheme = isDarkTheme,
-                    totalIncome = monthlySummary.income,
-                    totalExpenses = monthlySummary.expenses,
-                    totalSavings = monthlySummary.savings,
-                    remainingBalance = monthlySummary.remainingBalance,
-                    onViewInsightsClick = onViewInsightsClick
-                )
-            }
-        }
-        if (showHeaderIcons) {
-            // Theme icon at top-left
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(start = 12.dp, top = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onThemeClick) {
-                        Icon(
-                            imageVector = if (isDarkTheme) Icons.Outlined.DarkMode else Icons.Outlined.LightMode,
-                            contentDescription = if (isDarkTheme) "Dark Mode" else "Light Mode",
-                            tint = colors.textPrimary
-                        )
-                    }
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    BalanceCard(
+                        isDarkTheme = isDarkTheme,
+                        data = balanceCardData,
+                        onStreakClick = onStreakClick,
+                        onThemeClick = onThemeClick,
+                        onProfileClick = onProfileClick
+                    )
                 }
+            }
 
-                // Profile + notification icons at top-right
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(end = 12.dp, top = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onProfileClick) {
-                        Icon(
-                            imageVector = Icons.Outlined.Person,
-                            contentDescription = "Profile",
-                            tint = colors.textPrimary
-                        )
-                    }
-                    Box {
-                        IconButton(onClick = onNotificationClick) {
-                            Icon(
-                                imageVector = Icons.Outlined.Notifications,
-                                contentDescription = "Notifications",
-                                tint = colors.textPrimary
-                            )
-                        }
+            item {
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    QuickActionRow(
+                        isDarkTheme = isDarkTheme,
+                        onAddIncomeClick = onAddIncomeClick,
+                        onAddExpenseClick = onAddExpenseClick
+                    )
+                }
+            }
 
-                        if (unreadNotificationCount > 0) {
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .offset(x = (-2).dp, y = 2.dp)
-                                    .size(18.dp)
-                                    .background(Color(0xFFFF5E4D), RoundedCornerShape(99.dp))
-                                    .border(
-                                        width = 1.5.dp,
-                                        color = if (isDarkTheme) Color(0xFF1A1A2E) else Color(0xFFF5F3FF),
-                                        shape = RoundedCornerShape(99.dp)
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = if (unreadNotificationCount > 9) "9+" else unreadNotificationCount.toString(),
-                                    color = Color.White,
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
+            item {
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    MoneyFlowSection(
+                        isDarkTheme = isDarkTheme,
+                        items = moneyFlowItems,
+                        onIncomeClick = onIncomeClick,
+                        onGoalsClick = onGoalsClick,
+                        onExpensesClick = onExpensesClick,
+                        onSavingsClick = onSavingsClick
+                    )
+                }
+            }
+
+            item {
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    SectionHeader(isDarkTheme = isDarkTheme, title = "Savings Goal")
+                    Spacer(modifier = Modifier.height(10.dp))
+                    GoalProgressCard(
+                        isDarkTheme = isDarkTheme,
+                        data = goalCardData,
+                        onClick = onGoalCardClick
+                    )
+                }
+            }
+
+            item {
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    IncomeSourcesCard(isDarkTheme = isDarkTheme, sources = incomeSourceItems)
+                }
+            }
+
+            item {
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    ExpenseBreakdownSection(isDarkTheme = isDarkTheme, sections = expenseSections)
+                }
+            }
+
+            item {
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    val usedPercent = if (totalIncome > 0.0) ((totalExpenses / totalIncome) * 100).roundToInt() else 0
+                    BudgetUsageBar(
+                        isDarkTheme = isDarkTheme,
+                        usedPercent = usedPercent.coerceIn(0, 100),
+                        remainingAmount = max(0.0, remainingBalance).toLong()
+                    )
+                }
+            }
+
+            item {
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    MonthlySummaryCard(
+                        isDarkTheme = isDarkTheme,
+                        totalIncome = monthlySummary.income,
+                        totalExpenses = monthlySummary.expenses,
+                        totalSavings = monthlySummary.savings,
+                        remainingBalance = monthlySummary.remainingBalance,
+                        onViewInsightsClick = onViewInsightsClick
+                    )
                 }
             }
         }
@@ -531,6 +487,124 @@ private fun BudgetUsageBar(
                         )
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun HomeHeader(
+    isDarkTheme: Boolean,
+    greeting: String,
+    profileImage: String,
+    onThemeClick: () -> Unit,
+    onProfileClick: () -> Unit,
+    onNotificationClick: () -> Unit,
+    unreadNotificationCount: Int
+) {
+    val colors = getHomeScreenColors(isDarkTheme)
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        color = Color.White,
+        shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
+        shadowElevation = 2.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp)
+        ) {
+            // Top Row: Avatar and Icons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Avatar
+                Surface(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clickable { onProfileClick() },
+                    shape = CircleShape,
+                    color = Color(0xFFEDE7FF)
+                ) {
+                    if (profileImage.isNotEmpty()) {
+                        AsyncImage(
+                            model = profileImage,
+                            contentDescription = "Profile Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.Person,
+                            contentDescription = "Profile",
+                            modifier = Modifier.padding(12.dp),
+                            tint = Color(0xFF7C4DFF)
+                        )
+                    }
+                }
+
+                // Icons
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onThemeClick) {
+                        Icon(
+                            imageVector = if (isDarkTheme) Icons.Outlined.DarkMode else Icons.Outlined.LightMode,
+                            contentDescription = "Theme",
+                            tint = Color.Black
+                        )
+                    }
+                    Box {
+                        IconButton(onClick = onNotificationClick) {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = "Notifications",
+                                tint = Color.Black
+                            )
+                        }
+                        if (unreadNotificationCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = (-4).dp, y = 4.dp)
+                                    .size(16.dp)
+                                    .background(Color(0xFFFF5E4D), CircleShape)
+                                    .border(1.5.dp, Color.White, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (unreadNotificationCount > 9) "9+" else unreadNotificationCount.toString(),
+                                    color = Color.White,
+                                    fontSize = 8.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Greeting
+            Text(
+                text = greeting,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF7C4DFF),
+                    fontSize = 24.sp
+                )
+            )
+            
+            Text(
+                text = "Welcome Back",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    color = Color(0xFFB0B0C0),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            )
         }
     }
 }

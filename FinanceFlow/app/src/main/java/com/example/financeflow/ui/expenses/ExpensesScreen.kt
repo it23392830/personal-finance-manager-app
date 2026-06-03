@@ -24,6 +24,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import com.example.financeflow.ui.components.common.FeatureMonthHeader
+import com.example.financeflow.ui.components.common.FeatureMonthHeader
 import com.example.financeflow.ui.components.Expenses.*
 import com.example.financeflow.ui.components.Expenses.getExpensesColors
 import com.example.financeflow.ui.theme.FinanceFlowTheme
@@ -275,7 +277,28 @@ fun ExpensesScreen(
     val viewModel: ExpenseViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsState()
     // use ViewModel state directly
-    val selectedMonth = state.selectedMonth.ifBlank { SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(java.util.Date()) }
+    val selectedMonth = state.selectedMonth.ifBlank { 
+        SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(java.util.Date()) 
+    }
+    
+    val displaySelectedMonth = remember(selectedMonth) {
+        try {
+            val d = SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse(selectedMonth)
+            d?.let { SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(it) } ?: selectedMonth
+        } catch (e: Exception) { 
+            selectedMonth 
+        }
+    }
+    
+    val displayAvailableMonths = remember(state.availableMonths) {
+        state.availableMonths.map { m ->
+            try {
+                val d = SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse(m)
+                d?.let { SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(it) } ?: m
+            } catch (e: Exception) { m }
+        }
+    }
+
     val expenses = state.currentMonthTransactions
     val recurringList = state.fixedPayments.map {
         RecurringUiItem(
@@ -410,110 +433,121 @@ fun ExpensesScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(colors.AppBg)
-                .verticalScroll(rememberScrollState())
         ) {
-            // ── Header ─────────────────────────────────────────
-            ExpenseHeader(
-                selectedMonth = selectedMonth,
-                onMonthChange = { m ->
-                    // parse yyyy-MM -> set in viewmodel
-                    val parts = m.split("-")
-                    val y = parts.getOrNull(0)?.toIntOrNull() ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
-                    val mo = parts.getOrNull(1)?.toIntOrNull() ?: (java.util.Calendar.getInstance().get(java.util.Calendar.MONTH) + 1)
-                    viewModel.setSelectedMonth(y, mo)
+            // ── Fixed Header ─────────────────────────────────────────
+            FeatureMonthHeader(
+                title = "Expense Tracker",
+                subtitle = "low-friction tracking for busy days",
+                selectedMonth = displaySelectedMonth,
+                monthOptions = displayAvailableMonths,
+                onMonthSelected = { displayM ->
+                    try {
+                        val d = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).parse(displayM)
+                        if (d != null) {
+                            val cal = java.util.Calendar.getInstance().apply { time = d }
+                            viewModel.setSelectedMonth(cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH) + 1)
+                        }
+                    } catch (e: Exception) {}
                 },
-                onAddClick    = { openAddForm() },
-                colors = colors,
-                availableMonths = state.availableMonths
+                headerColor = colors.HeaderRed
             )
 
-            // ── Warning banner ──────────────────────────────────
-            if (budgetUsedPct >= 85f) {
-                ExpenseWarningBanner(
-                    budgetUsedPct = budgetUsedPct,
-                    remaining     = remaining,
-                    isDarkTheme = isDarkTheme
-                )
-            }
-
-            // ── Overview Section ──────────────────────────────
+            // ── Scrollable Content ──────────────────────────────
             Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Total Expenses This Month card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = colors.ExpenseBg)
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text("Total Expenses This Month", fontWeight = FontWeight.Bold, color = colors.TextPrimary)
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = "LKR ${"%,.0f".format(state.totalExpense)}",
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = colors.ExpenseRed
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Button(onClick = { onAddExpenseClick() }, colors = ButtonDefaults.buttonColors(containerColor = colors.HeaderRed)) {
-                            Text("+ Add Expense", color = Color.White)
-                        }
-                    }
-                }
-                ExpenseQuickAdd(
-                    isDarkTheme = isDarkTheme,
-                    recentCategoryIds = recentCategoryIds,
-                    onCategoryClick   = { catId -> openAddForm(catId) }
-                )
-                // Smart Suggestions removed per requirements
-                ExpenseTodayList(
-                    isDarkTheme = isDarkTheme,
-                    todayExpenses = state.todayExpenses,
-                    openMenuId    = openMenuId,
-                    onMenuToggle  = { id -> openMenuId = if (openMenuId == id) null else id },
-                    onEdit        = { exp -> openEditForm(exp) },
-                    onDelete      = { exp -> deletingDomainId = exp.domainId; showDeleteDialog = true }
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            // View Past Expenses button
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Button(onClick = { showPastDialog = true }) { Text("View Past Expenses") }
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            // ── Recurring Section ─────────────────────────────
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "Fixed Payments",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = colors.TextPrimary
+                // ── Warning banner ──────────────────────────────────
+                if (budgetUsedPct >= 85f) {
+                    ExpenseWarningBanner(
+                        budgetUsedPct = budgetUsedPct,
+                        remaining     = remaining,
+                        isDarkTheme = isDarkTheme
                     )
-                )
-                // Fixed payments list
-                state.fixedPayments.forEach { fe ->
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Column {
-                            Text(fe.description.ifBlank { getCat(fe.category).label }, fontWeight = FontWeight.Bold, color = colors.TextPrimary)
-                            Text(fmtLKR(fe.amount.toInt()), color = colors.TextMuted)
+                }
+
+                // ── Overview Section ──────────────────────────────
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Total Expenses This Month card
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = colors.ExpenseBg)
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Text("Total Expenses This Month", fontWeight = FontWeight.Bold, color = colors.TextPrimary)
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "LKR ${"%,.0f".format(state.totalExpense)}",
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = colors.ExpenseRed
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            Button(onClick = { onAddExpenseClick() }, colors = ButtonDefaults.buttonColors(containerColor = colors.HeaderRed)) {
+                                Text("+ Add Expense", color = Color.White)
+                            }
                         }
-                        Switch(checked = fe.isPaid, onCheckedChange = { checked -> viewModel.toggleFixedPaid(fe, checked) })
                     }
-                    Spacer(Modifier.height(8.dp))
+                    ExpenseQuickAdd(
+                        isDarkTheme = isDarkTheme,
+                        recentCategoryIds = recentCategoryIds,
+                        onCategoryClick   = { catId -> openAddForm(catId) }
+                    )
+                    // Smart Suggestions removed per requirements
+                    ExpenseTodayList(
+                        isDarkTheme = isDarkTheme,
+                        todayExpenses = state.todayExpenses,
+                        openMenuId    = openMenuId,
+                        onMenuToggle  = { id -> openMenuId = if (openMenuId == id) null else id },
+                        onEdit        = { exp -> openEditForm(exp) },
+                        onDelete      = { exp -> deletingDomainId = exp.domainId; showDeleteDialog = true }
+                    )
                 }
-                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                    OutlinedButton(onClick = { /* open add fixed expense dialog - simplified to reuse add form */ openAddForm() }) { Text("+ Add") }
+
+                Spacer(Modifier.height(12.dp))
+
+                // View Past Expenses button
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Button(onClick = { showPastDialog = true }) { Text("View Past Expenses") }
                 }
-                Spacer(Modifier.height(80.dp))
+
+                Spacer(Modifier.height(24.dp))
+
+                // ── Recurring Section ─────────────────────────────
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Fixed Payments",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = colors.TextPrimary
+                        )
+                    )
+                    // Fixed payments list
+                    state.fixedPayments.forEach { fe ->
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column {
+                                Text(fe.description.ifBlank { getCat(fe.category).label }, fontWeight = FontWeight.Bold, color = colors.TextPrimary)
+                                Text(fmtLKR(fe.amount.toInt()), color = colors.TextMuted)
+                            }
+                            Switch(checked = fe.isPaid, onCheckedChange = { checked -> viewModel.toggleFixedPaid(fe, checked) })
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(onClick = { /* open add fixed expense dialog - simplified to reuse add form */ openAddForm() }) { Text("+ Add") }
+                    }
+                    Spacer(Modifier.height(120.dp))
+                }
             }
         }
 

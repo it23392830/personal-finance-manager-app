@@ -142,7 +142,7 @@ fun IncomeScreenContent(
         else generateMonthOptions(todayYear, todayMonth, count = 5)
     }
 
-    val currentMonthYear = monthOptions.firstOrNull() ?: MonthYear(todayYear, todayMonth)
+    val currentMonthYear = MonthYear(uiState.selectedYear, uiState.selectedMonth)
 
     Box(
         modifier = Modifier
@@ -156,114 +156,114 @@ fun IncomeScreenContent(
             }
         }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+        Column(modifier = Modifier.fillMaxSize()) {
+            FeatureMonthHeader(
+                title = "Income Tracking",
+                subtitle = "Track your income sources month by month",
+                selectedMonth = currentMonthYear.toString(),
+                monthOptions = monthOptions.map { it.toString() },
+                onMonthSelected = { month ->
+                    monthOptions.firstOrNull { it.toString() == month }?.let(onMonthSelected)
+                },
+                headerColor = if (isDarkTheme) Color(0xFF1F6B50) else Color(0xFF22C55E)
+            )
 
-            contentPadding =
-                PaddingValues(
-                    bottom = 120.dp
-                ),
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
 
-            verticalArrangement =
-                Arrangement.spacedBy(16.dp)
+                contentPadding =
+                    PaddingValues(
+                        top = 16.dp,
+                        bottom = 120.dp
+                    ),
 
-        ) {
+                verticalArrangement =
+                    Arrangement.spacedBy(16.dp)
 
-            item {
-                FeatureMonthHeader(
-                    title = "Income Tracking",
-                    subtitle = "Track your income sources month by month",
-                    selectedMonth = currentMonthYear.toString(),
-                    monthOptions = monthOptions.map { it.toString() },
-                    onMonthSelected = { month ->
-                        monthOptions.firstOrNull { it.toString() == month }?.let(onMonthSelected)
-                    },
-                    headerColor = if (isDarkTheme) Color(0xFF1F6B50) else Color(0xFF22C55E)
-                )
-            }
-
-            item {
-                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    IncomeSummaryCard(
-                        isDarkTheme = isDarkTheme,
-                        totalAmount = uiState.totalIncome,
-                        currencyCode =
-                            uiState.displayCurrency.code,
-
-                        onAddIncomeClick =
-                            onShowAddDialog
-                    )
-                }
-
-            }
-
-            item {
-                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    SectionTitle(
-                        isDarkTheme = isDarkTheme,
-                        title = "Income by Source"
-                    )
-                }
-
-            }
-
-            items(
-                uiState.incomeBySource
             ) {
-
-                    source ->
-
-                IncomeCard(
-                    isDarkTheme = isDarkTheme,
-                    data = source,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-
-            }
-
-            item {
-                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    SectionTitle(
-                        isDarkTheme = isDarkTheme,
-                        title = "Recent Transactions"
-                    )
-                }
-
-            }
-
-            item {
-                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    RecentTransactionsCard(
-                        isDarkTheme = isDarkTheme,
-                        transactions = uiState.recentTransactions,
-                        expandedTransactionId = expandedTransactionId,
-                        onToggleExpand = onToggleExpand,
-                        onEditClick = onShowEditDialog,
-                        onDeleteClick = onShowDeleteDialog
-                    )
-                }
-
-            }
-
-            uiState.daysUntilNextSalary?.let {
-
-                    days ->
 
                 item {
                     Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        SalaryReminderCard(
+                        IncomeSummaryCard(
                             isDarkTheme = isDarkTheme,
-                            daysUntilSalary =
-                                days
+                            totalAmount = uiState.totalIncome,
+                            currencyCode =
+                                uiState.displayCurrency.code,
+
+                            onAddIncomeClick =
+                                onShowAddDialog
                         )
                     }
 
                 }
 
+                item {
+                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        SectionTitle(
+                            isDarkTheme = isDarkTheme,
+                            title = "Income by Source"
+                        )
+                    }
+
+                }
+
+                items(
+                    uiState.incomeBySource
+                ) {
+
+                        source ->
+
+                    IncomeCard(
+                        isDarkTheme = isDarkTheme,
+                        data = source,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+
+                }
+
+                item {
+                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        SectionTitle(
+                            isDarkTheme = isDarkTheme,
+                            title = "Recent Transactions"
+                        )
+                    }
+
+                }
+
+                item {
+                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        RecentTransactionsCard(
+                            isDarkTheme = isDarkTheme,
+                            transactions = uiState.recentTransactions,
+                            expandedTransactionId = expandedTransactionId,
+                            onToggleExpand = onToggleExpand,
+                            onEditClick = onShowEditDialog,
+                            onDeleteClick = onShowDeleteDialog
+                        )
+                    }
+
+                }
+
+                uiState.daysUntilNextSalary?.let {
+
+                        days ->
+
+                    item {
+                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            SalaryReminderCard(
+                                isDarkTheme = isDarkTheme,
+                                daysUntilSalary =
+                                    days
+                            )
+                        }
+
+                    }
+
+                }
+
             }
-
         }
-
     }
 
     if (uiState.showAddDialog) {

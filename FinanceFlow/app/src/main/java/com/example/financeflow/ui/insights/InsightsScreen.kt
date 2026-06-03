@@ -93,6 +93,19 @@ fun InsightsScreen(
 
     val monthOptions = remember(incomes, expenses, savings) {
         val monthSet = mutableSetOf<YearMonth>()
+        
+        // Add all months from account creation to current month
+        val creationTime = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.metadata?.creationTimestamp ?: System.currentTimeMillis()
+        val creationMonth = YearMonth.from(java.time.Instant.ofEpochMilli(creationTime).atZone(ZoneId.systemDefault()))
+        val currentMonthYm = YearMonth.now()
+        
+        var tempMonth = creationMonth
+        while (!tempMonth.isAfter(currentMonthYm)) {
+            monthSet.add(tempMonth)
+            tempMonth = tempMonth.plusMonths(1)
+        }
+
+        // Also add any month from transactions in case they have transactions before creation date
         incomes.forEach { item ->
             val ym = YearMonth.from(item.date.toDate().toInstant().atZone(ZoneId.systemDefault()))
             monthSet.add(ym)
@@ -105,8 +118,8 @@ fun InsightsScreen(
             val parsed = runCatching { YearMonth.parse(item.month, formatter) }.getOrNull()
             if (parsed != null) monthSet.add(parsed)
         }
-        val fallback = if (monthSet.isEmpty()) listOf(currentMonth) else monthSet.toList()
-        fallback.sortedByDescending { it }.map { it.format(formatter) }
+        
+        monthSet.toList().sortedByDescending { it }.map { it.format(formatter) }
     }
 
     androidx.compose.runtime.LaunchedEffect(monthOptions) {
@@ -226,9 +239,6 @@ fun InsightsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(scrollState)
-                .padding(bottom = 120.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             FeatureMonthHeader(
                 title = "Financial Insights",
@@ -241,73 +251,81 @@ fun InsightsScreen(
 
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Button(
-                    onClick = onViewReports,
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colors.PrimaryPurple,
-                        contentColor = Color.White
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text(
-                        text = "View Reports (Daily/Weekly/Monthly)",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
-                }
-
-                CalendarCard(
-                    isDarkTheme = isDarkTheme,
-                    month = selectedMonth,
-                    startDayOffset = startDayOffset,
-                    days = calendarDays,
-                    selectedDay = selectedDay,
-                    onDaySelected = { day -> selectedDay = day.dayOfMonth }
-                )
-
-                if (dayDetail != null) {
-                    DayDetailCard(detail = dayDetail, colors = colors)
-                }
-
-                FinancialHealthCard(
-                    isDarkTheme = isDarkTheme,
-                    score = score.roundToInt(),
-                    label = scoreLabel,
-                    savingsRate = "${"%.1f".format(savingsRate)}%",
-                    consistency = "${"%.0f".format(consistency)}/100",
-                    goalProgress = "${"%.1f".format(averageGoalProgress)}%"
-                )
-
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = colors.CardWhite,
-                    shadowElevation = 4.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Box(modifier = Modifier.padding(16.dp)) {
-                        SmartInsightsSection(isDarkTheme = isDarkTheme, items = insightItems)
+                    Button(
+                        onClick = onViewReports,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.PrimaryPurple,
+                            contentColor = Color.White
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    ) {
+                        Text(
+                            text = "View Reports (Daily/Weekly/Monthly)",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp
+                        )
                     }
-                }
 
-                ExpenseBreakdownCard(
-                    isDarkTheme = isDarkTheme,
-                    mustTotal = expenseBreakdown.mustTotal,
-                    mustPct = expenseBreakdown.mustPct,
-                    optionalTotal = expenseBreakdown.optionalTotal,
-                    optionalPct = expenseBreakdown.optionalPct,
-                    mustItems = expenseBreakdown.mustItems,
-                    optionalItems = expenseBreakdown.optionalItems
-                )
-                MonthlyComparisonCard(isDarkTheme = isDarkTheme, rows = comparisonRows)
-                Spacer(modifier = Modifier.height(16.dp))
+                    CalendarCard(
+                        isDarkTheme = isDarkTheme,
+                        month = selectedMonth,
+                        startDayOffset = startDayOffset,
+                        days = calendarDays,
+                        selectedDay = selectedDay,
+                        onDaySelected = { day -> selectedDay = day.dayOfMonth }
+                    )
+
+                    if (dayDetail != null) {
+                        DayDetailCard(detail = dayDetail, colors = colors)
+                    }
+
+                    FinancialHealthCard(
+                        isDarkTheme = isDarkTheme,
+                        score = score.roundToInt(),
+                        label = scoreLabel,
+                        savingsRate = "${"%.1f".format(savingsRate)}%",
+                        consistency = "${"%.0f".format(consistency)}/100",
+                        goalProgress = "${"%.1f".format(averageGoalProgress)}%"
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = colors.CardWhite,
+                        shadowElevation = 4.dp,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(modifier = Modifier.padding(16.dp)) {
+                            SmartInsightsSection(isDarkTheme = isDarkTheme, items = insightItems)
+                        }
+                    }
+
+                    ExpenseBreakdownCard(
+                        isDarkTheme = isDarkTheme,
+                        mustTotal = expenseBreakdown.mustTotal,
+                        mustPct = expenseBreakdown.mustPct,
+                        optionalTotal = expenseBreakdown.optionalTotal,
+                        optionalPct = expenseBreakdown.optionalPct,
+                        mustItems = expenseBreakdown.mustItems,
+                        optionalItems = expenseBreakdown.optionalItems
+                    )
+                    MonthlyComparisonCard(isDarkTheme = isDarkTheme, rows = comparisonRows)
+                    Spacer(modifier = Modifier.height(120.dp))
+                }
             }
         }
     }
