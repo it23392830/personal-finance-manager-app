@@ -8,7 +8,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlinx.coroutines.sync.Mutex
@@ -78,10 +77,6 @@ class ExpenseViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true)
             launch { loadExchangeRates() }
 
-            // default month = current
-            val cal = Calendar.getInstance()
-            setSelectedMonth(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1)
-
             // collect expenses for current user and compute derived UI state
             val uid = FirebaseAuth.getInstance().currentUser?.uid
             if (uid == null) {
@@ -89,95 +84,137 @@ class ExpenseViewModel @Inject constructor(
                 return@launch
             }
 
+            // default month = current
+            val cal = Calendar.getInstance()
+            val m = String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1)
+            _uiState.value = _uiState.value.copy(selectedMonth = m)
+
             // sync once from remote
             launch {
                 try { repository.syncFromFirestore() } catch (_: Exception) {}
             }
 
             // collect all expenses and compute totals and groupings
-            launch {
-                repository.getAllForUserFlow(uid).collect { list ->
-                    // compute available months
-                    val monthsSet = mutableSetOf<Pair<Int, Int>>()
-                    val tmpCal = Calendar.getInstance()
-                    list.forEach { ee ->
-                        tmpCal.time = ee.date.toDate()
-                        monthsSet.add(tmpCal.get(Calendar.YEAR) to (tmpCal.get(Calendar.MONTH) + 1))
-                    }
-                    val months = if (monthsSet.isEmpty()) {
-                        val c = Calendar.getInstance(); listOf(c.get(Calendar.YEAR) to (c.get(Calendar.MONTH) + 1))
-                    } else monthsSet.toList().sortedWith(compareByDescending<Pair<Int, Int>> { it.first }.thenByDescending { it.second })
-                    val monthsStr = months.map { (y, m) -> String.format("%04d-%02d", y, m) }
-
-                    // compute selected month filtered items
-                    val sel = _uiState.value.selectedMonth
-                    val (selYear, selMonth) = if (sel.isBlank()) {
-                        val c = Calendar.getInstance(); c.get(Calendar.YEAR) to (c.get(Calendar.MONTH) + 1)
-                    } else {
-                        val parts = sel.split("-")
-                        val y = parts.getOrNull(0)?.toIntOrNull() ?: Calendar.getInstance().get(Calendar.YEAR)
-                        val m = parts.getOrNull(1)?.toIntOrNull() ?: (Calendar.getInstance().get(Calendar.MONTH) + 1)
-                        y to m
-                    }
-
-                    val startCal = Calendar.getInstance().apply { set(selYear, selMonth - 1, 1, 0, 0, 0); set(Calendar.MILLISECOND, 0) }
-                    val endCal = Calendar.getInstance().apply { set(selYear, selMonth - 1, 1, 23, 59, 59); set(Calendar.MILLISECOND, 999); add(Calendar.MONTH, 1); add(Calendar.DAY_OF_MONTH, -1) }
-                    val start = startCal.timeInMillis
-                    val end = endCal.timeInMillis
-
-                    val now = Calendar.getInstance().timeInMillis
-                    val monthItems = list.filter { it.date.toDate().time in start..end }
-
-                    val visibleForCalc = monthItems.filter { it.date.toDate().time <= now }
-                    
-                    // total calculation: all non-fixed + only PAID fixed
-                    val total = visibleForCalc.sumOf {
-                        if (!it.isFixed || it.isPaid) {
-                            convertToLKR(it.amount, it.currency)
-                        } else 0.0
-                    }
-
-                    // today's expenses
-                    val sdfDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    val todayStr = sdfDate.format(Date())
-                    
-                    val todayList = list.filter {
-                        try {
-                            val dStr = sdfDate.format(it.date.toDate())
-                            dStr == todayStr
-                        } catch (_: Exception) { false }
-                    }.sortedByDescending { it.date.toDate().time }.map { mapToUiItem(it) }
-
-                    // Fixed payments (those where isFixed is true)
-                    val fixedList = list.filter { it.isFixed }
-
-                    // recent transactions (limit 10) based on visibleForCalc newest first
-                    val recent = visibleForCalc.sortedByDescending { it.date.toDate().time }.take(10).map { mapToUiItem(it) }
-
-                    // category breakdown
-                    val grouped = visibleForCalc.filter { !it.isFixed || it.isPaid }.groupBy { it.category }.map { (cat, items) ->
-                        val sum = items.sumOf { convertToLKR(it.amount, it.currency) }
-                        val label = com.example.financeflow.ui.expenses.getCat(cat).label
-                        CategoryBreakdownItem(label = label, amount = sum.toInt(), color = com.example.financeflow.ui.expenses.getCat(cat).bgColor)
-                    }.sortedByDescending { it.amount }
-
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        availableMonths = monthsStr,
-                        totalExpense = total,
-                        todayExpenses = todayList,
-                        currentMonthTransactions = monthItems.sortedByDescending { it.date.toDate().time }.map { mapToUiItem(it) },
-                        categoryBreakdown = grouped,
-                        fixedPayments = fixedList
-                    )
-                }
+            repository.getAllForUserFlow(uid).collect { list ->
+                currentAllExpenses = list
+                recalculateDerivedState()
             }
         }
+    }
+
+    private var currentAllExpenses: List<Expense> = emptyList()
+
+    private fun recalculateDerivedState() {
+        val list = currentAllExpenses
+        
+        // compute available months
+        val monthsSet = mutableSetOf<Pair<Int, Int>>()
+        val creationTime = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.metadata?.creationTimestamp ?: Calendar.getInstance().timeInMillis
+        val creationCal = Calendar.getInstance().apply { timeInMillis = creationTime }
+        val currentCal = Calendar.getInstance()
+        
+        val tempCal = creationCal.clone() as Calendar
+        tempCal.set(Calendar.DAY_OF_MONTH, 1)
+        while (tempCal.before(currentCal) || (tempCal.get(Calendar.YEAR) == currentCal.get(Calendar.YEAR) && tempCal.get(Calendar.MONTH) == currentCal.get(Calendar.MONTH))) {
+            monthsSet.add(tempCal.get(Calendar.YEAR) to (tempCal.get(Calendar.MONTH) + 1))
+            tempCal.add(Calendar.MONTH, 1)
+        }
+
+        val tmpCal = Calendar.getInstance()
+        list.forEach { ee ->
+            try {
+                tmpCal.time = ee.date.toDate()
+                monthsSet.add(tmpCal.get(Calendar.YEAR) to (tmpCal.get(Calendar.MONTH) + 1))
+            } catch (_: Exception) {}
+        }
+        val months = monthsSet.toList().sortedWith(compareByDescending<Pair<Int, Int>> { it.first }.thenByDescending { it.second })
+        val monthsStr = months.map { (y, m) -> String.format("%04d-%02d", y, m) }
+
+        // compute selected month filtered items
+        val sel = _uiState.value.selectedMonth
+        val (selYear, selMonth) = if (sel.isBlank()) {
+            val c = Calendar.getInstance(); c.get(Calendar.YEAR) to (c.get(Calendar.MONTH) + 1)
+        } else {
+            val parts = sel.split("-")
+            val y = parts.getOrNull(0)?.toIntOrNull() ?: Calendar.getInstance().get(Calendar.YEAR)
+            val m = parts.getOrNull(1)?.toIntOrNull() ?: (Calendar.getInstance().get(Calendar.MONTH) + 1)
+            y to m
+        }
+
+        val startCal = Calendar.getInstance().apply { 
+            set(Calendar.YEAR, selYear)
+            set(Calendar.MONTH, selMonth - 1)
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val endCal = (startCal.clone() as Calendar).apply {
+            add(Calendar.MONTH, 1)
+            add(Calendar.MILLISECOND, -1)
+        }
+        val start = startCal.timeInMillis
+        val end = endCal.timeInMillis
+
+        val now = Calendar.getInstance().timeInMillis
+        val monthItems = list.filter { e ->
+            try {
+                val t = e.date.toDate().time
+                t in start..end
+            } catch (_: Exception) { false }
+        }
+
+        val visibleForCalc = monthItems.filter { e ->
+            try { e.date.toDate().time <= now } catch (_: Exception) { false }
+        }
+        
+        // total calculation: all non-fixed + only PAID fixed
+        val total = visibleForCalc.sumOf { e ->
+            if (!e.isFixed || e.isPaid) {
+                convertToLKR(e.amount, e.currency)
+            } else 0.0
+        }
+
+        // today's expenses
+        val sdfDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val todayStr = sdfDate.format(Date())
+        
+        val todayList = list.filter { e ->
+            try {
+                val dStr = sdfDate.format(e.date.toDate())
+                dStr == todayStr
+            } catch (_: Exception) { false }
+        }.sortedByDescending { it.date.toDate().time }.map { mapToUiItem(it) }
+
+        // Fixed payments (those where isFixed is true)
+        val fixedList = list.filter { it.isFixed }
+
+        // recent transactions (limit 10) based on visibleForCalc newest first
+        val recent = visibleForCalc.sortedByDescending { it.date.toDate().time }.take(10).map { mapToUiItem(it) }
+
+        // category breakdown
+        val grouped = visibleForCalc.filter { !it.isFixed || it.isPaid }.groupBy { it.category }.map { (cat, items) ->
+            val sum = items.sumOf { convertToLKR(it.amount, it.currency) }
+            val label = com.example.financeflow.ui.expenses.getCat(cat).label
+            CategoryBreakdownItem(label = label, amount = sum.toInt(), color = com.example.financeflow.ui.expenses.getCat(cat).bgColor)
+        }.sortedByDescending { it.amount }
+
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            availableMonths = monthsStr,
+            totalExpense = total,
+            todayExpenses = todayList,
+            currentMonthTransactions = monthItems.sortedByDescending { it.date.toDate().time }.map { mapToUiItem(it) },
+            categoryBreakdown = grouped,
+            fixedPayments = fixedList
+        )
     }
 
     fun setSelectedMonth(year: Int, month: Int) {
         val m = String.format("%04d-%02d", year, month)
         _uiState.value = _uiState.value.copy(selectedMonth = m)
+        recalculateDerivedState()
     }
 
     fun addExpense(expense: Expense) {

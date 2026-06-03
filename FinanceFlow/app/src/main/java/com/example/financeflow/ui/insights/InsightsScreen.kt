@@ -93,6 +93,19 @@ fun InsightsScreen(
 
     val monthOptions = remember(incomes, expenses, savings) {
         val monthSet = mutableSetOf<YearMonth>()
+        
+        // Add all months from account creation to current month
+        val creationTime = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.metadata?.creationTimestamp ?: System.currentTimeMillis()
+        val creationMonth = YearMonth.from(java.time.Instant.ofEpochMilli(creationTime).atZone(ZoneId.systemDefault()))
+        val currentMonthYm = YearMonth.now()
+        
+        var tempMonth = creationMonth
+        while (!tempMonth.isAfter(currentMonthYm)) {
+            monthSet.add(tempMonth)
+            tempMonth = tempMonth.plusMonths(1)
+        }
+
+        // Also add any month from transactions in case they have transactions before creation date
         incomes.forEach { item ->
             val ym = YearMonth.from(item.date.toDate().toInstant().atZone(ZoneId.systemDefault()))
             monthSet.add(ym)
@@ -105,8 +118,8 @@ fun InsightsScreen(
             val parsed = runCatching { YearMonth.parse(item.month, formatter) }.getOrNull()
             if (parsed != null) monthSet.add(parsed)
         }
-        val fallback = if (monthSet.isEmpty()) listOf(currentMonth) else monthSet.toList()
-        fallback.sortedByDescending { it }.map { it.format(formatter) }
+        
+        monthSet.toList().sortedByDescending { it }.map { it.format(formatter) }
     }
 
     androidx.compose.runtime.LaunchedEffect(monthOptions) {

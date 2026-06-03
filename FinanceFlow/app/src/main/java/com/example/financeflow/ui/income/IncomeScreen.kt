@@ -142,7 +142,7 @@ fun IncomeScreenContent(
         else generateMonthOptions(todayYear, todayMonth, count = 5)
     }
 
-    val currentMonthYear = monthOptions.firstOrNull() ?: MonthYear(todayYear, todayMonth)
+    val currentMonthYear = MonthYear(uiState.selectedYear, uiState.selectedMonth)
 
     Box(
         modifier = Modifier

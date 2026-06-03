@@ -144,19 +144,28 @@ class IncomeRepository @Inject constructor(
         }
     }
 
-    /** Returns available months computed from local data. */
     suspend fun getAvailableMonths(): List<Pair<Int, Int>> {
         val uid = firebaseService.currentUserId() ?: error("No authenticated user")
         val list = incomeDao.getAllIncomeFlowForUser(uid).first()
         val set = mutableSetOf<Pair<Int, Int>>()
+
+        // Add all months from creation to current
+        val creationTime = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.metadata?.creationTimestamp ?: Calendar.getInstance().timeInMillis
+        val creationCal = Calendar.getInstance().apply { timeInMillis = creationTime }
+        val currentCal = Calendar.getInstance()
+        
+        val tempCal = creationCal.clone() as Calendar
+        tempCal.set(Calendar.DAY_OF_MONTH, 1)
+        while (tempCal.before(currentCal) || (tempCal.get(Calendar.YEAR) == currentCal.get(Calendar.YEAR) && tempCal.get(Calendar.MONTH) == currentCal.get(Calendar.MONTH))) {
+            set.add(tempCal.get(Calendar.YEAR) to (tempCal.get(Calendar.MONTH) + 1))
+            tempCal.add(Calendar.MONTH, 1)
+        }
+
         list.forEach { e ->
             val cal = Calendar.getInstance().apply { timeInMillis = e.date }
             set.add(cal.get(Calendar.YEAR) to (cal.get(Calendar.MONTH) + 1))
         }
-        if (set.isEmpty()) {
-            val c = Calendar.getInstance()
-            return listOf(c.get(Calendar.YEAR) to (c.get(Calendar.MONTH) + 1))
-        }
+
         return set.toList().sortedWith(compareByDescending<Pair<Int, Int>> { it.first }.thenByDescending { it.second })
     }
 }

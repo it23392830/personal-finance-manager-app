@@ -24,6 +24,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import com.example.financeflow.ui.components.common.FeatureMonthHeader
+import com.example.financeflow.ui.components.common.FeatureMonthHeader
 import com.example.financeflow.ui.components.Expenses.*
 import com.example.financeflow.ui.components.Expenses.getExpensesColors
 import com.example.financeflow.ui.theme.FinanceFlowTheme
@@ -275,7 +277,28 @@ fun ExpensesScreen(
     val viewModel: ExpenseViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsState()
     // use ViewModel state directly
-    val selectedMonth = state.selectedMonth.ifBlank { SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(java.util.Date()) }
+    val selectedMonth = state.selectedMonth.ifBlank { 
+        SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(java.util.Date()) 
+    }
+    
+    val displaySelectedMonth = remember(selectedMonth) {
+        try {
+            val d = SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse(selectedMonth)
+            d?.let { SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(it) } ?: selectedMonth
+        } catch (e: Exception) { 
+            selectedMonth 
+        }
+    }
+    
+    val displayAvailableMonths = remember(state.availableMonths) {
+        state.availableMonths.map { m ->
+            try {
+                val d = SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse(m)
+                d?.let { SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(it) } ?: m
+            } catch (e: Exception) { m }
+        }
+    }
+
     val expenses = state.currentMonthTransactions
     val recurringList = state.fixedPayments.map {
         RecurringUiItem(
@@ -412,18 +435,21 @@ fun ExpensesScreen(
                 .background(colors.AppBg)
         ) {
             // ── Fixed Header ─────────────────────────────────────────
-            ExpenseHeader(
-                selectedMonth = selectedMonth,
-                onMonthChange = { m ->
-                    // parse yyyy-MM -> set in viewmodel
-                    val parts = m.split("-")
-                    val y = parts.getOrNull(0)?.toIntOrNull() ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
-                    val mo = parts.getOrNull(1)?.toIntOrNull() ?: (java.util.Calendar.getInstance().get(java.util.Calendar.MONTH) + 1)
-                    viewModel.setSelectedMonth(y, mo)
+            FeatureMonthHeader(
+                title = "Expense Tracker",
+                subtitle = "low-friction tracking for busy days",
+                selectedMonth = displaySelectedMonth,
+                monthOptions = displayAvailableMonths,
+                onMonthSelected = { displayM ->
+                    try {
+                        val d = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).parse(displayM)
+                        if (d != null) {
+                            val cal = java.util.Calendar.getInstance().apply { time = d }
+                            viewModel.setSelectedMonth(cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH) + 1)
+                        }
+                    } catch (e: Exception) {}
                 },
-                onAddClick    = { openAddForm() },
-                colors = colors,
-                availableMonths = state.availableMonths
+                headerColor = colors.HeaderRed
             )
 
             // ── Scrollable Content ──────────────────────────────
