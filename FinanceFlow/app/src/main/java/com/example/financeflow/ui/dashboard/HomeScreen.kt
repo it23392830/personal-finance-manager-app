@@ -502,11 +502,17 @@ private fun HomeHeader(
     unreadNotificationCount: Int
 ) {
     val colors = getHomeScreenColors(isDarkTheme)
+    
+    // Explicitly determine the surface color to avoid any potential issues with State
+    val surfaceColor = if (isDarkTheme) DarkCardBg else Color.White
+    val contentColor = if (isDarkTheme) DarkTextPrimary else LightTextPrimary
+    val secondaryContentColor = if (isDarkTheme) DarkTextSecondary else Color(0xFFB0B0C0)
+    
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(),
-        color = Color.White,
+        color = surfaceColor,
         shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
         shadowElevation = 2.dp
     ) {
@@ -527,7 +533,7 @@ private fun HomeHeader(
                         .size(60.dp)
                         .clickable { onProfileClick() },
                     shape = CircleShape,
-                    color = Color(0xFFEDE7FF)
+                    color = if (isDarkTheme) Color(0xFF3A3A4E) else Color(0xFFEDE7FF)
                 ) {
                     if (profileImage.isNotEmpty()) {
                         AsyncImage(
@@ -541,7 +547,7 @@ private fun HomeHeader(
                             imageVector = Icons.Outlined.Person,
                             contentDescription = "Profile",
                             modifier = Modifier.padding(12.dp),
-                            tint = Color(0xFF7C4DFF)
+                            tint = if (isDarkTheme) Color(0xFFB794F4) else Color(0xFF7C4DFF)
                         )
                     }
                 }
@@ -552,7 +558,7 @@ private fun HomeHeader(
                         Icon(
                             imageVector = if (isDarkTheme) Icons.Outlined.DarkMode else Icons.Outlined.LightMode,
                             contentDescription = "Theme",
-                            tint = Color.Black
+                            tint = contentColor
                         )
                     }
                     Box {
@@ -560,7 +566,7 @@ private fun HomeHeader(
                             Icon(
                                 imageVector = Icons.Outlined.Notifications,
                                 contentDescription = "Notifications",
-                                tint = Color.Black
+                                tint = contentColor
                             )
                         }
                         if (unreadNotificationCount > 0) {
@@ -570,7 +576,7 @@ private fun HomeHeader(
                                     .offset(x = (-4).dp, y = 4.dp)
                                     .size(16.dp)
                                     .background(Color(0xFFFF5E4D), CircleShape)
-                                    .border(1.5.dp, Color.White, CircleShape),
+                                    .border(1.5.dp, surfaceColor, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -592,7 +598,7 @@ private fun HomeHeader(
                 text = greeting,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF7C4DFF),
+                    color = if (isDarkTheme) Color(0xFFB794F4) else Color(0xFF7C4DFF),
                     fontSize = 24.sp
                 )
             )
@@ -600,7 +606,7 @@ private fun HomeHeader(
             Text(
                 text = "Welcome Back",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = Color(0xFFB0B0C0),
+                    color = secondaryContentColor,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )
