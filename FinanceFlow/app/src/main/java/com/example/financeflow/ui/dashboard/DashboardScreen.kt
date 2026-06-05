@@ -322,7 +322,10 @@ fun DashboardScreen(
                     onNavigateBack = { navController.popBackStack() },
                     onLoggedOut = {
                         rootNavController.navigate(Routes.LOGIN) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo(rootNavController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
                     }
                 )

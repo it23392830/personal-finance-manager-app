@@ -3,8 +3,10 @@ package com.example.financeflow.repository.notification
 import com.example.financeflow.data.local.dao.NotificationDao
 import com.example.financeflow.data.local.entity.NotificationEntity
 import com.example.financeflow.model.FinanceNotification
+import com.example.financeflow.model.FinanceNotificationType
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -83,15 +85,29 @@ class NotificationRepository @Inject constructor(
     /** Marks one notification as read locally and in Firestore. */
     suspend fun markAsRead(id: String) {
         val userId = currentUserId ?: return
+        val local = notificationDao.getNotificationById(id)
         notificationDao.markAsRead(id)
-        notificationsCollection(userId).document(id).update("isRead", true).await()
+        runCatching {
+            val payload = mapOf(
+                "id" to id,
+                "userId" to userId,
+                "title" to (local?.title ?: ""),
+                "message" to (local?.message ?: ""),
+                "timestamp" to (local?.timestamp ?: System.currentTimeMillis()),
+                "type" to (local?.type ?: FinanceNotificationType.MISSED),
+                "isRead" to true
+            )
+            notificationsCollection(userId).document(id).set(payload, SetOptions.merge()).await()
+        }
     }
 
     /** Deletes one notification locally and in Firestore. */
     suspend fun deleteNotification(id: String) {
         val userId = currentUserId ?: return
         notificationDao.deleteNotificationById(id)
-        notificationsCollection(userId).document(id).delete().await()
+        runCatching {
+            notificationsCollection(userId).document(id).delete().await()
+        }
     }
 
     /** Streams the unread count for the Home screen badge. */

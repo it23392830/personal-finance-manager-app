@@ -47,7 +47,7 @@ class ProfileFirestoreService(
         val uid = currentUserId()
         val listener = userDocument().addSnapshotListener { snapshot, error ->
             if (error != null) {
-                close(error)
+                trySend(defaultProfile(uid))
                 return@addSnapshotListener
             }
 

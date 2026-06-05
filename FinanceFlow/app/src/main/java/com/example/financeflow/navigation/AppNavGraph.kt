@@ -229,7 +229,10 @@ fun AppNavGraph(
                 onNavigateBack = { navController.popBackStack() },
                 onLoggedOut = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
                     }
                 }
             )
