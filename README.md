@@ -1,4 +1,5 @@
 # 💰 Penny-Pilot (FinanceFlow)
+
 ### Smart Personal Finance Management Mobile Application
 
 Penny-Pilot is a modern personal finance management mobile application designed to help users manage income, expenses, savings, goals, and financial insights in a single platform. The system helps users build better financial habits by using goal-based savings, spending analytics, reminders, notifications, and streak tracking.
@@ -8,6 +9,7 @@ Penny-Pilot is a modern personal finance management mobile application designed 
 ## 📱 Features
 
 ### 🔐 Authentication
+
 - User registration and login
 - Forgot password functionality
 - Remember Me functionality
@@ -19,6 +21,7 @@ Penny-Pilot is a modern personal finance management mobile application designed 
 ---
 
 ### 💵 Income Management
+
 - Add income records
 - Edit income records
 - Delete income records
@@ -36,6 +39,7 @@ Penny-Pilot is a modern personal finance management mobile application designed 
 ---
 
 ### 💸 Expense Management
+
 - Add expenses
 - Edit expenses
 - Delete expenses
@@ -52,6 +56,7 @@ Penny-Pilot is a modern personal finance management mobile application designed 
 ---
 
 ### 🎯 Goal Management
+
 - Create savings goals
 - Goal progress tracking
 - Goal completion tracking
@@ -63,6 +68,7 @@ Penny-Pilot is a modern personal finance management mobile application designed 
 ---
 
 ### 💰 Savings Management
+
 - Savings linked directly with goals
 - Goal-based savings allocation
 - Progress percentage calculations
@@ -73,6 +79,7 @@ Penny-Pilot is a modern personal finance management mobile application designed 
 ---
 
 ### 📊 Insights & Analytics
+
 - Daily financial reports
 - Weekly financial reports
 - Monthly financial reports
@@ -87,7 +94,37 @@ Penny-Pilot is a modern personal finance management mobile application designed 
 
 ---
 
+### 💬 Finance Chat Assistant
+
+- AI-powered finance chat assistant
+- Personalized responses using the user's income, expenses, savings, and goals
+- Real-time financial summaries for smarter answers
+- In-app typing indicator and smooth messaging flow
+
+---
+
+### 🔥 Streak Tracking
+
+- Daily expense streaks
+- Missed day recovery
+- Streak freeze functionality
+- Daily engagement tracking
+- Streak progress monitoring
+
+---
+
+### 🧩 Widgets
+
+- Home screen financial summary widget
+- Current , Streak Freezes, Best, Status Streak
+- User engagement support through quick access widgets
+- Real-time widget data updates
+- Mobile-friendly widget design
+
+---
+
 ### 🔔 Notifications
+
 - Daily reminders
 - Missing transaction notifications
 - Goal completion notifications
@@ -97,6 +134,7 @@ Penny-Pilot is a modern personal finance management mobile application designed 
 ---
 
 ### 🏠 Home Dashboard
+
 - Remaining balance calculation
 - Total income summary
 - Total expenses summary
@@ -151,7 +189,9 @@ FinanceFlow
 │   ├── expenses
 │   ├── savings
 │   ├── goals
+|   ├── streak
 │   ├── insights
+│   ├── chat assistant
 │   ├── notifications
 │   └── components
 │
@@ -165,31 +205,38 @@ FinanceFlow
 ## ⚙ Technologies Used
 
 ### Frontend
+
 - Kotlin
 - Jetpack Compose
 - Material Design 3
 
 ### Architecture
+
 - MVVM Architecture
 - Repository Pattern
 - StateFlow
 - Coroutines
 
 ### Dependency Injection
+
 - Hilt
 
 ### Backend
+
 - Firebase Authentication
 - Firebase Cloud Firestore
 
 ### Local Storage
+
 - Room Database
 - DataStore Preferences
 
 ### Navigation
+
 - Navigation Compose
 
 ### Development Tools
+
 - Android Studio
 - GitHub
 - Firebase Console
@@ -217,7 +264,7 @@ users
 ### Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+git clone https://github.com/it23392830/personal-finance-manager-app.git
 ```
 
 ### Open Project
@@ -237,13 +284,13 @@ Android Studio
 - Firebase Authentication
 - Cloud Firestore
 
-3. Download:
+1. Download:
 
 ```text
 google-services.json
 ```
 
-4. Add file into:
+1. Add file into:
 
 ```text
 app/google-services.json
@@ -272,6 +319,8 @@ Or run directly through Android Studio emulator/device.
 - Savings Screen
 - Goals Screen
 - Insights Screen
+- Finance Chat Assistant Screen
+- Streak Screen
 - Notifications Screen
 - Profile Screen
 
@@ -283,7 +332,7 @@ Or run directly through Android Studio emulator/device.
 |--------|----------------|
 | W.W.G.S.N.Gunawardhana| Income Module, Authentication, Home Dashboard, Insights, Integration |
 | H.M.J.D.Herath | Expense Module |
-| R.M.C.S.Rathnayaka | Savings Module,Streak, Notification, User Profile |
+| R.M.C.S.Rathnayaka | Savings Module, Streak & Widgets, Notification, User Profile |
 | C.M.Suraweera | Goals Module |
 
 ---
@@ -292,7 +341,6 @@ Or run directly through Android Studio emulator/device.
 
 - AI Financial Recommendations
 - Bill Prediction System
-- Voice Assistant Integration
 - OCR Receipt Scanning
 - Google Authentication
 - Financial Forecasting
@@ -304,7 +352,7 @@ Or run directly through Android Studio emulator/device.
 
 ## 📄 License
 
-This project was developed for educational and academic purposes.
+This project was developed for Personal  purposes 
 
 ---
 

@@ -27,6 +27,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.financeflow.model.Saving
 import com.example.financeflow.model.Goal
+import com.example.financeflow.model.Income
 import com.example.financeflow.navigation.Routes
 import com.example.financeflow.ui.components.SavingsInsightsCard
 import com.example.financeflow.ui.components.savings.HeaderCard
@@ -50,6 +51,7 @@ fun SavingsScreen(
     val context = LocalContext.current
     val savings by viewModel.savings.collectAsState()
     val goals by viewModel.goals.collectAsState()
+    val incomes by viewModel.incomes.collectAsState()
     val toastMessage by viewModel.toastMessage.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val currentMonth = remember { YearMonth.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")) }
@@ -70,12 +72,18 @@ fun SavingsScreen(
         savings.filter { it.month == selectedMonth }
     }
     val totalSavedThisMonth = monthSavings.sumOf { it.amountSaved }
-    val totalIncomeThisMonth = monthSavings.sumOf { it.totalIncome }
-    val rateThisMonth = calculateSavingRate(totalSavedThisMonth, totalIncomeThisMonth)
     val lifetimeSaved = savings.sumOf { it.amountSaved }
-    val averageRate = if (savings.isNotEmpty()) savings.map { it.savingRate }.average() else 0.0
+    val totalIncomeThisMonth = remember(incomes, selectedMonth) {
+        viewModel.getMonthIncomeTotal(selectedMonth)
+    }
+    val currentMonthRate = remember(monthSavings, totalIncomeThisMonth) {
+        if (totalIncomeThisMonth > 0.0) (totalSavedThisMonth / totalIncomeThisMonth) * 100.0 else 0.0
+    }
+    val averageRate = remember(savings, incomes) {
+        if (savings.isNotEmpty()) savings.map { viewModel.calculateSavingRateForSaving(it) }.average() else 0.0
+    }
     val goalUiItems = remember(goals) { goals.map { it.toGoalUi() } }
-    val historyItems = remember(savings) { savings.map { it.toHistoryEntry() } }
+    val historyItems = remember(savings, incomes) { savings.map { it.toHistoryEntry(viewModel) } }
 
     LaunchedEffect(toastMessage, errorMessage) {
         toastMessage?.let { message ->
@@ -111,7 +119,7 @@ fun SavingsScreen(
                         isDarkTheme = isDarkTheme,
                         amount = totalSavedThisMonth.toLkr(),
                         totalIncome = totalIncomeThisMonth.toLkr(),
-                        savingRate = "${rateThisMonth.toInt()}%",
+                        savingRate = "${"%.1f".format(currentMonthRate)}%",
                         onAddNewSaving = { navController.navigate(Routes.ADD_SAVING) }
                     )
                 }
@@ -191,9 +199,12 @@ fun SavingsScreen(
     }
 
     editingSaving?.let { saving ->
+        val incomeSourcesList by viewModel.incomeSources.collectAsState()
         EditSavingsRecordScreen(
             isDarkTheme = isDarkTheme,
             saving = saving,
+            incomeSources = listOf(saving.incomeSource).filter { it.isNotBlank() } + incomeSourcesList.filter { it != saving.incomeSource },
+            goals = goals.map { it.title }.distinct(),
             onSave = { updatedSaving ->
                 viewModel.updateSaving(updatedSaving)
                 editingSaving = null
@@ -239,12 +250,13 @@ private fun Goal.toGoalUi(): SavingGoalUi {
 }
 
 /** Maps Firestore Saving into the existing history card model. */
-private fun Saving.toHistoryEntry(): SavingHistoryEntry {
+private fun Saving.toHistoryEntry(viewModel: SavingsViewModel): SavingHistoryEntry {
+    val calculatedRate = viewModel.calculateSavingRateForSaving(this)
     return SavingHistoryEntry(
         month = month,
         date = date,
-        savingRate = "${savingRate.toInt()}%",
-        income = totalIncome.toLkr(),
+        savingRate = "${calculatedRate.toInt()}%",
+        incomeSource = incomeSource.ifBlank { "Unknown" },
         saved = amountSaved.toLkr(),
         id = id
     )

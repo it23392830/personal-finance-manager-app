@@ -8,6 +8,7 @@ import com.example.financeflow.model.GoalBadge
 import com.example.financeflow.repository.goal.GoalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -58,6 +59,8 @@ data class AddAllocationState(
 class GoalViewModel @Inject constructor(
     private val repository: GoalRepository
 ) : ViewModel() {
+    private var goalDetailJob: Job? = null
+    private var allocationDetailJob: Job? = null
 
     private fun getMockTimestamp(daysOffset: Int): Timestamp {
         val calendar = Calendar.getInstance()
@@ -90,28 +93,43 @@ class GoalViewModel @Inject constructor(
     val goalDetailState: StateFlow<GoalDetailState> = _goalDetailState.asStateFlow()
 
     fun loadGoalDetail(goalId: String) {
-        _goalDetailState.update { it.copy(isLoading = true, goal = null, allocations = emptyList()) }
+        goalDetailJob?.cancel()
+        allocationDetailJob?.cancel()
+        _goalDetailState.update {
+            it.copy(
+                isLoading = true,
+                goal = null,
+                allocations = emptyList(),
+                newlyUnlockedBadges = emptyList()
+            )
+        }
 
-        viewModelScope.launch {
-            launch {
-                repository.observeGoal(goalId).collect { result ->
-                    val finalGoal = result.getOrNull()
-                    if (finalGoal != null) {
-                        val newBadges = GoalBadge.checkNewBadges(finalGoal)
-                        if (newBadges.isNotEmpty()) {
-                            // Automatically unlock and save badges if progress qualifies but badges are missing
-                            repository.updateGoal(finalGoal)
-                            _goalDetailState.update { it.copy(newlyUnlockedBadges = newBadges) }
+        goalDetailJob = viewModelScope.launch {
+            repository.observeGoal(goalId).collect { result ->
+                val finalGoal = result.getOrNull()
+                if (finalGoal != null) {
+                    val newBadges = GoalBadge.checkNewBadges(finalGoal)
+                    if (newBadges.isNotEmpty()) {
+                        val updatedGoal = finalGoal.copy(
+                            unlockedBadges = (finalGoal.unlockedBadges + newBadges.map { badge -> badge.id }).distinct()
+                        )
+                        repository.updateGoal(updatedGoal)
+                        _goalDetailState.update {
+                            it.copy(goal = updatedGoal, isLoading = false, newlyUnlockedBadges = newBadges)
                         }
+                    } else {
+                        _goalDetailState.update { it.copy(goal = finalGoal, isLoading = false) }
                     }
-                    _goalDetailState.update { it.copy(goal = finalGoal, isLoading = false) }
+                } else {
+                    _goalDetailState.update { it.copy(goal = null, isLoading = false) }
                 }
             }
-            launch {
-                repository.observeAllocations(goalId).collect { result ->
-                    val allocations = result.getOrNull() ?: emptyList()
-                    _goalDetailState.update { it.copy(allocations = allocations) }
-                }
+        }
+
+        allocationDetailJob = viewModelScope.launch {
+            repository.observeAllocations(goalId).collect { result ->
+                val allocations = result.getOrNull() ?: emptyList()
+                _goalDetailState.update { it.copy(allocations = allocations) }
             }
         }
     }

@@ -72,12 +72,20 @@ fun GoalsScreen(
     var showAddContribution by remember { mutableStateOf(false) }
     var showCreateGoal by remember { mutableStateOf(false) }
     var selectedBadge by remember { mutableStateOf<GoalBadge?>(null) }
+    var autoUnlockedBadge by remember { mutableStateOf<GoalBadge?>(null) }
     var goalToDelete by remember { mutableStateOf<Goal?>(null) }
     val palette = goalsScreenPalette(isDarkTheme)
 
     LaunchedEffect(uiState.goals) {
         if (detailState.goal == null && uiState.goals.isNotEmpty()) {
             viewModel.loadGoalDetail(uiState.goals.first().id)
+        }
+    }
+
+    LaunchedEffect(detailState.goal?.id, detailState.newlyUnlockedBadges) {
+        if (autoUnlockedBadge == null && detailState.newlyUnlockedBadges.isNotEmpty()) {
+            autoUnlockedBadge = detailState.newlyUnlockedBadges.first()
+            viewModel.clearNewBadges()
         }
     }
 
@@ -294,13 +302,13 @@ fun GoalsScreen(
         )
     }
 
-    if (detailState.newlyUnlockedBadges.isNotEmpty() && detailState.goal != null) {
+    if (autoUnlockedBadge != null && detailState.goal != null) {
         MilestoneDetailDialog(
-            badge = detailState.newlyUnlockedBadges.first(),
+            badge = autoUnlockedBadge!!,
             unlocked = true,
             goal = detailState.goal!!,
             isDarkTheme = isDarkTheme,
-            onDismiss = { viewModel.clearNewBadges() }
+            onDismiss = { autoUnlockedBadge = null }
         )
     }
 }

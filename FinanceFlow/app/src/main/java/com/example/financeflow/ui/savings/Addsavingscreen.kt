@@ -86,22 +86,22 @@ fun AddSavingScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val toastMessage by viewModel.toastMessage.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val incomeSources by viewModel.incomeSources.collectAsState()
 
     var amount by remember { mutableStateOf("") }
-    var totalIncome by remember { mutableStateOf("") }
+    var selectedIncomeSource by remember { mutableStateOf("") }
     var selectedCurrency by remember { mutableStateOf(currencyOptions[0]) }
     var selectedGoal by remember { mutableStateOf("") }
     var selectedGoalId by remember { mutableStateOf("") }
-    var newGoalName by remember { mutableStateOf("") }
-    var targetAmount by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf(LocalDate.now().toString()) }
 
     var currencyExpanded by remember { mutableStateOf(false) }
+    var incomeSourceExpanded by remember { mutableStateOf(false) }
     var goalExpanded by remember { mutableStateOf(false) }
     val goalOptions = remember(goals) {
         val names = goals.map { it.title }.filter { it.isNotBlank() }
-        (names + "Other").distinct()
+        names.distinct()
     }
 
     val colors = getSavingsColors(isDarkTheme)
@@ -149,8 +149,21 @@ fun AddSavingScreen(
                 FormFieldLabel(text = "Amount", isDarkTheme = isDarkTheme)
                 AmountField(value = amount, onChange = { amount = it }, isDarkTheme = isDarkTheme)
 
-                FormFieldLabel(text = "Total Income", isDarkTheme = isDarkTheme)
-                AmountField(value = totalIncome, onChange = { totalIncome = it }, isDarkTheme = isDarkTheme)
+                FormFieldLabel(text = "Income Source", isDarkTheme = isDarkTheme)
+                DropdownField(
+                    value = selectedIncomeSource.ifEmpty { "Income Source" },
+                    expanded = incomeSourceExpanded,
+                    options = incomeSources,
+                    onExpand = { incomeSourceExpanded = true },
+                    onDismiss = { incomeSourceExpanded = false },
+                    onSelect = {
+                        selectedIncomeSource = it
+                        incomeSourceExpanded = false
+                    },
+                    leadingIcon = Icons.Default.CardGiftcard,
+                    isPlaceholder = selectedIncomeSource.isEmpty(),
+                    isDarkTheme = isDarkTheme
+                )
 
                 FormFieldLabel(text = "Currency", isDarkTheme = isDarkTheme)
                 DropdownField(
@@ -185,22 +198,6 @@ fun AddSavingScreen(
                     isDarkTheme = isDarkTheme
                 )
 
-                if (selectedGoal == "Other") {
-                    FormFieldLabel(text = "New Goal Name", isDarkTheme = isDarkTheme)
-                    DescriptionField(
-                        value = newGoalName,
-                        onChange = { newGoalName = it },
-                        isDarkTheme = isDarkTheme
-                    )
-
-                    FormFieldLabel(text = "Target Amount", isDarkTheme = isDarkTheme)
-                    AmountField(
-                        value = targetAmount,
-                        onChange = { targetAmount = it },
-                        isDarkTheme = isDarkTheme
-                    )
-                }
-
                 FormFieldLabel(text = "Description (Optional)", isDarkTheme = isDarkTheme)
                 DescriptionField(
                     value = description,
@@ -228,37 +225,39 @@ fun AddSavingScreen(
                 enabled = !isLoading,
                 onClick = {
                     val savedAmount = amount.toMoneyDouble()
-                    val incomeAmount = totalIncome.toMoneyDouble()
                     val selectedGoalData = goals.firstOrNull { it.id == selectedGoalId }
-                    val finalGoalName = if (selectedGoal == "Other") newGoalName.trim() else selectedGoalData?.title.orEmpty()
-                    val finalGoalId = if (selectedGoal == "Other") "" else selectedGoalData?.id.orEmpty()
-                    val finalTargetAmount = selectedGoalData?.targetAmount ?: targetAmount.toMoneyDouble()
+                    val finalGoalName = selectedGoalData?.title.orEmpty()
+                    val finalGoalId = selectedGoalData?.id.orEmpty()
+                    val finalTargetAmount = selectedGoalData?.targetAmount ?: 0.0
 
-                    if (savedAmount <= 0.0 || incomeAmount <= 0.0) {
-                        Toast.makeText(context, "Enter valid saved amount and total income", Toast.LENGTH_SHORT).show()
+                    if (savedAmount <= 0.0) {
+                        Toast.makeText(context, "Enter a valid saved amount", Toast.LENGTH_SHORT).show()
                         return@ActionButton
                     }
-
-                    if (selectedGoal == "Other" && finalGoalName.isBlank()) {
-                        Toast.makeText(context, "Enter a goal name", Toast.LENGTH_SHORT).show()
+                    if (selectedIncomeSource.isEmpty()) {
+                        Toast.makeText(context, "Please select an income source", Toast.LENGTH_SHORT).show()
+                        return@ActionButton
+                    }
+                    if (selectedGoalId.isEmpty() && finalGoalName.isEmpty() && selectedGoal.isEmpty()) {
+                        Toast.makeText(context, "Please select a goal", Toast.LENGTH_SHORT).show()
                         return@ActionButton
                     }
 
                     val saving = Saving(
                         goalId = finalGoalId,
                         amountSaved = savedAmount,
-                        totalIncome = incomeAmount,
+                        incomeSource = selectedIncomeSource,
                         month = monthLabel,
                         date = selectedDate,
-                        goalName = finalGoalName.ifBlank { "General" },
+                        goalName = finalGoalName.ifBlank { selectedGoal.ifBlank { "General" } },
                         description = description,
                         targetAmount = finalTargetAmount
                     )
 
                     viewModel.addSavingWithOptionalGoal(
                         saving = saving,
-                        newGoalTitle = if (selectedGoal == "Other") finalGoalName else null,
-                        newGoalTargetAmount = if (selectedGoal == "Other") finalTargetAmount else null
+                        newGoalTitle = null,
+                        newGoalTargetAmount = null
                     )
                 }
             )

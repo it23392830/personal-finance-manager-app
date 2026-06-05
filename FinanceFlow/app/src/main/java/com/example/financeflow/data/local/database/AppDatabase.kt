@@ -24,7 +24,7 @@ import com.example.financeflow.data.local.entity.SavingGoalEntity
 /**
  * Room database for the app. Add additional entities here as the app grows.
  */
-@Database(entities = [IncomeEntity::class, ExpenseEntity::class, FixedExpenseEntity::class, GoalEntity::class, GoalAllocationEntity::class, NotificationEntity::class, SavingEntity::class, SavingGoalEntity::class, ChatMessageEntity::class], version = 8, exportSchema = false)
+@Database(entities = [IncomeEntity::class, ExpenseEntity::class, FixedExpenseEntity::class, GoalEntity::class, GoalAllocationEntity::class, NotificationEntity::class, SavingEntity::class, SavingGoalEntity::class, ChatMessageEntity::class], version = 9, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun incomeDao(): IncomeDao
     abstract fun expenseDao(): ExpenseDao
