@@ -29,11 +29,11 @@ class IncomeFirebaseService @Inject constructor(
 
     suspend fun addIncome(income: Income, id: String? = null): String {
         return if (!id.isNullOrBlank()) {
-            firestore.collection("users").document(uid).collection("incomes").document(id)
+            firestore.collection("users").document(uid).collection("income").document(id)
                 .set(income).await()
             id
         } else {
-            val ref = firestore.collection("users").document(uid).collection("incomes").add(income).await()
+            val ref = firestore.collection("users").document(uid).collection("income").add(income).await()
             ref.id
         }
     }
@@ -46,15 +46,15 @@ class IncomeFirebaseService @Inject constructor(
             "description" to income.description,
             "date" to income.date
         )
-        firestore.collection("users").document(uid).collection("incomes").document(income.id).update(data).await()
+        firestore.collection("users").document(uid).collection("income").document(income.id).update(data).await()
     }
 
     suspend fun deleteIncome(id: String) {
-        firestore.collection("users").document(uid).collection("incomes").document(id).delete().await()
+        firestore.collection("users").document(uid).collection("income").document(id).delete().await()
     }
 
     suspend fun getAllIncomes(): List<Income> {
-        val snap = firestore.collection("users").document(uid).collection("incomes").get().await()
+        val snap = firestore.collection("users").document(uid).collection("income").get().await()
         return snap.documents.mapNotNull { it.toObject(Income::class.java)?.copy(id = it.id) }
     }
 
