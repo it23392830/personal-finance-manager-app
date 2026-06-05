@@ -15,7 +15,7 @@ data class SavingEntity(
     val userId: String = "",
     val goalId: String = "",
     val amountSaved: Double = 0.0,
-    val totalIncome: Double = 0.0,
+    val incomeSource: String = "",
     val savingRate: Double = 0.0,
     val month: String = "",
     val date: String = "",

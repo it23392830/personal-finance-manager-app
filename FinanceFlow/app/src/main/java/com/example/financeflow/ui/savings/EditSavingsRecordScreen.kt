@@ -13,17 +13,21 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,15 +58,21 @@ import com.example.financeflow.model.Saving
 fun EditSavingsRecordScreen(
     isDarkTheme: Boolean = false,
     saving: Saving? = null,
+    incomeSources: List<String> = emptyList(),
+    goals: List<String> = emptyList(),
     onSave: (Saving) -> Unit = {},
     onDismiss: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     var month by remember(saving) { mutableStateOf(saving?.month ?: "May 2026") }
-    var totalIncome by remember(saving) { mutableStateOf(saving?.totalIncome?.toPlainAmount() ?: "") }
+    var selectedIncomeSource by remember(saving) { mutableStateOf(saving?.incomeSource ?: "") }
+    var selectedGoal by remember(saving) { mutableStateOf(saving?.goalName ?: "") }
     var amountSaved by remember(saving) { mutableStateOf(saving?.amountSaved?.toPlainAmount() ?: "") }
     var date by remember(saving) { mutableStateOf(saving?.date ?: "") }
-    val savingRate = calculateSavingRate(amountSaved.toMoneyDouble(), totalIncome.toMoneyDouble())
+    var description by remember(saving) { mutableStateOf(saving?.description ?: "") }
+    
+    var incomeSourceExpanded by remember { mutableStateOf(false) }
+    var goalExpanded by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -119,12 +129,30 @@ fun EditSavingsRecordScreen(
                         colors = colors
                     )
 
-                    EditRecordField(
-                        label = "Total Income",
-                        value = totalIncome,
-                        onValueChange = { totalIncome = it },
-                        trailingIcon = {
-                            Icon(Icons.Default.KeyboardArrowDown, null)
+                    EditRecordDropdownField(
+                        label = "Income Source",
+                        value = selectedIncomeSource.ifEmpty { "Select Income Source" },
+                        expanded = incomeSourceExpanded,
+                        options = incomeSources,
+                        onExpand = { incomeSourceExpanded = true },
+                        onDismiss = { incomeSourceExpanded = false },
+                        onSelect = { 
+                            selectedIncomeSource = it
+                            incomeSourceExpanded = false 
+                        },
+                        colors = colors
+                    )
+
+                    EditRecordDropdownField(
+                        label = "Goal",
+                        value = selectedGoal.ifEmpty { "Select Goal" },
+                        expanded = goalExpanded,
+                        options = goals,
+                        onExpand = { goalExpanded = true },
+                        onDismiss = { goalExpanded = false },
+                        onSelect = {
+                            selectedGoal = it
+                            goalExpanded = false
                         },
                         colors = colors
                     )
@@ -139,20 +167,6 @@ fun EditSavingsRecordScreen(
                         colors = colors
                     )
 
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = colors.accent)
-                    ) {
-                        Text(
-                            text = "Saving Rate ${savingRate.toInt()}%",
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
                     EditRecordField(
                         label = "Date",
                         value = date,
@@ -160,6 +174,13 @@ fun EditSavingsRecordScreen(
                         trailingIcon = {
                             Icon(Icons.Default.CalendarToday, null)
                         },
+                        colors = colors
+                    )
+
+                    EditRecordField(
+                        label = "Description (Optional)",
+                        value = description,
+                        onValueChange = { description = it },
                         colors = colors
                     )
 
@@ -177,10 +198,11 @@ fun EditSavingsRecordScreen(
                                 onSave(
                                     (saving ?: Saving()).copy(
                                         month = month,
-                                        totalIncome = totalIncome.toMoneyDouble(),
+                                        incomeSource = selectedIncomeSource,
                                         amountSaved = amountSaved.toMoneyDouble(),
-                                        savingRate = savingRate,
-                                        date = date
+                                        date = date,
+                                        description = description,
+                                        goalName = selectedGoal
                                     )
                                 )
                             }
@@ -234,6 +256,70 @@ private fun EditRecordField(
     }
 }
 
+@Composable
+private fun EditRecordDropdownField(
+    label: String,
+    value: String,
+    expanded: Boolean,
+    options: List<String>,
+    onExpand: () -> Unit,
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit,
+    colors: SavingsColors
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.muted
+        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = {},
+                readOnly = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                trailingIcon = {
+                    androidx.compose.material3.IconButton(onClick = onExpand) {
+                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Expand")
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = colors.cardBg,
+                    unfocusedContainerColor = colors.cardBg,
+                    focusedBorderColor = colors.fieldBorder,
+                    unfocusedBorderColor = colors.fieldBorder,
+                    focusedTextColor = colors.textPrimary,
+                    unfocusedTextColor = colors.textPrimary
+                )
+            )
+            
+            // Invisible click target over the field to trigger dropdown
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color.Transparent)
+                    .clickable { onExpand() }
+            )
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = onDismiss,
+                modifier = Modifier.fillMaxWidth(0.85f)
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(text = option, fontSize = 14.sp, color = colors.textPrimary) },
+                        onClick = { onSelect(option) }
+                    )
+                }
+            }
+        }
+    }
+}
+
 /** Converts user-visible currency text into a Double. */
 private fun String.toMoneyDouble(): Double {
     return replace(",", "")
@@ -244,11 +330,6 @@ private fun String.toMoneyDouble(): Double {
 
 /** Formats a Firestore amount for editing without a currency prefix. */
 private fun Double.toPlainAmount(): String = "%.0f".format(this)
-
-/** Calculates saving rate as a percentage. */
-private fun calculateSavingRate(amountSaved: Double, totalIncome: Double): Double {
-    return if (totalIncome > 0.0) (amountSaved / totalIncome) * 100.0 else 0.0
-}
 
 @Composable
 private fun EditRecordActionButton(

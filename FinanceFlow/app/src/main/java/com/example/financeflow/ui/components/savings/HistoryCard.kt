@@ -22,15 +22,15 @@ data class SavingHistoryEntry(
     val month: String,
     val date: String,
     val savingRate: String,
-    val income: String,
+    val incomeSource: String,
     val saved: String,
     val id: String = ""
 )
 
 val dummyHistory = listOf(
-    SavingHistoryEntry("May 2026", "2026.05.05", "28%", "LKR 196,400", "LKR 53,200"),
-    SavingHistoryEntry("Apr 2026", "2026.04.25", "28%", "LKR 187,500", "LKR 53,200"),
-    SavingHistoryEntry("Mar 2026", "2026.03.05", "26%", "LKR 191,000", "LKR 48,900")
+    SavingHistoryEntry("June 2026", "05/06/2026", "22%", "Salary", "LKR 10,000"),
+    SavingHistoryEntry("May 2026", "25/05/2026", "15%", "Freelancing", "LKR 8,000"),
+    SavingHistoryEntry("Apr 2026", "10/04/2026", "10%", "Google AdSense", "LKR 5,000")
 )
 
 @Composable
@@ -95,7 +95,7 @@ fun HistoryItem(
                     color = colors.textPrimary
                 )
                 Text(
-                    text = "Income: ${entry.income}",
+                    text = "Source: ${entry.incomeSource}",
                     fontSize = 13.sp,
                     color = colors.textSecondary
                 )
@@ -104,19 +104,16 @@ fun HistoryItem(
                     fontSize = 13.sp,
                     color = colors.textSecondary
                 )
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(colors.accent.copy(alpha = 0.4f))
-                        .padding(horizontal = 10.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "Rate ${entry.savingRate}",
-                        fontSize = 12.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                Text(
+                    text = "Rate: ${entry.savingRate}",
+                    fontSize = 13.sp,
+                    color = colors.textSecondary
+                )
+                Text(
+                    text = "Date: ${entry.date}",
+                    fontSize = 12.sp,
+                    color = colors.muted
+                )
             }
 
             Box {
