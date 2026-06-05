@@ -39,8 +39,7 @@ class SavingsFirestoreService(
     /** Adds one saving record and returns its Firestore id. */
     suspend fun addSaving(saving: Saving): String {
         val id = if (saving.id.isBlank()) savingsCollection().document().id else saving.id
-        val savingRate = calculateSavingRate(saving.amountSaved, saving.totalIncome)
-        val data = saving.copy(id = id, savingRate = savingRate)
+        val data = saving.copy(id = id)
         savingsCollection().document(id).set(data).await()
         return id
     }
@@ -63,7 +62,7 @@ class SavingsFirestoreService(
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    trySend(emptyList())
                     return@addSnapshotListener
                 }
 
@@ -76,11 +75,10 @@ class SavingsFirestoreService(
         awaitClose { listener.remove() }
     }
 
-    /** Updates one saving record and recalculates savingRate automatically. */
+    /** Updates one saving record. */
     suspend fun updateSaving(saving: Saving) {
-        val savingRate = calculateSavingRate(saving.amountSaved, saving.totalIncome)
         savingsCollection().document(saving.id)
-            .set(saving.copy(savingRate = savingRate))
+            .set(saving)
             .await()
     }
 
@@ -114,7 +112,7 @@ class SavingsFirestoreService(
             .orderBy("goalName", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    trySend(emptyList())
                     return@addSnapshotListener
                 }
 
@@ -139,10 +137,7 @@ class SavingsFirestoreService(
         goalsCollection().document(goalId).delete().await()
     }
 
-    /** Calculates saving rate as a percentage from amount saved and income. */
-    private fun calculateSavingRate(amountSaved: Double, totalIncome: Double): Double {
-        return if (totalIncome > 0.0) (amountSaved / totalIncome) * 100.0 else 0.0
-    }
+
 
     /** Calculates goal progress as a 0f..1f fraction. */
     private fun calculateGoalProgress(goal: SavingGoal): Float {

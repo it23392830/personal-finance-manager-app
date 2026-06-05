@@ -1,6 +1,5 @@
 package com.example.financeflow.ui.profile
 
-import android.util.Log
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -13,7 +12,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.financeflow.viewmodel.auth.AuthViewModel
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LogoutScreen(
@@ -39,17 +37,8 @@ fun LogoutScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        try {
-                            // Sign out synchronously so the user is fully signed out
-                            // before navigation clears the back stack (and cancels the ViewModel scope).
-                            FirebaseAuth.getInstance().signOut()
-                            // Clear DataStore preferences asynchronously — safe to run after navigation.
-                            authViewModel.logoutClearPrefsOnly()
-                            onLoggedOut()
-                        } catch (e: Exception) {
-                            Log.e("APP_CRASH", "Logout failed: ${e.stackTraceToString()}")
-                            onLoggedOut()
-                        }
+                        authViewModel.logout()
+                        onLoggedOut()
                     }
                 ) {
                     Text("Log Out")

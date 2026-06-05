@@ -38,7 +38,7 @@ class SavingsRepository(
             id = entity.id,
             goalId = entity.goalId,
             amountSaved = entity.amountSaved,
-            totalIncome = entity.totalIncome,
+            incomeSource = entity.incomeSource,
             savingRate = entity.savingRate,
             month = entity.month,
             date = entity.date,
@@ -56,8 +56,8 @@ class SavingsRepository(
             userId = userId,
             goalId = saving.goalId,
             amountSaved = saving.amountSaved,
-            totalIncome = saving.totalIncome,
-            savingRate = calculateSavingRate(saving.amountSaved, saving.totalIncome),
+            incomeSource = saving.incomeSource,
+            savingRate = saving.savingRate,
             month = saving.month,
             date = saving.date,
             goalName = saving.goalName,
@@ -185,11 +185,6 @@ class SavingsRepository(
         } catch (error: Exception) {
             SavingsResult.Error(error)
         }
-    }
-
-    /** Calculates saving rate as a percentage. */
-    private fun calculateSavingRate(amountSaved: Double, totalIncome: Double): Double {
-        return if (totalIncome > 0.0) (amountSaved / totalIncome) * 100.0 else 0.0
     }
 
     /** Calculates goal progress as a 0f..1f fraction. */

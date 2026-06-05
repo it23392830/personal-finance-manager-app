@@ -64,7 +64,10 @@ class GoalFirebaseService @Inject constructor(
         val listener = firestore.collection("users").document(uid).collection("goals").document(goalId)
             .collection("allocations")
             .addSnapshotListener { snapshot, error ->
-                if (error != null) { close(error); return@addSnapshotListener }
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
                 val list = snapshot?.documents?.mapNotNull { it.toObject(GoalAllocation::class.java)?.copy(id = it.id) } ?: emptyList()
                 trySend(list)
             }
