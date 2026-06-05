@@ -1,5 +1,6 @@
 package com.example.financeflow.ui.profile
 
+import android.content.Intent
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -9,8 +10,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.financeflow.MainActivity
 import com.example.financeflow.viewmodel.auth.AuthViewModel
 
 @Composable
@@ -21,10 +24,12 @@ fun LogoutScreen(
     onLoggedOut: () -> Unit = {},
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     var showDialog by remember { mutableStateOf(true) }
+    var shouldNavigateBack by remember { mutableStateOf(true) }
 
     LaunchedEffect(showDialog) {
-        if (!showDialog) {
+        if (!showDialog && shouldNavigateBack) {
             onNavigateBack()
         }
     }
@@ -37,15 +42,23 @@ fun LogoutScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        authViewModel.logout()
-                        onLoggedOut()
+                        shouldNavigateBack = false
+                        authViewModel.logout {
+                            val restartIntent = Intent(context, MainActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            }
+                            context.startActivity(restartIntent)
+                        }
                     }
                 ) {
                     Text("Log Out")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(onClick = {
+                    shouldNavigateBack = true
+                    showDialog = false
+                }) {
                     Text("Cancel")
                 }
             }

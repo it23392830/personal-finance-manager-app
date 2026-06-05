@@ -67,7 +67,7 @@ class IncomeFirebaseService @Inject constructor(
             .collection("incomeSources")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    trySend(emptyList())
                     return@addSnapshotListener
                 }
                 val list = snapshot?.documents?.mapNotNull { doc -> doc.getString("sourceName") ?: doc.id } ?: emptyList()

@@ -111,11 +111,12 @@ class AuthViewModel @Inject constructor(
     /**
      * Signs out the user and clears all local remember me settings.
      */
-    fun logout() {
+    fun logout(onComplete: () -> Unit = {}) {
         Log.d("AuthFlow", "logout: Clearing session")
         viewModelScope.launch {
             repository.clearRememberMe()
             repository.logout()
+            onComplete()
         }
     }
 
