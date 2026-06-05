@@ -14,7 +14,9 @@ data class ExpenseEntity(
     val paymentMethod: String = "",
     val notes: String = "",
     val isFixed: Boolean = false,
+    val isFixedExpense: Boolean = false,
     val isPaid: Boolean = false,
+    val templateId: String? = null,
     val date: Long = 0L,
     val createdAt: Long = 0L
 )

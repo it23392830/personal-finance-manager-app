@@ -49,6 +49,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.testTag
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.airbnb.lottie.compose.LottieAnimation
@@ -131,6 +132,7 @@ fun LoginScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(Color.White)
+                .testTag("login_screen")
         ) {
             Column(
                 modifier = Modifier

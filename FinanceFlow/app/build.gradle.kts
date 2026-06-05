@@ -34,7 +34,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner =
-            "androidx.test.runner.AndroidJUnitRunner"
+            "com.example.financeflow.FinanceFlowTestRunner"
 
         val localProperties = Properties()
         val localPropertiesFile = rootProject.file("local.properties")
@@ -162,6 +162,8 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.52")
     ksp("com.google.dagger:hilt-android-compiler:2.52")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    androidTestImplementation("com.google.dagger:hilt-android-testing:2.52")
+    kspAndroidTest("com.google.dagger:hilt-android-compiler:2.52")
 
     // WorkManager + Hilt integration
     implementation("androidx.work:work-runtime-ktx:2.9.0")
@@ -182,14 +184,23 @@ dependencies {
     testImplementation(
         "junit:junit:4.13.2"
     )
+    testImplementation("org.mockito:mockito-core:5.12.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
 
     androidTestImplementation(
-        "androidx.test.ext:junit:1.2.1"
+        "androidx.test.ext:junit:1.3.0"
     )
 
     androidTestImplementation(
-        "androidx.test.espresso:espresso-core:3.6.1"
+        "androidx.test.espresso:espresso-core:3.7.0"
     )
+
+    // Add tracing and test core ktx to address runtime compatibility with Espresso/AndroidX tracing
+    implementation("androidx.tracing:tracing:1.2.0")
+    androidTestImplementation("androidx.test:core-ktx:1.7.0")
+
+    androidTestImplementation("org.mockito:mockito-android:5.12.0")
+    androidTestImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
 
     androidTestImplementation(
         platform(

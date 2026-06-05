@@ -106,61 +106,77 @@ class DashboardViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            repository.getTotalIncome().collectLatest { _totalIncome.value = it }
+            try { repository.getTotalIncome().collectLatest { _totalIncome.value = it } }
+            catch (e: Exception) { android.util.Log.e("APP_CRASH", "getTotalIncome failed", e) }
         }
 
         viewModelScope.launch {
-            repository.getTotalExpenses().collectLatest { _totalExpenses.value = it }
+            try { repository.getTotalExpenses().collectLatest { _totalExpenses.value = it } }
+            catch (e: Exception) { android.util.Log.e("APP_CRASH", "getTotalExpenses failed", e) }
         }
 
         viewModelScope.launch {
-            repository.getTotalSavings().collectLatest { _totalSavings.value = it }
+            try { repository.getTotalSavings().collectLatest { _totalSavings.value = it } }
+            catch (e: Exception) { android.util.Log.e("APP_CRASH", "getTotalSavings failed", e) }
         }
 
         viewModelScope.launch {
-            combine(_totalIncome, _totalExpenses, _totalSavings) { income, expenses, savings ->
-                income - (expenses + savings)
-            }.collectLatest { _remainingBalance.value = it }
+            try {
+                combine(_totalIncome, _totalExpenses, _totalSavings) { income, expenses, savings ->
+                    income - (expenses + savings)
+                }.collectLatest { _remainingBalance.value = it }
+            } catch (e: Exception) { android.util.Log.e("APP_CRASH", "remainingBalance failed", e) }
         }
 
         viewModelScope.launch {
-            repository.getMonthlySummary().collectLatest { _monthlySummary.value = it }
+            try { repository.getMonthlySummary().collectLatest { _monthlySummary.value = it } }
+            catch (e: Exception) { android.util.Log.e("APP_CRASH", "getMonthlySummary failed", e) }
         }
 
         viewModelScope.launch {
-            repository.getGoalProgress().collectLatest { _goalProgress.value = it }
+            try { repository.getGoalProgress().collectLatest { _goalProgress.value = it } }
+            catch (e: Exception) { android.util.Log.e("APP_CRASH", "getGoalProgress failed", e) }
         }
 
         viewModelScope.launch {
-            repository.getExpenseCategoryTotals().collectLatest { totals ->
-                _expenseCategories.value = collapseCategoryTotals(totals)
-            }
+            try {
+                repository.getExpenseCategoryTotals().collectLatest { totals ->
+                    _expenseCategories.value = collapseCategoryTotals(totals)
+                }
+            } catch (e: Exception) { android.util.Log.e("APP_CRASH", "getExpenseCategoryTotals failed", e) }
         }
 
         viewModelScope.launch {
-            repository.getIncomeSources().collectLatest { _incomeSources.value = it }
+            try { repository.getIncomeSources().collectLatest { _incomeSources.value = it } }
+            catch (e: Exception) { android.util.Log.e("APP_CRASH", "getIncomeSources failed", e) }
         }
 
         viewModelScope.launch {
-            repository.getExpenseTypeBreakdown().collectLatest { breakdown ->
-                _expenseSectionSummary.value = toExpenseSectionSummary(breakdown)
-            }
+            try {
+                repository.getExpenseTypeBreakdown().collectLatest { breakdown ->
+                    _expenseSectionSummary.value = toExpenseSectionSummary(breakdown)
+                }
+            } catch (e: Exception) { android.util.Log.e("APP_CRASH", "getExpenseTypeBreakdown failed", e) }
         }
 
         viewModelScope.launch {
-            repository.getIncomesFlow().collectLatest { _incomes.value = it }
+            try { repository.getIncomesFlow().collectLatest { _incomes.value = it } }
+            catch (e: Exception) { android.util.Log.e("APP_CRASH", "getIncomesFlow failed", e) }
         }
 
         viewModelScope.launch {
-            repository.getExpensesFlow().collectLatest { _expenses.value = it }
+            try { repository.getExpensesFlow().collectLatest { _expenses.value = it } }
+            catch (e: Exception) { android.util.Log.e("APP_CRASH", "getExpensesFlow failed", e) }
         }
 
         viewModelScope.launch {
-            repository.getSavingsFlow().collectLatest { _savings.value = it }
+            try { repository.getSavingsFlow().collectLatest { _savings.value = it } }
+            catch (e: Exception) { android.util.Log.e("APP_CRASH", "getSavingsFlow failed", e) }
         }
 
         viewModelScope.launch {
-            repository.getGoalsFlow().collectLatest { _goals.value = it }
+            try { repository.getGoalsFlow().collectLatest { _goals.value = it } }
+            catch (e: Exception) { android.util.Log.e("APP_CRASH", "getGoalsFlow failed", e) }
         }
     }
 

@@ -302,14 +302,14 @@ fun ExpensesScreen(
     val expenses = state.currentMonthTransactions
     val recurringList = state.fixedPayments.map {
         RecurringUiItem(
-            id = it.id.hashCode(),
-            name = it.description.ifBlank { getCat(it.category).label },
-            amount = it.amount.toInt(),
-            categoryId = it.category,
+            id = it.template.id.hashCode(),
+            name = it.template.name.ifBlank { getCat(it.template.category).label },
+            amount = it.template.amount.toInt(),
+            categoryId = it.template.category,
             frequency = "Monthly",
             nextDue = "",
             lastPaid = "",
-            isActive = true,
+            isActive = it.isApplied,
             missed = false
         )
     }
@@ -352,8 +352,13 @@ fun ExpensesScreen(
 
     // ── Helper lambdas (defined here, passed to components) ───
 
-    fun openAddForm(prefillCategoryId: String = "food_dining") {
-        onAddExpenseClick()
+    fun openAddForm(prefillCategoryId: String = "food_dining", isTemplate: Boolean = false) {
+        isEditMode = false; editingDomainId = null
+        formAmount = ""; formDescription = ""
+        formCategory = prefillCategoryId; formType = if (isTemplate) ExpenseType.ESSENTIAL else ExpenseType.DISCRETIONARY
+        formPayment = PaymentMethod.CARD; formDate = TODAY
+        formNotes = ""; formIsRecurring = isTemplate
+        showFormDialog = true
     }
 
     fun openEditForm(exp: ExpenseUiItem) {
@@ -373,35 +378,25 @@ fun ExpensesScreen(
         if (isEditMode) {
             // update existing using stored domain id
             val idStr = editingDomainId ?: ""
-            if (formIsRecurring) {
-                val fixed = com.example.financeflow.model.FixedExpense(
-                    id = idStr,
-                    name = formDescription.ifBlank { getCat(formCategory).label },
-                    amount = amt,
-                    category = formCategory
-                )
-                viewModel.addFixedExpense(fixed)
-            } else {
-                val exp = com.example.financeflow.model.Expense(
-                    id = idStr,
-                    amount = amt,
-                    currency = "LKR",
-                    category = formCategory,
-                    description = formDescription,
-                    notes = formNotes,
-                    isFixed = formIsRecurring,
-                    date = ts
-                )
-                viewModel.updateExpense(exp)
-            }
+            viewModel.updateExpenseDetails(
+                id = idStr,
+                amount = amt,
+                description = formDescription,
+                category = formCategory,
+                paymentMethod = formPayment.name,
+                date = ts,
+                notes = formNotes,
+                isFixed = formIsRecurring
+            )
         } else {
             if (formIsRecurring) {
-                val fixed = com.example.financeflow.model.FixedExpense(
+                viewModel.addFixedExpenseWithRecord(
                     name = formDescription.ifBlank { getCat(formCategory).label },
                     amount = amt,
-                    category = formCategory
+                    category = formCategory,
+                    date = ts,
+                    notes = formNotes
                 )
-                viewModel.addFixedExpense(fixed)
             } else {
                 val exp = com.example.financeflow.model.Expense(
                     amount = amt,
@@ -410,6 +405,7 @@ fun ExpensesScreen(
                     description = formDescription,
                     notes = formNotes,
                     isFixed = formIsRecurring,
+                    isFixedExpense = formIsRecurring,
                     date = ts
                 )
                 viewModel.addExpense(exp)
@@ -498,7 +494,7 @@ fun ExpensesScreen(
                     ExpenseQuickAdd(
                         isDarkTheme = isDarkTheme,
                         recentCategoryIds = recentCategoryIds,
-                        onCategoryClick   = { catId -> openAddForm(catId) }
+                        onCategoryClick   = { catId -> onAddExpenseClick() }
                     )
                     // Smart Suggestions removed per requirements
                     ExpenseTodayList(
@@ -508,6 +504,11 @@ fun ExpensesScreen(
                         onMenuToggle  = { id -> openMenuId = if (openMenuId == id) null else id },
                         onEdit        = { exp -> openEditForm(exp) },
                         onDelete      = { exp -> deletingDomainId = exp.domainId; showDeleteDialog = true }
+                    )
+                    
+                    ExpenseCategoryChart(
+                        breakdown = state.categoryBreakdown,
+                        isDarkTheme = isDarkTheme
                     )
                 }
 
@@ -532,19 +533,51 @@ fun ExpensesScreen(
                             color = colors.TextPrimary
                         )
                     )
-                    // Fixed payments list
-                    state.fixedPayments.forEach { fe ->
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    
+                    if (state.fixedPayments.isEmpty()) {
+                        Text(
+                            "No fixed payment templates found.",
+                            color = colors.TextMuted,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+
+                    // Fixed payments list rendered exactly as per screenshot
+                    state.fixedPayments.forEach { item ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(), 
+                            horizontalArrangement = Arrangement.SpaceBetween, 
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Column {
-                                Text(fe.description.ifBlank { getCat(fe.category).label }, fontWeight = FontWeight.Bold, color = colors.TextPrimary)
-                                Text(fmtLKR(fe.amount.toInt()), color = colors.TextMuted)
+                                Text(
+                                    text = item.template.name.ifBlank { getCat(item.template.category).label }, 
+                                    fontWeight = FontWeight.Bold, 
+                                    color = colors.TextPrimary
+                                )
+                                Text(
+                                    text = fmtLKR(item.template.amount.toInt()), 
+                                    color = colors.TextMuted,
+                                    fontSize = 14.sp
+                                )
                             }
-                            Switch(checked = fe.isPaid, onCheckedChange = { checked -> viewModel.toggleFixedPaid(fe, checked) })
+                            Switch(
+                                checked = item.isApplied, 
+                                onCheckedChange = { checked -> 
+                                    viewModel.toggleFixedApplied(item.template, checked) 
+                                },
+                                colors = SwitchDefaults.colors(
+                                    checkedTrackColor = if (isDarkTheme) Color(0xFF8B5CF6) else Color(0xFF7C4DFF)
+                                )
+                            )
                         }
                         Spacer(Modifier.height(8.dp))
                     }
                     Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(onClick = { /* open add fixed expense dialog - simplified to reuse add form */ openAddForm() }) { Text("+ Add") }
+                        OutlinedButton(onClick = { openAddForm(isTemplate = true) }) { 
+                            Text("+ Add Template") 
+                        }
                     }
                     Spacer(Modifier.height(120.dp))
                 }

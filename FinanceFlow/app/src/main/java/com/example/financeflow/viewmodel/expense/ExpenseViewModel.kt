@@ -3,6 +3,7 @@ package com.example.financeflow.viewmodel.expense
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.financeflow.model.ExpenseUiState
+import com.example.financeflow.model.Expense
 import com.example.financeflow.repository.expense.ExpenseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,12 +13,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import com.example.financeflow.model.Expense
+import android.util.Log
+import com.example.financeflow.model.FixedExpenseDisplayItem
+import com.example.financeflow.model.FixedExpense
 import com.example.financeflow.ui.expenses.ExpenseUiItem
 import com.example.financeflow.ui.expenses.CategoryBreakdownItem
 import java.util.Calendar
 import java.util.Date
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -57,6 +61,7 @@ class ExpenseViewModel @Inject constructor(
         val amtLkr = convertToLKR(e.amount, e.currency).toInt()
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val dateStr = try { sdf.format(e.date.toDate()) } catch (_: Exception) { "" }
+        val isFixedVal = e.isFixedExpense || e.isFixed
         return ExpenseUiItem(
             id = idInt,
             categoryId = e.category,
@@ -64,8 +69,8 @@ class ExpenseViewModel @Inject constructor(
             amount = amtLkr,
             paymentMethod = payment,
             date = dateStr,
-            type = if (e.isFixed) com.example.financeflow.ui.expenses.ExpenseType.ESSENTIAL else com.example.financeflow.ui.expenses.ExpenseType.DISCRETIONARY,
-            isRecurring = e.isFixed,
+            type = if (isFixedVal) com.example.financeflow.ui.expenses.ExpenseType.ESSENTIAL else com.example.financeflow.ui.expenses.ExpenseType.DISCRETIONARY,
+            isRecurring = isFixedVal,
             isPaid = e.isPaid,
             notes = e.notes,
             domainId = e.id
@@ -91,25 +96,57 @@ class ExpenseViewModel @Inject constructor(
 
             // sync once from remote
             launch {
-                try { repository.syncFromFirestore() } catch (_: Exception) {}
+                try { 
+                    repository.syncFromFirestore() 
+                } catch (e: Exception) {
+                    Log.e("EXPENSE_SYNC", "Sync expenses failed", e)
+                }
+                try { 
+                    repository.syncFixedFromFirestore() 
+                } catch (e: Exception) {
+                    Log.e("EXPENSE_SYNC", "Sync fixed expenses failed", e)
+                }
+                recalculateDerivedState()
             }
 
             // collect all expenses and compute totals and groupings
-            repository.getAllForUserFlow(uid).collect { list ->
-                currentAllExpenses = list
-                recalculateDerivedState()
+            launch {
+                try {
+                    repository.getAllForUserFlow(uid).collect { list ->
+                        currentAllExpenses = list
+                        recalculateDerivedState()
+                    }
+                } catch (e: Exception) {
+                    Log.e("APP_CRASH", "getAllForUserFlow failed: ${e.stackTraceToString()}")
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
+                }
+            }
+
+            // collect fixed templates
+            launch {
+                try {
+                    repository.getAllFixedForUserFlow(uid).collect { list ->
+                        Log.d("FIXED_DEBUG", "getAllFixedForUserFlow: Room emitted ${list.size} templates")
+                        currentFixedTemplates = list
+                        recalculateDerivedState()
+                    }
+                } catch (e: Exception) {
+                    Log.e("APP_CRASH", "getAllFixedForUserFlow failed: ${e.stackTraceToString()}")
+                }
             }
         }
     }
 
     private var currentAllExpenses: List<Expense> = emptyList()
+    private var currentFixedTemplates: List<FixedExpense> = emptyList()
 
     private fun recalculateDerivedState() {
         val list = currentAllExpenses
+        val templates = currentFixedTemplates
         
         // compute available months
         val monthsSet = mutableSetOf<Pair<Int, Int>>()
-        val creationTime = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.metadata?.creationTimestamp ?: Calendar.getInstance().timeInMillis
+        val creationTime = FirebaseAuth.getInstance().currentUser?.metadata?.creationTimestamp ?: Calendar.getInstance().timeInMillis
         val creationCal = Calendar.getInstance().apply { timeInMillis = creationTime }
         val currentCal = Calendar.getInstance()
         
@@ -169,11 +206,10 @@ class ExpenseViewModel @Inject constructor(
             try { e.date.toDate().time <= now } catch (_: Exception) { false }
         }
         
-        // total calculation: all non-fixed + only PAID fixed
+        // total calculation: sum of all records in this month's collection
+        // Fixed expenses are only added to 'expenses' collection when applied.
         val total = visibleForCalc.sumOf { e ->
-            if (!e.isFixed || e.isPaid) {
-                convertToLKR(e.amount, e.currency)
-            } else 0.0
+            convertToLKR(e.amount, e.currency)
         }
 
         // today's expenses
@@ -187,14 +223,57 @@ class ExpenseViewModel @Inject constructor(
             } catch (_: Exception) { false }
         }.sortedByDescending { it.date.toDate().time }.map { mapToUiItem(it) }
 
-        // Fixed payments (those where isFixed is true)
-        val fixedList = list.filter { it.isFixed }
+        // Fixed payments: Merge templates with current month's applied status.
+        // Accept both isFixed and isFixedExpense so toggle-applied expenses are matched correctly.
+        val fixedPayments = templates.map { template ->
+            val appliedExpense = list.find {
+                (it.isFixedExpense || it.isFixed) && it.templateId == template.id &&
+                isSameMonth(it.date.toDate(), startCal.time)
+            }
+            FixedExpenseDisplayItem(
+                template = template,
+                isApplied = appliedExpense != null,
+                monthExpenseId = appliedExpense?.id
+            )
+        }.toMutableList()
+
+        // Fallback: also show fixed expenses from the expense list that have no matching template.
+        // This restores display of legacy records (saved before the fixedExpenses Firestore
+        // collection existed) and any templates accidentally removed by the edit flow.
+        val knownTemplateIds = templates.map { it.id }.toSet()
+        list.filter { expense ->
+            (expense.isFixed || expense.isFixedExpense) &&
+            (expense.templateId == null || expense.templateId !in knownTemplateIds)
+        }
+        .groupBy { it.templateId ?: it.id }
+        .forEach { (_, group) ->
+            val rep = group.maxByOrNull { it.createdAt.toDate().time } ?: return@forEach
+            val syntheticTemplate = FixedExpense(
+                id = rep.templateId ?: rep.id,
+                userId = rep.userId,
+                name = rep.description.ifBlank { rep.category },
+                amount = rep.amount,
+                category = rep.category,
+                isPaid = rep.isPaid,
+                createdAt = rep.createdAt
+            )
+            val appliedThisMonth = try {
+                group.find { isSameMonth(it.date.toDate(), startCal.time) }
+            } catch (_: Exception) { null }
+            fixedPayments.add(
+                FixedExpenseDisplayItem(
+                    template = syntheticTemplate,
+                    isApplied = appliedThisMonth != null,
+                    monthExpenseId = appliedThisMonth?.id
+                )
+            )
+        }
 
         // recent transactions (limit 10) based on visibleForCalc newest first
         val recent = visibleForCalc.sortedByDescending { it.date.toDate().time }.take(10).map { mapToUiItem(it) }
 
         // category breakdown
-        val grouped = visibleForCalc.filter { !it.isFixed || it.isPaid }.groupBy { it.category }.map { (cat, items) ->
+        val grouped = visibleForCalc.filter { !it.isFixedExpense || it.isPaid }.groupBy { it.category }.map { (cat, items) ->
             val sum = items.sumOf { convertToLKR(it.amount, it.currency) }
             val label = com.example.financeflow.ui.expenses.getCat(cat).label
             CategoryBreakdownItem(label = label, amount = sum.toInt(), color = com.example.financeflow.ui.expenses.getCat(cat).bgColor)
@@ -207,7 +286,7 @@ class ExpenseViewModel @Inject constructor(
             todayExpenses = todayList,
             currentMonthTransactions = monthItems.sortedByDescending { it.date.toDate().time }.map { mapToUiItem(it) },
             categoryBreakdown = grouped,
-            fixedPayments = fixedList
+            fixedPayments = fixedPayments
         )
     }
 
@@ -241,6 +320,92 @@ class ExpenseViewModel @Inject constructor(
         }
     }
 
+    fun updateExpenseDetails(
+        id: String,
+        amount: Double,
+        description: String,
+        category: String,
+        paymentMethod: String,
+        date: Timestamp,
+        notes: String,
+        isFixed: Boolean
+    ) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true)
+                val original = currentAllExpenses.find { it.id == id }
+                if (original != null) {
+                    val oldFixed = original.isFixedExpense
+                    val newFixed = isFixed
+                    
+                    Log.d("FIXED_EDIT", "OldFixed=$oldFixed")
+                    Log.d("FIXED_EDIT", "NewFixed=$newFixed")
+
+                    val templateId = original.templateId ?: java.util.UUID.randomUUID().toString()
+                    
+                    val updated = original.copy(
+                        amount = amount,
+                        description = description,
+                        category = category,
+                        paymentMethod = paymentMethod,
+                        date = date,
+                        notes = notes,
+                        isFixed = isFixed,
+                        isFixedExpense = isFixed,
+                        templateId = if (isFixed) templateId else original.templateId
+                    )
+                    
+                    Log.d("EDIT_EXPENSE", "Before Update = $original")
+                    Log.d("EDIT_EXPENSE", "After Update = $updated")
+                    Log.d("EDIT_EXPENSE", "DocumentId = ${updated.id}")
+                    
+                    repository.updateExpense(updated)
+
+                    // Sync Fixed Payment Template
+                    if (!oldFixed && newFixed) {
+                        // Case A: Create fixed payment
+                        val template = FixedExpense(
+                            id = templateId,
+                            userId = original.userId,
+                            name = description,
+                            amount = amount,
+                            category = category,
+                            isPaid = true,
+                            createdAt = Timestamp.now()
+                        )
+                        repository.addFixedExpense(template)
+                        Log.d("FIXED_EDIT", "FixedPaymentCreated")
+                    } else if (oldFixed && !newFixed) {
+                        // Case B: Remove fixed payment
+                        original.templateId?.let { tid ->
+                            repository.deleteFixedExpense(tid)
+                            Log.d("FIXED_EDIT", "FixedPaymentRemoved")
+                        }
+                    } else if (oldFixed && newFixed) {
+                        // Update existing template
+                        val template = FixedExpense(
+                            id = templateId,
+                            userId = original.userId,
+                            name = description,
+                            amount = amount,
+                            category = category,
+                            isPaid = true,
+                            createdAt = Timestamp.now()
+                        )
+                        repository.updateFixedExpense(template)
+                    }
+
+                } else {
+                    Log.e("EDIT_EXPENSE", "Original expense not found for id: $id")
+                }
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            } catch (e: Exception) {
+                Log.e("EDIT_EXPENSE", "Update failed", e)
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
+            }
+        }
+    }
+
     fun deleteExpense(id: String) {
         viewModelScope.launch {
             try {
@@ -253,7 +418,7 @@ class ExpenseViewModel @Inject constructor(
         }
     }
 
-    // Fixed payments
+    // Fixed payments logic
     fun addFixedExpense(fixed: com.example.financeflow.model.FixedExpense) {
         viewModelScope.launch {
             try {
@@ -262,13 +427,99 @@ class ExpenseViewModel @Inject constructor(
         }
     }
 
-    fun toggleFixedPaid(expense: com.example.financeflow.model.Expense, paid: Boolean) {
+    fun addFixedExpenseWithRecord(
+        name: String,
+        amount: Double,
+        category: String,
+        date: Timestamp,
+        notes: String
+    ) {
         viewModelScope.launch {
             try {
-                val updated = expense.copy(isPaid = paid)
-                repository.updateExpense(updated)
+                _uiState.value = _uiState.value.copy(isLoading = true)
+                val templateId = java.util.UUID.randomUUID().toString()
+                
+                // 1. Create template
+                val template = FixedExpense(
+                    id = templateId,
+                    name = name,
+                    amount = amount,
+                    category = category,
+                    isPaid = true,
+                    createdAt = Timestamp.now()
+                )
+                repository.addFixedExpense(template)
+                
+                // 2. Create actual record for the date
+                val expense = Expense(
+                    amount = amount,
+                    category = category,
+                    description = name,
+                    notes = notes,
+                    isFixed = true,
+                    isFixedExpense = true,
+                    isPaid = true,
+                    templateId = templateId,
+                    date = date
+                )
+                repository.addExpense(expense)
+                
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
+            }
+        }
+    }
+
+    fun toggleFixedApplied(template: FixedExpense, applied: Boolean) {
+        viewModelScope.launch {
+            try {
+                // Find existing expense for this template in the selected month
+                val sel = _uiState.value.selectedMonth
+                val parts = sel.split("-")
+                val selYear = parts.getOrNull(0)?.toIntOrNull() ?: Calendar.getInstance().get(Calendar.YEAR)
+                val selMonth = parts.getOrNull(1)?.toIntOrNull() ?: (Calendar.getInstance().get(Calendar.MONTH) + 1)
+
+                val cal = Calendar.getInstance().apply {
+                    set(Calendar.YEAR, selYear)
+                    set(Calendar.MONTH, selMonth - 1)
+                    set(Calendar.DAY_OF_MONTH, 1)
+                }
+                
+                if (applied) {
+                    // Create a new expense record for this month
+                    val newExpense = Expense(
+                        amount = template.amount,
+                        category = template.category,
+                        description = template.name,
+                        isFixed = true,
+                        isFixedExpense = true,
+                        isPaid = true,
+                        templateId = template.id,
+                        date = Timestamp(cal.time)
+                    )
+                    repository.addExpense(newExpense)
+                } else {
+                    // Find and delete the expense record for this month/template
+                    val existing = currentAllExpenses.find { 
+                        it.isFixed && it.templateId == template.id &&
+                        isSameMonth(it.date.toDate(), cal.time)
+                    }
+                    existing?.let { repository.deleteExpense(it.id) }
+                }
             } catch (_: Exception) {}
         }
+    }
+
+    private fun isSameMonth(d1: Date, d2: Date): Boolean {
+        val c1 = Calendar.getInstance().apply { time = d1 }
+        val c2 = Calendar.getInstance().apply { time = d2 }
+        return c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR) &&
+               c1.get(Calendar.MONTH) == c2.get(Calendar.MONTH)
+    }
+
+    fun toggleFixedPaid(expense: Expense, paid: Boolean) {
+        // ... kept for compatibility if needed, but the main logic is now toggleFixedApplied
     }
 
     fun deleteFixedExpense(id: String) {

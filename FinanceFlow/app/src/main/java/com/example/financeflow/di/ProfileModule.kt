@@ -2,6 +2,7 @@ package com.example.financeflow.di
 
 import com.example.financeflow.data.remote.ProfileFirestoreService
 import com.example.financeflow.repository.ProfileRepository
+import com.example.financeflow.repository.ProfileRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -40,6 +41,6 @@ object ProfileModule {
     fun provideProfileRepository(
         service: ProfileFirestoreService
     ): ProfileRepository {
-        return ProfileRepository(service)
+        return ProfileRepositoryImpl(service)
     }
 }

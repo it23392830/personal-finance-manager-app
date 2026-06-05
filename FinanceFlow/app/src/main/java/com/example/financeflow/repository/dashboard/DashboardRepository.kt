@@ -88,11 +88,15 @@ class DashboardRepository @Inject constructor(
     fun getGoalsFlow(): Flow<List<Goal>> = goalRepository.observeGoals().map { it.getOrNull().orEmpty() }
 
     fun getTotalIncome(): Flow<Double> = combine(getIncomesFlow(), incomeRates) { list, rates ->
-        list.sumOf { convertToLkr(it.amount, it.currency, rates) }
+        val now = System.currentTimeMillis()
+        list.filter { it.date.toDate().time <= now }
+            .sumOf { convertToLkr(it.amount, it.currency, rates) }
     }
 
     fun getTotalExpenses(): Flow<Double> = combine(getExpensesFlow(), expenseRates) { list, rates ->
-        list.sumOf { convertToLkr(it.amount, it.currency, rates) }
+        val now = System.currentTimeMillis()
+        list.filter { it.date.toDate().time <= now }
+            .sumOf { convertToLkr(it.amount, it.currency, rates) }
     }
 
     fun getTotalSavings(): Flow<Double> = getSavingsFlow().map { list ->
@@ -108,7 +112,11 @@ class DashboardRepository @Inject constructor(
     }
 
     fun getExpenseCategoryTotals(): Flow<List<CategoryTotal>> = combine(getExpensesFlow(), expenseRates) { list, rates ->
-        list.groupBy { it.category }
+        val month = YearMonth.now()
+        val start = month.atDay(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val end = month.atEndOfMonth().atTime(23, 59, 59).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        list.filter { it.date.toDate().time in start..end }
+            .groupBy { it.category }
             .map { (categoryId, items) ->
                 val total = items.sumOf { convertToLkr(it.amount, it.currency, rates) }
                 CategoryTotal(categoryId = categoryId, amount = total)
@@ -117,7 +125,11 @@ class DashboardRepository @Inject constructor(
     }
 
     fun getIncomeSources(): Flow<List<IncomeSourceTotal>> = combine(getIncomesFlow(), incomeRates) { list, rates ->
-        list.groupBy { it.source }
+        val month = YearMonth.now()
+        val start = month.atDay(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val end = month.atEndOfMonth().atTime(23, 59, 59).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        list.filter { it.date.toDate().time in start..end }
+            .groupBy { it.source }
             .map { (source, items) ->
                 val total = items.sumOf { convertToLkr(it.amount, it.currency, rates) }
                 IncomeSourceTotal(source = source, amount = total)
@@ -126,11 +138,16 @@ class DashboardRepository @Inject constructor(
     }
 
     fun getExpenseTypeBreakdown(): Flow<ExpenseTypeBreakdown> = combine(getExpensesFlow(), expenseRates) { list, rates ->
-        val mustItems = list.filter { it.isFixed }.groupBy { it.category }.map { (categoryId, items) ->
+        val month = YearMonth.now()
+        val start = month.atDay(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val end = month.atEndOfMonth().atTime(23, 59, 59).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val filtered = list.filter { it.date.toDate().time in start..end }
+        
+        val mustItems = filtered.filter { it.isFixed }.groupBy { it.category }.map { (categoryId, items) ->
             val total = items.sumOf { convertToLkr(it.amount, it.currency, rates) }
             CategoryTotal(categoryId = categoryId, amount = total)
         }
-        val optionalItems = list.filter { !it.isFixed }.groupBy { it.category }.map { (categoryId, items) ->
+        val optionalItems = filtered.filter { !it.isFixed }.groupBy { it.category }.map { (categoryId, items) ->
             val total = items.sumOf { convertToLkr(it.amount, it.currency, rates) }
             CategoryTotal(categoryId = categoryId, amount = total)
         }

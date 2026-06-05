@@ -63,8 +63,9 @@ class ExpenseRepository @Inject constructor(
     
     // --- Fixed expenses support -----------------------------------------
     suspend fun addFixedExpense(fixed: com.example.financeflow.model.FixedExpense) {
+        val uid = firebase.currentUserId() ?: error("No authenticated user")
         val id = if (fixed.id.isBlank()) java.util.UUID.randomUUID().toString() else fixed.id
-        val withId = fixed.copy(id = id)
+        val withId = fixed.copy(id = id, userId = uid)
         // persist locally
         val ent = withId.toEntity()
         fixedDao.insertFixedExpense(ent)
@@ -84,9 +85,14 @@ class ExpenseRepository @Inject constructor(
     suspend fun syncFixedFromFirestore() {
         val uid = firebase.currentUserId() ?: return
         val remote = firebase.getAllFixedExpenses()
+        android.util.Log.d("FIXED_DEBUG", "syncFixedFromFirestore: Firestore returned ${remote.size} templates for uid=$uid")
         // replace local
         fixedDao.deleteAllForUser(uid)
-        remote.forEach { fixedDao.insertFixedExpense(it.toEntity()) }
+        remote.forEach {
+            val withUid = if (it.userId.isBlank()) it.copy(userId = uid) else it
+            fixedDao.insertFixedExpense(withUid.toEntity())
+        }
+        android.util.Log.d("FIXED_DEBUG", "syncFixedFromFirestore: inserted ${remote.size} templates into Room")
     }
 
     fun getAllFixedForUserFlow(userId: String) = fixedDao.getAllFixedExpensesFlowForUser(userId).map { it.map { fe -> fe.toDomain() } }
@@ -121,7 +127,9 @@ private fun ExpenseEntity.toDomain(): Expense = Expense(
     paymentMethod = paymentMethod,
     notes = notes,
     isFixed = isFixed,
+    isFixedExpense = isFixedExpense,
     isPaid = isPaid,
+    templateId = templateId,
     date = Timestamp(date / 1000, 0),
     createdAt = Timestamp(createdAt / 1000, 0)
 )
@@ -136,7 +144,9 @@ private fun Expense.toEntity(): ExpenseEntity = ExpenseEntity(
     paymentMethod = paymentMethod,
     notes = notes,
     isFixed = isFixed,
+    isFixedExpense = isFixedExpense,
     isPaid = isPaid,
+    templateId = templateId,
     date = date.toDate().time,
     createdAt = createdAt.toDate().time
 )

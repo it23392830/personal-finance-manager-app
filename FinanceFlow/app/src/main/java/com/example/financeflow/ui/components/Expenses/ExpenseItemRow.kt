@@ -25,7 +25,7 @@ fun ExpenseItemRow(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
-    colors: ExpensesColors = getExpensesColors(false)
+    colors: ExpensesColors
 ) {
     val category = getCat(item.categoryId)
 
@@ -125,7 +125,8 @@ fun ExpenseItemRowPreview() {
             isMenuOpen = false,
             onMenuToggle = {},
             onEdit = {},
-            onDelete = {}
+            onDelete = {},
+            colors = getExpensesColors(false)
         )
     }
 }

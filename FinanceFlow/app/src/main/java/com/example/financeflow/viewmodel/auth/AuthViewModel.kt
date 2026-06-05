@@ -119,6 +119,20 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Clears DataStore preferences only. Call this after FirebaseAuth.signOut() has already
+     * been called synchronously, so clearing DataStore can complete even if the ViewModel
+     * scope is about to be cancelled by navigation.
+     */
+    fun logoutClearPrefsOnly() {
+        Log.d("AuthFlow", "logoutClearPrefsOnly: Clearing DataStore preferences")
+        viewModelScope.launch {
+            try { repository.clearRememberMe() } catch (e: Exception) {
+                Log.e("APP_CRASH", "clearRememberMe failed: ${e.stackTraceToString()}")
+            }
+        }
+    }
+
     private fun resetUiState() {
         _uiState.value = AuthUiState()
     }

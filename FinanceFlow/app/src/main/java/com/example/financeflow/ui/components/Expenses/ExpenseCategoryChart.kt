@@ -20,9 +20,10 @@ import com.example.financeflow.ui.theme.FinanceFlowTheme
 @Composable
 fun ExpenseCategoryChart(
     breakdown: List<CategoryBreakdownItem>,
+    isDarkTheme: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val colors = getExpensesColors(false)
+    val colors = getExpensesColors(isDarkTheme)
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),

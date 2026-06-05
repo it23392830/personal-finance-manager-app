@@ -150,7 +150,7 @@ fun HomeScreen(
         totalIncome = totalIncome.toLong(),
         totalExpenses = totalExpenses.toLong(),
         totalSaved = totalSavings.toLong(),
-        streakDays = streakDays
+        streakDays = profileState.streak.currentStreak
     )
 
     val savingsPct = if (totalIncome > 0.0) ((totalSavings / totalIncome) * 100).roundToInt() else 0

@@ -207,24 +207,33 @@ fun AddExpenseScreen(
                     val sdfInput = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                     val dateObj = try { sdfInput.parse(date) } catch (_: Exception) { Date() }
                     
-                    val expense = Expense(
-                        amount = amtValue,
-                        currency = "LKR",
-                        category = category,
-                        description = description,
-                        notes = notes,
-                        isFixed = isRecurring,
-                        isPaid = false,
-                        date = Timestamp(dateObj)
-                    )
-                    viewModel.addExpense(expense)
+                    if (isRecurring) {
+                        val fixed = com.example.financeflow.model.FixedExpense(
+                            name = description.ifBlank { getCat(category).label },
+                            amount = amtValue,
+                            category = category
+                        )
+                        viewModel.addFixedExpense(fixed)
+                    } else {
+                        val expense = Expense(
+                            amount = amtValue,
+                            currency = "LKR",
+                            category = category,
+                            description = description,
+                            notes = notes,
+                            isFixed = false,
+                            isPaid = false,
+                            date = Timestamp(dateObj)
+                        )
+                        viewModel.addExpense(expense)
+                    }
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = colors.HeaderRed),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Add Expense", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(if (isRecurring) "Add Template" else "Add Expense", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
             
             Spacer(Modifier.height(40.dp))
